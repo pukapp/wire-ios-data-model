@@ -61,6 +61,21 @@ typedef NS_ENUM(int16_t, ZMConversationListIndicator) {
     ZMConversationListIndicatorPending
 };
 
+// 智能回复模式
+// 0 : 关闭
+// 1 :  智能达尔文托管
+// 2 :  智能小天使托管
+// 3 :  智能校花托管
+// 4 : 人工训练模式
+typedef NS_ENUM(int16_t, ZMAutoReplyType) {
+    ZMAutoReplyTypeClosed = 0,
+    ZMAutoReplyTypeDarwin,
+    ZMAutoReplyTypeAngel,
+    ZMAutoReplyTypeCampusBelle,
+    ZMAutoReplyTypeAI, // Incoming & outgoing connection request
+    ZMAutoReplyTypeZuChongZhi
+};
+
 
 extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a range in an attributed string should be displayed dimmed.
 
@@ -91,6 +106,17 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 /// For group conversation this will be nil, for one to one or connection conversation this will be the other user
 @property (nonatomic, readonly, nullable) ZMUser *connectedUser;
+/// 新增
+/// 我对单人聊天里好友的智能回复状态
+@property (nonatomic) ZMAutoReplyType autoReply;
+/// 单人聊天里好友对我的智能回复状态
+@property (nonatomic) ZMAutoReplyType autoReplyFromOther;
+// 是否开启群二维码链接邀请
+@property (nonatomic) BOOL isOpenUrlJoin;
+// 群二维码链接
+@property (nonatomic, copy, nullable) NSString *joinGroupUrl;
+// 群应用icon组(逗号分割)
+@property (nonatomic, copy, nullable) NSString *appletsIcon;
 
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;

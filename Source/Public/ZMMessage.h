@@ -46,7 +46,13 @@
 @property (nonatomic, readonly) BOOL isDownloaded; // If it is GIF and has more than 1 frame
 @property (nonatomic, readonly, nullable) NSString *imageType; // UTI e.g. kUTTypeGIF
 @property (nonatomic, readonly) CGSize originalSize;
-
+// 图片消息可作为回复内容(测试)
+//@property (nonatomic, readonly, nullable) ZMMessage *quote;
+///// Detect if user replies to a message sent from himself
+//@property (nonatomic, readonly) BOOL isQuotingSelf;
+//
+///// Check if message has a quote
+//@property (nonatomic, readonly) BOOL hasQuote;
 - (void)fetchImageDataWithQueue:(dispatch_queue_t _Nonnull )queue completionHandler:(void (^_Nonnull)(NSData * _Nullable imageData))completionHandler;
 
 /// Request the download of the image if not already present.

@@ -46,7 +46,8 @@ NSString *const ZMConversationInfoOTRMutedReferenceKey = @"otr_muted_ref";
 NSString *const ZMConversationInfoOTRArchivedValueKey = @"otr_archived";
 NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 
-
+// 新增
+static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
 @implementation ZMConversation (Transport)
 
@@ -126,7 +127,11 @@ NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
     NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
     NSMutableOrderedSet<ZMUser *> *users = [NSMutableOrderedSet orderedSet];
     NSMutableOrderedSet<ZMUser *> *lastSyncedUsers = [NSMutableOrderedSet orderedSet];
-    
+    // 获取对方对自己设置的智能推送状态
+    if (users.count == 1){
+        NSDictionary *user = (NSDictionary *)users[0];
+        self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[user optionalNumberForKey:ConversationInfoAutoReplyKey]];
+    }
     if (self.mutableLastServerSyncedActiveParticipants != nil) {
         lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants;
     }
@@ -201,6 +206,12 @@ NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
         }
     }
     return NO;
+}
+
+- (ZMAutoReplyType)autoReplyTypeFromTransportData:(NSNumber *)autoReplyType
+{
+    int const t = [autoReplyType intValue];
+    return (ZMAutoReplyType)t;
 }
 
 - (ZMConversationType)conversationTypeFromTransportData:(NSNumber *)transportType

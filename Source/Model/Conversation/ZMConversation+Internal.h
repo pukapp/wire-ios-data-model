@@ -81,6 +81,10 @@ extern NSString *const ZMConversationLastReadLocalTimestampKey;
 
 extern NSString *const SecurityLevelKey;
 
+// 新增智能回复
+extern NSString *const ZMConversationAutoReplyKey;
+extern NSString *const ZMConversationAutoReplyFromOtherKey;
+
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)

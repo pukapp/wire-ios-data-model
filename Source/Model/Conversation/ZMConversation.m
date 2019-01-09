@@ -74,6 +74,11 @@ NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data"
 
 NSString *const SecurityLevelKey = @"securityLevel";
 
+// 新增智能回复
+// 新增自动回复状态
+NSString *const ZMConversationAutoReplyKey = @"autoReply";
+NSString *const ZMConversationAutoReplyFromOtherKey = @"autoReplyFromOther";
+
 static NSString *const ConnectedUserKey = @"connectedUser";
 static NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
@@ -103,6 +108,8 @@ static NSString *const TeamKey = @"team";
 
 static NSString *const AccessModeStringsKey = @"accessModeStrings";
 static NSString *const AccessRoleStringKey = @"accessRoleString";
+
+
 
 NSTimeInterval ZMConversationDefaultLastReadTimestampSaveDelay = 3.0;
 
@@ -158,11 +165,24 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic archivedChangedTimestamp;
 @dynamic silencedChangedTimestamp;
 @dynamic team;
+// 新增
+@dynamic autoReply;
+@dynamic autoReplyFromOther;
+@dynamic isOpenUrlJoin;
+@dynamic joinGroupUrl;
+@dynamic appletsIcon;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
 @synthesize lastReadTimestampUpdateCounter;
 @synthesize unreadTimeStamps;
+
+
+-(void)setAutoReply:(ZMAutoReplyType)autoReply{
+    [self willChangeValueForKey:ZMConversationAutoReplyKey];
+    [self setPrimitiveValue:@(autoReply) forKey:ZMConversationAutoReplyKey];
+    [self didChangeValueForKey:ZMConversationAutoReplyKey];
+}
 
 - (BOOL)isArchived
 {
@@ -366,7 +386,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             TeamRemoteIdentifierDataKey,
             AccessModeStringsKey,
             AccessRoleStringKey,
-            LanguageKey
+            LanguageKey,
+            //、 新增
+            ZMConversationAutoReplyFromOtherKey,
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];

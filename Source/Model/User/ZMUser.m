@@ -86,6 +86,11 @@ static NSString *const UsesCompanyLoginKey = @"usesCompanyLogin";
 static NSString *const TeamIdentifierDataKey = @"teamIdentifier_data";
 static NSString *const TeamIdentifierKey = @"teamIdentifier";
 
+/// 新增
+static NSString *const RemarkKey = @"reMark";
+static NSString *const AliasnameKey = @"aliasname";
+static NSString *const AiAddressKey = @"aiAddress";
+
 @interface ZMBoxedSelfUser : NSObject
 
 @property (nonatomic, weak) ZMUser *selfUser;
@@ -194,6 +199,23 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
 @dynamic clients;
 @dynamic handle;
 @dynamic addressBookEntry;
+
+@dynamic reMark;
+@dynamic aiAddress;
+@dynamic darwinState;
+@dynamic zuChongZhiState;
+@dynamic robotType;
+@dynamic pkRobotState;
+
+
+- (NSString *)newName;
+{
+    if (self.reMark) {
+        return self.reMark;
+    }else{
+        return self.name;
+    }
+}
 
 - (UserClient *)selfClient
 {
@@ -493,6 +515,27 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
     return [self fetchObjectsWithRemoteIdentifiers:UUIDs inManagedObjectContext:moc];
 }
 
+/// 通过AiAddress获取用户
++ (nullable instancetype)userWithAiAddress:(nonnull NSString *)aiAddress inContext:(nonnull NSManagedObjectContext *)context{
+    RequireString(0 != aiAddress.length, "aiAddress required");
+    
+    NSFetchRequest *usersWithPhoneFetch = [NSFetchRequest fetchRequestWithEntityName:[ZMUser entityName]];
+    usersWithPhoneFetch.predicate = [NSPredicate predicateWithFormat:@"%K = %@", AiAddressKey, aiAddress];
+    NSArray<ZMUser *> *users = [context executeFetchRequestOrAssert:usersWithPhoneFetch];
+    
+    RequireString(users.count <= 1, "More than one user with the same ai address");
+    
+    if (0 == users.count) {
+        return nil;
+    }
+    else if (1 == users.count) {
+        return users.firstObject;
+    }
+    else {
+        return nil;
+    }
+}
+
 - (NSUUID *)remoteIdentifier;
 {
     return [self transientUUIDForKey:@"remoteIdentifier"];
@@ -557,6 +600,37 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
     if (name != nil || authoritative) {
         self.name = name;
     }
+    NSString *address = [transportData optionalStringForKey:@"user_address"];
+    if (address != nil || authoritative) {
+        self.aiAddress = address;
+    }
+    
+    NSArray *robotStateArray = [transportData optionalArrayForKey:@"bots"];
+    
+    for (NSDictionary *robotState in robotStateArray) {
+        if (! [robotState isKindOfClass:[NSDictionary class]]) {
+            ZMLogError(@"Invalid robotState data in user info.");
+            continue;
+        }
+        if ([[robotState stringForKey:@"bot"] isEqualToString:@"Darwin"]) {
+            self.darwinState = [ZMUser robotStateFromTransportData:[robotState numberForKey:@"status"]];
+        }
+        else if ([[robotState stringForKey:@"bot"] isEqualToString:@"Zuchongzhi"]) {
+            self.zuChongZhiState = [ZMUser robotStateFromTransportData:[robotState numberForKey:@"status"]];
+        }else if ([[robotState stringForKey:@"bot"] isEqualToString:@"PKbot"]) {
+            self.pkRobotState = [[self class] robotStateFromTransportData:[robotState numberForKey:@"status"]];
+        }
+    }
+    
+    NSNumber *robotTypeId = [transportData optionalNumberForKey:@"nature"];
+    if (robotTypeId != nil || authoritative) {
+        self.robotType = [ZMUser robotTypeFromTransportData:robotTypeId];
+    }
+    
+    NSString *remark = [transportData optionalStringForKey:@"remark"];
+    if (remark != nil || authoritative) {
+        self.reMark = remark;
+    }
     
     NSString *handle = [transportData optionalStringForKey:@"handle"];
     if (handle != nil || authoritative) {
@@ -606,6 +680,18 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
     }
     
     [self updatePotentialGapSystemMessagesIfNeeded];
+}
+
++ (ZMRobotState)robotStateFromTransportData:(NSNumber *)transportType
+{
+    int const t = [transportType intValue];
+    return (ZMRobotState)t;
+}
+
++ (ZMRobotType)robotTypeFromTransportData:(NSNumber *)transportType
+{
+    int const t = [transportType intValue];
+    return (ZMRobotType)t;
 }
 
 - (void)updatePotentialGapSystemMessagesIfNeeded
@@ -869,6 +955,18 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
     [self didChangeValueForKey:EmailAddressKey];
     
     self.normalizedEmailAddress = [self.emailAddress normalizedEmailaddress];
+}
+
+- (void)setReMark:(NSString *)reMark {
+    [self willChangeValueForKey:RemarkKey];
+    [self setPrimitiveValue:[reMark copy] forKey:RemarkKey];
+    [self didChangeValueForKey:RemarkKey];
+}
+
+- (void)setAliasname:(NSString *)aliasname {
+    [self willChangeValueForKey:AliasnameKey];
+    [self setPrimitiveValue:[aliasname copy] forKey:AliasnameKey];
+    [self didChangeValueForKey:AliasnameKey];
 }
 
 @end
@@ -1137,7 +1235,7 @@ static NSString *const TeamIdentifierKey = @"teamIdentifier";
 + (BOOL)validatePassword:(NSString **)ioPassword error:(NSError **)outError
 {
     return [StringLengthValidator validateValue:ioPassword
-                            minimumStringLength:8
+                            minimumStringLength:1
                             maximumStringLength:120
                               maximumByteLength:INT_MAX
                                           error:outError];

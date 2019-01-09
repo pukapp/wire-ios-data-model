@@ -28,6 +28,27 @@
 @class Member;
 @class Team;
 
+// 机器人模式
+// 1 : 已关闭
+// 2 : 已过期
+// 3 : 已开通
+// 4 : 开通中
+typedef NS_ENUM(int16_t, ZMRobotState) {
+    ZMRobotStateClosed = 1,
+    ZMRobotStateExpired,
+    ZMRobotStateOpened,
+    ZMRobotStateOpening
+};
+
+// 机器人类型
+// 0 : 非机器人
+// 1 : 祖冲之机器人
+typedef NS_ENUM(int16_t, ZMRobotType) {
+    ZMRobotTypeNormal = 0,
+    ZMRobotTypeZuchongzhi,
+    ZMRobotTypePK
+};
+
 extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
 @interface ZMUser : ZMManagedObject
@@ -75,6 +96,17 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
 @property (nonatomic, readonly) BOOL isTeamMember;
 
+/// 新增
+/// 备注
+@property (nonatomic, copy, nullable) NSString *reMark;
+/// aiaddress
+@property (nonatomic, copy, nullable) NSString *aiAddress;
+// 机器人状态
+@property (nonatomic) ZMRobotState darwinState;
+@property (nonatomic) ZMRobotState zuChongZhiState;
+@property (nonatomic) ZMRobotState pkRobotState;
+@property (nonatomic) ZMRobotType robotType;
+
 /// Request a refresh of the user data from the backend.
 /// This is useful for non-connected user, that we will otherwise never refetch
 - (void)refreshData;
@@ -83,6 +115,10 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 /// A ZMUserChangeNotification with the searchUser as object will be sent notifiying about the connection status change
 /// You should stop from observing the searchUser and start observing the user from there on
 - (void)connectWithMessage:(NSString * _Nonnull)text NS_SWIFT_NAME(connect(message:));
+
+/// 新增
+- (NSString *_Nonnull)newName;
+
 
 @end
 

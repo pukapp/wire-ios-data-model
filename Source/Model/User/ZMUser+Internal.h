@@ -56,7 +56,8 @@ extern NSString * __nonnull const AvailabilityKey;
 + (nullable instancetype)userWithPhoneNumber:(nonnull NSString *)phoneNumber inContext:(nonnull NSManagedObjectContext *)context;
 
 + (nonnull NSOrderedSet <ZMUser *> *)usersWithRemoteIDs:(nonnull NSOrderedSet <NSUUID *>*)UUIDs inContext:(nonnull NSManagedObjectContext *)moc;
-
+/// 根据AiAddress获取ZMUser
++ (nullable instancetype)userWithAiAddress:(nonnull NSString *)aiAddress inContext:(nonnull NSManagedObjectContext *)context;
 + (ZMAccentColor)accentColorFromPayloadValue:(nullable NSNumber *)payloadValue;
 
 /// @method Updates the user with a name or handle received through a search
