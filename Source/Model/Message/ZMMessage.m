@@ -87,6 +87,8 @@ NSString * const ZMSystemMessageNumberOfGuestsAddedKey = @"numberOfGuestsAdded";
 NSString * const ZMMessageRepliesKey = @"replies";
 NSString * const ZMMessageQuoteKey = @"quote";
 
+NSString * const ZMMessageJsonTextKey = @"jsonText";
+
 
 @interface ZMMessage ()
 
@@ -129,6 +131,13 @@ NSString * const ZMMessageQuoteKey = @"quote";
 @dynamic confirmations;
 @dynamic isObfuscated;
 @dynamic normalizedText;
+
+@dynamic isFromHugeGroup;
+@dynamic isNeedReply;
+@dynamic isNeedUpload;
+@dynamic isSelfSend;
+@dynamic isGet;
+@dynamic bibiCashType;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
@@ -652,6 +661,7 @@ NSString * const ZMMessageQuoteKey = @"quote";
                              ZMMessageServerTimestampKey,
                              ZMMessageSystemMessageTypeKey,
                              ZMMessageTextKey,
+                             ZMMessageJsonTextKey,
                              ZMMessageUserIDsKey,
                              ZMMessageEventIDDataKey,
                              ZMMessageUsersKey,
@@ -798,7 +808,52 @@ NSString * const ZMMessageQuoteKey = @"quote";
 
 @end
 
+#pragma mark - JsonText message
 
+@implementation ZMJsonTextMessage
+
+@dynamic text;
+
+
++ (NSString *)entityName;
+{
+    return @"JsonTextMessage";
+}
+
+- (NSString *)shortDebugDescription;
+{
+    return [[super shortDebugDescription] stringByAppendingFormat:@", \'%@\'", self.text];
+}
+
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent  __unused *)updateEvent
+                              inManagedObjectContext:(NSManagedObjectContext  __unused *)moc
+                                      prefetchResult:(ZMFetchRequestBatchResult  __unused *)prefetchResult
+{
+    return nil;
+}
+
+- (NSString *)jsonMessageText
+{
+    return self.text;
+}
+
+- (id<ZMJsonTextMessageData>)jsonTextMessageData
+{
+    return self;
+}
+
+- (void)removeMessageClearingSender:(BOOL)clearingSender
+{
+    self.text = nil;
+    [super removeMessageClearingSender:clearingSender];
+}
+
+- (ZMDeliveryState)deliveryState
+{
+    return ZMDeliveryStateDelivered;
+}
+
+@end
 
 
 

@@ -33,6 +33,17 @@ extension ZMConversation {
         return appendClientMessage(with: ZMGenericMessage.message(content: ZMKnock.knock(), nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
     }
     
+    @discardableResult @objc(appendJsonText:nonce:)
+    public func append(jsonText: String,
+                       nonce: UUID = UUID()) -> ZMConversationMessage? {
+        
+//        guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
+        let textContent = ZMTextJson.text(with: jsonText)
+        let clientMessage = ZMGenericMessage.message(content: textContent, nonce: nonce)
+        let message = appendClientMessage(with: clientMessage)!
+        return message
+    }
+    
     @discardableResult @objc(appendText:mentions:fetchLinkPreview:nonce:)
     public func append(text: String,
                        mentions: [Mention] = [],

@@ -246,6 +246,13 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     }
 }
 
+- (id<ZMJsonTextMessageData>)jsonTextMessageData{
+    if (self.genericMessage.jsonTextData != nil) {
+        return self;
+    }
+    return nil;
+}
+
 - (id<ZMTextMessageData>)textMessageData
 {
     if (self.genericMessage.textData != nil) {

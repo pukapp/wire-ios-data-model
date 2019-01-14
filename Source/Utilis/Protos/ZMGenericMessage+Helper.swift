@@ -166,6 +166,20 @@ extension ZMKnock: EphemeralMessageContentType {
 }
 
 @objc
+extension ZMTextJson: MessageContentType{
+    public static func text(with message: String) -> ZMTextJson {
+        let builder = ZMTextJsonBuilder()
+        builder.setContent(message)
+        return builder.build()
+    }
+    
+    public func setContent(on builder: ZMGenericMessageBuilder) {
+        builder.setTextJson(self)
+    }
+}
+
+
+@objc
 extension ZMText: EphemeralMessageContentType {
         
     public static func text(with message: String, mentions: [Mention] = [], linkPreviews: [ZMLinkPreview] = [], replyingTo quotedMessage: ZMOTRMessage? = nil) -> ZMText {
@@ -252,6 +266,8 @@ extension ZMGenericMessage {
             return ephemeral.content
         } else if hasText() {
             return text
+        } else if hasTextJson() {
+            return textJson
         } else if hasAsset() {
             return asset
         } else if hasImage() {
@@ -333,6 +349,13 @@ extension ZMGenericMessage {
         }
         if hasEphemeral() && ephemeral.hasText() {
             return ephemeral.text
+        }
+        return nil
+    }
+    
+    @objc public var jsonTextData : ZMTextJson? {
+        if hasTextJson() {
+            return textJson
         }
         return nil
     }

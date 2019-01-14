@@ -50,6 +50,10 @@ public protocol ZMConversationMessage : NSObjectProtocol {
     /// ZMDeliveryStateDelivered
     var deliveryState: ZMDeliveryState { get }
     
+    /// The textMessageData of the message. If the message has no jsonJext, it will be nil
+    var jsonTextMessageData : ZMJsonTextMessageData? { get }
+    
+    
     /// The textMessageData of the message which also contains potential link previews. If the message has no text, it will be nil
     var textMessageData : ZMTextMessageData? { get }
     
@@ -193,7 +197,10 @@ extension ZMMessage {
     
     @NSManaged public var sender : ZMUser?
     @NSManaged public var serverTimestamp : Date?
-
+    
+    @objc public var jsonTextMessageData: ZMJsonTextMessageData? {
+        return nil
+    }
     @objc public var textMessageData : ZMTextMessageData? {
         return nil
     }

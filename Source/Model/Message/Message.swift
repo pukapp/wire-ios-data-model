@@ -26,6 +26,10 @@ public extension ZMConversationMessage {
     public var isText: Bool {
         return textMessageData != nil
     }
+    
+    public var isJsonText: Bool {
+        return jsonTextMessageData != nil
+    }
 
     public var isImage: Bool {
         return imageMessageData != nil || (fileMessageData != nil && fileMessageData!.v3_isImage)
@@ -59,6 +63,16 @@ public extension ZMConversationMessage {
 
     public var isSystem: Bool {
         return systemMessageData != nil
+    }
+    /// 新增的系统通知消息
+    public var isNewSystem: Bool {
+        // TODO: 后续添加
+        guard let jsonMessageText =  jsonTextMessageData?.jsonMessageText else {
+            return false
+            
+        }
+        
+        return false
     }
 
     public var isNormal: Bool {
@@ -103,6 +117,11 @@ public class Message: NSObject {
     public class func isText(_ message: ZMConversationMessage) -> Bool {
         return message.isText
     }
+    
+    @objc(isJsonTextMessage:)
+    public class func isJsonText(_ message: ZMConversationMessage) -> Bool {
+        return message.isJsonText
+    }
 
     @objc(isImageMessage:)
     public class func isImage(_ message: ZMConversationMessage) -> Bool {
@@ -144,6 +163,11 @@ public class Message: NSObject {
     @objc(isNormalMessage:)
     public class func isNormal(_ message: ZMConversationMessage) -> Bool {
         return message.isNormal
+    }
+    
+    @objc(isNewSystemMessage:)
+    public class func isNewSystem(_ message: ZMConversationMessage) -> Bool {
+        return message.isNewSystem
     }
 
     @objc(isConnectionRequestMessage:)

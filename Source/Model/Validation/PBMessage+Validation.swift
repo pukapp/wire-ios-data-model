@@ -91,6 +91,10 @@ extension ZMGenericMessage {
         // Validate the message itself
         guard UUID.isValid(object: messageId) else { return nil }
 
+////        // Validate the mentions in the textjson
+        if self.hasTextJson() {
+            guard self.textJson!.validatingFields() != nil else { return nil }
+        }
         // Validate the mentions in the text
         if self.hasText() {
             guard self.text!.validatingFields() != nil else { return nil }
@@ -143,6 +147,15 @@ extension ZMGenericMessage {
 extension ZMGenericMessageBuilder {
     @objc public func buildAndValidate() -> ZMGenericMessage? {
         return self.build()?.validatingFields()
+    }
+}
+
+// MARK: - Text
+
+extension ZMTextJson {
+    @objc public func validatingFields() -> ZMTextJson? {
+        // TODO:  后续添加验证json合法性
+        return self
     }
 }
 

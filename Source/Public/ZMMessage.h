@@ -89,7 +89,11 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeMessageTimerUpdate
 };
 
+@protocol ZMJsonTextMessageData <NSObject>
 
+@property (nonatomic, readonly, nullable) NSString *jsonMessageText;
+
+@end
 
 @protocol ZMTextMessageData <NSObject>
 

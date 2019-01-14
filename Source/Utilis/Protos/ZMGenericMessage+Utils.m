@@ -77,6 +77,7 @@
 {
     return
     self.hasText ||
+    self.hasTextJson ||
     self.hasKnock ||
     self.hasImage ||
     self.hasReaction ||

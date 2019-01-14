@@ -63,6 +63,19 @@ extern NSString * _Nonnull const ZMMessageDeliveryStateKey;
 extern NSString * _Nonnull const ZMMessageRepliesKey;
 extern NSString * _Nonnull const ZMMessageQuoteKey;
 
+extern NSString * _Nonnull const ZMMessageJsonTextKey;
+
+// 币币兑换状态
+// 0 :  没有兑换
+// 1 :  已兑换
+// 2 :  已兑完
+typedef NS_ENUM(int16_t, ZMBiBiCashType) {
+    ZMBiBiCashTypeNone = 0,
+    ZMBiBiCashTypeGotten,
+    ZMBiBiCashTypeGottenAll,
+    ZMBiBiCashTypeExpired
+};
+
 @interface ZMMessage : ZMManagedObject
 
 +(instancetype _Nonnull )insertNewObjectInManagedObjectContext:(NSManagedObjectContext *_Nonnull)moc NS_UNAVAILABLE;
@@ -102,6 +115,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 
 @interface ZMTextMessage : ZMMessage <ZMTextMessageData>
+
+@property (nonatomic, readonly, copy) NSString * _Nullable text;
+
+@end
+
+@interface ZMJsonTextMessage : ZMMessage <ZMJsonTextMessageData>
 
 @property (nonatomic, readonly, copy) NSString * _Nullable text;
 
@@ -161,6 +180,19 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 
 @interface ZMMessage ()
+// 新增 是否是万人群内消息 默认 NO
+@property (nonatomic) BOOL isFromHugeGroup;
+// 新增是否需要回复标记,默认为false
+@property (nonatomic) BOOL isNeedReply;
+// 新增是否需要上传,默认为false
+@property (nonatomic) BOOL isNeedUpload;
+// 新增自己当前设备发送消息标记,默认为false
+@property (nonatomic) BOOL isSelfSend;
+// 标记红包是否已领取,默认为false
+@property (nonatomic) BOOL  isGet;
+// 标记币币兑换状态
+@property (nonatomic) ZMBiBiCashType bibiCashType;
+
 
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;
@@ -240,6 +272,16 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 + (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
                                decodedGenericMessage:(ZMGenericMessage * _Nonnull)genericMessage
                               inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
+
+@end
+
+@interface ZMJsonTextMessage (Internal)
+
+@property (nonatomic, copy) NSString * _Nullable text;
+
++ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
+                                         decodedGenericMessage:(ZMGenericMessage * _Nonnull)genericMessage
+                                        inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @end
 
