@@ -127,11 +127,6 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
     NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
     NSMutableOrderedSet<ZMUser *> *users = [NSMutableOrderedSet orderedSet];
     NSMutableOrderedSet<ZMUser *> *lastSyncedUsers = [NSMutableOrderedSet orderedSet];
-    // 获取对方对自己设置的智能推送状态
-    if (users.count == 1){
-        NSDictionary *user = (NSDictionary *)users[0];
-        self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[user optionalNumberForKey:ConversationInfoAutoReplyKey]];
-    }
     if (self.mutableLastServerSyncedActiveParticipants != nil) {
         lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants;
     }
@@ -144,6 +139,12 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
         }
         
         [users addObject:[ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext]];
+    }
+    
+    // 获取对方对自己设置的智能推送状态
+    if (usersInfos.count == 1){
+        NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
+        self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[userInfo optionalNumberForKey:ConversationInfoAutoReplyKey]];
     }
     
     NSMutableOrderedSet<ZMUser *> *addedUsers = [users mutableCopy];
