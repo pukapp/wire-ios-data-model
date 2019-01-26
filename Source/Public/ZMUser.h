@@ -45,7 +45,7 @@ typedef NS_ENUM(int16_t, ZMRobotState) {
 // 1 : 祖冲之机器人
 typedef NS_ENUM(int16_t, ZMRobotType) {
     ZMRobotTypeNormal = 0,
-    ZMRobotTypeZuchongzhi,
+    ZMRobotTypeZuChongZhi,
     ZMRobotTypePK
 };
 
