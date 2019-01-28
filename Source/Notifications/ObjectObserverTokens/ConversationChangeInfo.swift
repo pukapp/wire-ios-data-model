@@ -60,7 +60,11 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
-
+    /// 新增对别人的回复类型改变
+    public var replyTypeChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.autoReply))
+    }
+    
     public var languageChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.language))
     }
@@ -131,7 +135,8 @@ extension ZMConversation : ObjectInSnapshot {
     
     public override var description : String { return self.debugDescription }
     public override var debugDescription : String {
-        return ["messagesChanged: \(messagesChanged)",
+        return ["replyTypeChanged: \(replyTypeChanged)",
+                "messagesChanged: \(messagesChanged)",
                 "participantsChanged: \(participantsChanged)",
                 "nameChanged: \(nameChanged)",
                 "unreadCountChanged: \(unreadCountChanged)",
