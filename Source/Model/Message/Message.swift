@@ -87,6 +87,7 @@ public extension ZMConversationMessage {
             || isVideo
             || isAudio
             || isLocation
+            || (isJsonText && !isNewSystem)
     }
 
     public var isConnectionRequest: Bool {
