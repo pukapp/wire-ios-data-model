@@ -66,13 +66,17 @@ public extension ZMConversationMessage {
     }
     /// 新增的系统通知消息
     public var isNewSystem: Bool {
-        // TODO: 后续添加
-        guard let jsonMessageText =  jsonTextMessageData?.jsonMessageText else {
+        guard let jsonMessageData = jsonTextMessageData?.jsonMessageText?.data(using: .utf8),
+            let jsonObject = try? JSONSerialization.jsonObject(with: jsonMessageData, options: JSONSerialization.ReadingOptions.mutableContainers),
+            let dict = jsonObject as? [String: Any] else {
             return false
-            
         }
-        
-        return false
+        // 红包领取消息和币币兑付领取消息
+        if dict["msgType"] as? String == "4" || dict["msgType"] as? String == "6" {
+            return true
+        } else {
+            return false
+        }
     }
 
     public var isNormal: Bool {
