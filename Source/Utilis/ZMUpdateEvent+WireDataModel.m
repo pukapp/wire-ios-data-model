@@ -43,7 +43,9 @@
     if (self.type == ZMUpdateEventTypeUserContactJoin) {
         return [[self.payload optionalDictionaryForKey:@"user"] optionalUuidForKey:@"id"];
     }
-
+    if (self.type == ZMUpdateEventTypeConversationWalletNotify) {
+        return [NSUUID uuidWithTransportString:@"00000000-0000-0000-0000-000000000000"];
+    }
     return [self.payload optionalUuidForKey:@"from"];
 }
 
@@ -82,6 +84,7 @@
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         case ZMUpdateEventTypeConversationOtrAssetAdd:
+        case ZMUpdateEventTypeConversationWalletNotify:
         {
             ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:self];
             return [NSUUID uuidWithTransportString:message.messageId];

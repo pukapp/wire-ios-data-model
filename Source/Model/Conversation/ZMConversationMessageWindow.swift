@@ -22,14 +22,18 @@ public final class ZMConversationMessageWindow: NSObject {
     @objc public private(set) var size: UInt
     @objc public let conversation: ZMConversation
 
-    let mutableMessages: NSMutableOrderedSet
+    fileprivate let mutableMessages: NSMutableOrderedSet
 
     var activeSize: UInt {
         return min(size, UInt(conversation.messages.count))
     }
 
     @objc public var messages: NSOrderedSet {
-        return mutableMessages.reversed
+        if self.conversation.remoteIdentifier?.transportString() == "00000000-0000-0000-0000-000000000000" {
+            return mutableMessages
+        }else{
+            return mutableMessages.reversed
+        }
     }
 
     @objc public init(conversation: ZMConversation, size: UInt) {
