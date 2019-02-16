@@ -565,7 +565,7 @@ static NSString *const AiAddressKey = @"aiAddress";
         color = (ZMAccentColor) (arc4random_uniform(ZMAccentColorMax - 1) + 1);
     }
     return color;
-}
+} 
 
 // NB: This method is called with **partial** user info and @c authoritative set to false, when the update payload
 // is received from the notification stream.
