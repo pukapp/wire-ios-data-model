@@ -28,6 +28,7 @@
 @protocol ZMEditableUser <NSObject>
 
 @property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *reMark;
 @property (nonatomic) ZMAccentColor accentColorValue;
 @property (nonatomic, copy, readonly) NSString *emailAddress;
 @property (nonatomic, copy, readonly) NSString *phoneNumber;

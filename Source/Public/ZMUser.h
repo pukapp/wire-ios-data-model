@@ -98,7 +98,7 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
 /// 新增
 /// 备注
-@property (nonatomic, copy, nullable) NSString *reMark;
+@property (nonatomic, readonly, nullable) NSString *reMark;
 /// aiaddress
 @property (nonatomic, copy, nullable) NSString *aiAddress;
 // 机器人状态
