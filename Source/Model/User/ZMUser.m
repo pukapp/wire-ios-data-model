@@ -140,6 +140,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 
 @property (nonatomic) NSString *normalizedName;
 @property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *reMark;
 @property (nonatomic) ZMAccentColor accentColorValue;
 @property (nonatomic, copy) NSString *emailAddress;
 @property (nonatomic, copy) NSData *imageMediumData;
@@ -402,12 +403,13 @@ static NSString *const AiAddressKey = @"aiAddress";
 
 - (NSSet *)keysTrackedForLocalModifications
 {
-    if(self.isSelfUser) {
+    // 暂时取消自身属性检查，如有BUG继续追踪
+//    if(self.isSelfUser) {
         return [super keysTrackedForLocalModifications];
-    }
-    else {
-        return [NSSet set];
-    }
+//    }
+//    else {
+//        return [NSSet set];
+//    }
 }
 
 - (NSSet *)ignoredKeys;
@@ -959,15 +961,15 @@ static NSString *const AiAddressKey = @"aiAddress";
 
 - (void)setReMark:(NSString *)reMark {
     [self willChangeValueForKey:RemarkKey];
-    [self setPrimitiveValue:[reMark copy] forKey:RemarkKey];
+    [self setPrimitiveValue:[[reMark copy] stringByRemovingExtremeCombiningCharacters] forKey:RemarkKey];
     [self didChangeValueForKey:RemarkKey];
 }
 
-- (void)setAliasname:(NSString *)aliasname {
-    [self willChangeValueForKey:AliasnameKey];
-    [self setPrimitiveValue:[aliasname copy] forKey:AliasnameKey];
-    [self didChangeValueForKey:AliasnameKey];
-}
+//- (void)setAliasname:(NSString *)aliasname {
+//    [self willChangeValueForKey:AliasnameKey];
+//    [self setPrimitiveValue:[aliasname copy] forKey:AliasnameKey];
+//    [self didChangeValueForKey:AliasnameKey];
+//}
 
 @end
 
