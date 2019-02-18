@@ -86,7 +86,7 @@ public extension ZMConversation {
         precondition(conversationType == .oneOnOne)
 
         let other = lastServerSyncedActiveParticipants.firstObject as? ZMUser ?? connectedUser
-        if let name = other?.name, !name.isEmpty {
+        if let name = other?.newName(), !name.isEmpty {
             return name
         } else {
             return nil
