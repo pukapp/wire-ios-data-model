@@ -118,6 +118,10 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 // 群应用icon组(逗号分割)
 @property (nonatomic, copy, nullable) NSString *appletsIcon;
 
+/// 群头像
+@property (nullable, nonatomic, copy) NSString *groupImageMediumKey;
+@property (nullable, nonatomic, copy) NSString *groupImageSmallKey;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 

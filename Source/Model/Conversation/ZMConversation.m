@@ -171,6 +171,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isOpenUrlJoin;
 @dynamic joinGroupUrl;
 @dynamic appletsIcon;
+@dynamic groupImageMediumKey;
+@dynamic groupImageSmallKey;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;

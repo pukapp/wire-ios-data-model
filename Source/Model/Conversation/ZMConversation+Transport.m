@@ -77,6 +77,18 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
         self.userDefinedName = [transportData stringForKey:ConversationInfoNameKey];
     }
     
+    if(transportData[@"assets"] != [NSNull null]) {
+        NSArray *imgArr = [transportData arrayForKey:@"assets"];
+        for (NSDictionary *dic in imgArr) {
+            if ([dic[@"size"] isEqualToString:@"preview"]) {
+                self.groupImageSmallKey = dic[@"key"];
+            }
+            if ([dic[@"size"] isEqualToString:@"complete"]) {
+                self.groupImageMediumKey = dic[@"key"];
+            }
+        }
+    }
+    
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
     
     if (serverTimeStamp != nil) {
