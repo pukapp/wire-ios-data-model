@@ -23,6 +23,9 @@ extension ZMConversation : ObjectInSnapshot {
     
     @objc public static var observableKeys : Set<String> {
         return Set([#keyPath(ZMConversation.messages),
+                    #keyPath(ZMConversation.groupImageSmallKey),
+                    #keyPath(ZMConversation.groupImageMediumKey),
+                    #keyPath(ZMConversation.autoReply),
                     #keyPath(ZMConversation.lastModifiedDate),
                     #keyPath(ZMConversation.isArchived),
                     #keyPath(ZMConversation.conversationListIndicator),
@@ -60,9 +63,16 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
+    
     /// 新增对别人的回复类型改变
     public var replyTypeChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.autoReply))
+    }
+    
+    /// 头像改变
+    public var headerImgChanged : Bool {
+        return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey)) ||
+               changedKeysContain(keys:#keyPath(ZMConversation.groupImageMediumKey))
     }
     
     public var languageChanged : Bool {
@@ -78,7 +88,7 @@ extension ZMConversation : ObjectInSnapshot {
     }
 
     public var nameChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.displayName), #keyPath(ZMConversation.userDefinedName))
+        return changedKeysContain(keys: #keyPath(ZMConversation.displayName))
     }
 
     public var lastModifiedDateChanged : Bool {
@@ -137,6 +147,7 @@ extension ZMConversation : ObjectInSnapshot {
     public override var debugDescription : String {
         return ["replyTypeChanged: \(replyTypeChanged)",
                 "messagesChanged: \(messagesChanged)",
+                "headerImgChanged: \(headerImgChanged)",
                 "participantsChanged: \(participantsChanged)",
                 "nameChanged: \(nameChanged)",
                 "unreadCountChanged: \(unreadCountChanged)",
