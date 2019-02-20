@@ -254,6 +254,8 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
             return ZMConversationTypeOneOnOne;
         case ZMConvConnection:
             return ZMConversationTypeConnection;
+        case ZMConvTypeHugeGroup:
+            return ZMConversationTypeHugeGroup;
         default:
             NOT_USED(ZMConvTypeSelf);
             return ZMConversationTypeSelf;
