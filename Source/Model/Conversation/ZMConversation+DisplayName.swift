@@ -36,6 +36,7 @@ public extension ZMConversation {
         case .oneOnOne, .connection: return result ?? ZMConversation.emptyConversationEllipsis
         case .group: return result ?? ZMConversation.emptyGroupConversationName
         case .self, .invalid: return result ?? ""
+        case .hugeGroup: return "万人群" // TODO: "万人群"
         }
     }
     
@@ -49,6 +50,8 @@ public extension ZMConversation {
         case .oneOnOne: return oneOnOneDisplayName()
         case .self: return managedObjectContext.map(ZMUser.selfUser)?.name
         case .invalid: return nil
+        case .hugeGroup:
+            return "万人群" // TODO: "万人群"
         }
     }
     
