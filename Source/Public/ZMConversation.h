@@ -44,6 +44,7 @@ typedef NS_ENUM(int16_t, ZMConversationType) {
     ZMConversationTypeOneOnOne,
     ZMConversationTypeGroup,
     ZMConversationTypeConnection, // Incoming & outgoing connection request
+    ZMConversationTypeHugeGroup, // 万人群 type=5
 };
 
 /// The current indicator to be shown for a conversation in the conversation list.
