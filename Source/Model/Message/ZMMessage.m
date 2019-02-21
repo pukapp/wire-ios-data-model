@@ -1148,7 +1148,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 - (void)deleteEphemeral;
 {
     ZMLogDebug(@"deleting ephemeral %@", self.nonce.transportString);
-    if (self.conversation.conversationType != ZMConversationTypeGroup) {
+    if (self.conversation.conversationType != ZMConversationTypeGroup &&
+        self.conversation.conversationType != ZMConversationTypeHugeGroup) {
         self.destructionDate = nil;
     }
     [ZMMessage deleteForEveryone:self];

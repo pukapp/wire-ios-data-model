@@ -250,7 +250,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 + (NSPredicate *)predicateForObjectsThatNeedToBeInsertedUpstream;
 {
     NSPredicate *superPredicate = [super predicateForObjectsThatNeedToBeInsertedUpstream];
-    NSPredicate *onlyGoupPredicate = [NSPredicate predicateWithFormat:@"%K == %@", ZMConversationConversationTypeKey, @(ZMConversationTypeGroup)];
+    NSPredicate *onlyGoupPredicate = [NSPredicate predicateWithFormat:@"(%K == %@) OR (%K == %@)",
+                                      ZMConversationConversationTypeKey, @(ZMConversationTypeGroup),
+                                      ZMConversationConversationTypeKey, @(ZMConversationTypeHugeGroup)];
     return [NSCompoundPredicate andPredicateWithSubpredicates:@[superPredicate, onlyGoupPredicate]];
 }
 
@@ -296,7 +298,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 {
     NSMutableOrderedSet *activeParticipants = [NSMutableOrderedSet orderedSet];
     
-    if (self.internalConversationType != ZMConversationTypeGroup) {
+    if (self.internalConversationType != ZMConversationTypeGroup &&
+        self.internalConversationType != ZMConversationTypeHugeGroup) {
         [activeParticipants addObject:[ZMUser selfUserInContext:self.managedObjectContext]];
         if (self.connectedUser != nil) {
             [activeParticipants addObject:self.connectedUser];
@@ -420,7 +423,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     (self.conversationType == ZMConversationTypeInvalid) ||
     (self.conversationType == ZMConversationTypeSelf) ||
     (self.conversationType == ZMConversationTypeConnection) ||
-    (self.conversationType == ZMConversationTypeGroup && !self.isSelfAnActiveMember);
+    (self.conversationType == ZMConversationTypeGroup && !self.isSelfAnActiveMember) ||
+    (self.conversationType == ZMConversationTypeHugeGroup && !self.isSelfAnActiveMember);
 }
 
 + (NSSet *)keyPathsForValuesAffectingIsReadOnly;
@@ -552,7 +556,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     // 2. Has no name given.
     // 3. Conversation has only one other participant.
     // 4. This participant is not a service user (bot).
-    if (conversationType == ZMConversationTypeGroup &&
+    if ((conversationType == ZMConversationTypeGroup ||
+         conversationType == ZMConversationTypeHugeGroup) &&
         self.teamRemoteIdentifier != nil &&
         self.lastServerSyncedActiveParticipants.count == 1 &&
         !self.lastServerSyncedActiveParticipants.firstObject.isServiceUser &&
@@ -862,7 +867,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     //  3. It does not have a custom display name
 
     NSPredicate *sameTeam = [ZMConversation predicateForConversationsInTeam:team];
-    NSPredicate *groupConversation = [NSPredicate predicateWithFormat:@"%K == %d", ZMConversationConversationTypeKey, ZMConversationTypeGroup];
+    NSPredicate *groupConversation = [NSPredicate predicateWithFormat:@"(%K == %d) OR (%K == %d)",
+                                      ZMConversationConversationTypeKey, ZMConversationTypeGroup,
+                                      ZMConversationConversationTypeKey, ZMConversationTypeHugeGroup];
     NSPredicate *noUserDefinedName = [NSPredicate predicateWithFormat:@"%K == NULL", ZMConversationUserDefinedNameKey];
     NSPredicate *sameParticipant = [NSPredicate predicateWithFormat:@"%K.@count == 1 AND %@ IN %K ", ZMConversationLastServerSyncedActiveParticipantsKey, participant, ZMConversationLastServerSyncedActiveParticipantsKey];
     NSCompoundPredicate *compoundPredicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[sameTeam, groupConversation,noUserDefinedName, sameParticipant]];

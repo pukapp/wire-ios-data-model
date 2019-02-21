@@ -69,7 +69,7 @@ public extension ZMConversation {
     }
 
     private func groupDisplayName() -> String? {
-        precondition(conversationType == .group)
+        precondition([.group, .hugeGroup].contains(conversationType))
 
         if let userDefined = userDefinedName, !userDefined.isEmpty {
             return userDefined

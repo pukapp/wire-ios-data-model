@@ -159,7 +159,7 @@ extension ZMGenericMessage {
         }
 
         func recipientsForDeletedEphemeral() -> Set<ZMUser>? {
-            guard (self.hasDeleted() && conversation.conversationType == .group ) else { return nil }
+            guard self.hasDeleted() && [.group, .hugeGroup].contains(conversation.conversationType) else { return nil }
             let nonce = UUID(uuidString: self.deleted.messageId)
             guard let message = ZMMessage.fetch(withNonce:nonce, for:conversation, in:conversation.managedObjectContext!) else { return nil }
             guard message.destructionDate != nil else { return nil }
