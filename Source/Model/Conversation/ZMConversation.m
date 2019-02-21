@@ -467,6 +467,20 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                      allowGuests:allowGuests];
 }
 
++ (nonnull instancetype)insertHugeGroupConversationIntoUserSession:(nonnull id<ZMManagedObjectContextProvider> )session
+                                                  withParticipants:(nonnull NSArray<ZMUser *> *)participants
+                                                              name:(nullable NSString*)name
+                                                            inTeam:(nullable Team *)team
+                                                       allowGuests:(BOOL)allowGuests
+{
+    VerifyReturnNil(session != nil);
+    return [self insertHugeGroupConversationIntoManagedObjectContext:session.managedObjectContext
+                                                    withParticipants:participants
+                                                                name:name
+                                                              inTeam:team
+                                                         allowGuests:allowGuests];
+}
+
 + (instancetype)existingOneOnOneConversationWithUser:(ZMUser *)otherUser inUserSession:(id<ZMManagedObjectContextProvider>)session;
 {
     NOT_USED(session);
@@ -924,6 +938,51 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     [conversation appendNewConversationSystemMessageIfNeeded];
     return conversation;
 }
+
++ (nullable instancetype)insertHugeGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc
+                                                            withParticipants:(nonnull NSArray <ZMUser *>*)participants
+                                                                        name:(nullable NSString *)name
+                                                                      inTeam:(nullable Team *)team
+                                                                 allowGuests:(BOOL)allowGuests
+{
+    ZMUser *selfUser = [ZMUser selfUserInContext:moc];
+
+    if (nil != team && !selfUser.canCreateConversation) {
+        return nil;
+    }
+
+    ZMConversation *conversation = (ZMConversation *)[super insertNewObjectInManagedObjectContext:moc];
+    conversation.lastModifiedDate = [NSDate date];
+    conversation.conversationType = ZMConversationTypeHugeGroup;
+    conversation.creator = selfUser;
+    conversation.team = team;
+    conversation.userDefinedName = name;
+    if (nil != team) {
+        conversation.allowGuests = allowGuests;
+    }
+
+    // TODO: 万人群需要吗？
+    for (ZMUser *participant in participants) {
+        Require([participant isKindOfClass:[ZMUser class]]);
+        const BOOL isSelf = (participant == selfUser);
+        RequireString(!isSelf, "Can't pass self user as a participant of a group conversation");
+        if(!isSelf) {
+            [conversation internalAddParticipants:[NSSet setWithObject:participant]];
+        }
+    }
+
+    NSMutableSet *allClients = [NSMutableSet set];
+    for (ZMUser *user in conversation.activeParticipants) {
+        [allClients unionSet:user.clients];
+    }
+
+    // TODO: 万人群需要吗？
+    // We need to check if we should add a 'secure' system message in case all participants are trusted
+    [conversation increaseSecurityLevelIfNeededAfterTrustingClients:allClients];
+    [conversation appendNewConversationSystemMessageIfNeeded];
+    return conversation;
+}
+
 
 + (NSPredicate *)predicateForSearchQuery:(NSString *)searchQuery team:(Team *)team
 {
