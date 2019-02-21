@@ -38,6 +38,7 @@
 @class ZMGenericMessage;
 @class ZMSystemMessage;
 @class Team;
+@class UserAliasname;
 
 NS_ASSUME_NONNULL_BEGIN
 extern NSString *const ZMConversationConnectionKey;
@@ -48,6 +49,7 @@ extern NSString *const ZMConversationIsSelfAnActiveMemberKey;
 extern NSString *const ZMConversationMutedStatusKey;
 extern NSString *const ZMConversationMessagesKey;
 extern NSString *const ZMConversationHiddenMessagesKey;
+extern NSString *const ZMConversationMembersAliasnameKey;
 extern NSString *const ZMConversationLastServerSyncedActiveParticipantsKey;
 extern NSString *const ZMConversationHasUnreadKnock;
 extern NSString *const ZMConversationUserDefinedNameKey;
@@ -63,6 +65,7 @@ extern NSString *const ZMConversationLastServerTimeStampKey;
 extern NSString *const ZMConversationClearedTimeStampKey;
 extern NSString *const ZMConversationArchivedChangedTimeStampKey;
 extern NSString *const ZMConversationSilencedChangedTimeStampKey;
+
 
 extern NSString *const ZMNotificationConversationKey;
 extern NSString *const ZMConversationRemoteIdentifierDataKey;
@@ -81,9 +84,15 @@ extern NSString *const ZMConversationLastReadLocalTimestampKey;
 
 extern NSString *const SecurityLevelKey;
 
-// 新增智能回复
+// 新增
 extern NSString *const ZMConversationAutoReplyKey;
 extern NSString *const ZMConversationAutoReplyFromOtherKey;
+
+extern NSString *const ZMConversationSelfRemarkKey;
+extern NSString *const ZMConversationIsOpenCreatorInviteVerifyKey;
+extern NSString *const ZMConversationOnlyCreatorInviteKey;
+extern NSString *const ZMConversationOpenUrlJoinKey;
+extern NSString *const CreatorKey;
 
 NS_ASSUME_NONNULL_END
 
@@ -121,6 +130,7 @@ NS_ASSUME_NONNULL_END
 @property (nonatomic, nullable) NSUUID *teamRemoteIdentifier;
 @property (readonly, nonatomic, nonnull) NSMutableOrderedSet *mutableMessages;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *hiddenMessages;
+@property (readonly, nonatomic, nonnull) NSOrderedSet<UserAliasname *> *membersAliasname;
 @property (nonatomic, nullable) ZMConnection *connection;
 @property (readonly, nonatomic) enum ZMConnectionStatus relatedConnectionState; // This is a computed property, needed for snapshoting
 @property (nonatomic, nonnull) ZMUser *creator;

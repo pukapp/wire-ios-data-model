@@ -54,6 +54,7 @@ NSString *const ZMConversationIsSelfAnActiveMemberKey = @"isSelfAnActiveMember";
 NSString *const ZMConversationMutedStatusKey = @"mutedStatus";
 NSString *const ZMConversationMessagesKey = @"messages";
 NSString *const ZMConversationHiddenMessagesKey = @"hiddenMessages";
+NSString *const ZMConversationMembersAliasnameKey = @"membersAliasname";
 NSString *const ZMConversationLastServerSyncedActiveParticipantsKey = @"lastServerSyncedActiveParticipants";
 NSString *const ZMConversationHasUnreadKnock = @"hasUnreadKnock";
 NSString *const ZMConversationUserDefinedNameKey = @"userDefinedName";
@@ -79,8 +80,13 @@ NSString *const SecurityLevelKey = @"securityLevel";
 NSString *const ZMConversationAutoReplyKey = @"autoReply";
 NSString *const ZMConversationAutoReplyFromOtherKey = @"autoReplyFromOther";
 
+NSString *const ZMConversationSelfRemarkKey = @"selfRemark";
+NSString *const ZMConversationIsOpenCreatorInviteVerifyKey = @"isOpenCreatorInviteVerify";
+NSString *const ZMConversationOnlyCreatorInviteKey = @"isOnlyCreatorInvite";
+NSString *const ZMConversationOpenUrlJoinKey   = @"isOpenUrlJoin";
+
 static NSString *const ConnectedUserKey = @"connectedUser";
-static NSString *const CreatorKey = @"creator";
+NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
 static NSString *const IsPendingConnectionConversationKey = @"isPendingConnectionConversation";
 static NSString *const LastModifiedDateKey = @"lastModifiedDate";
@@ -166,11 +172,19 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic silencedChangedTimestamp;
 @dynamic team;
 // 新增
+
+@dynamic selfRemark;
+
 @dynamic autoReply;
 @dynamic autoReplyFromOther;
+
 @dynamic isOpenUrlJoin;
+@dynamic isOpenCreatorInviteVerify;
+@dynamic isOnlyCreatorInvite;
+
 @dynamic joinGroupUrl;
 @dynamic appletsIcon;
+
 @dynamic groupImageMediumKey;
 @dynamic groupImageSmallKey;
 
@@ -366,6 +380,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             ZMConversationHasUnreadUnsentMessageKey,
             ZMConversationMessagesKey,
             ZMConversationHiddenMessagesKey,
+            ZMConversationMembersAliasnameKey,
             ZMConversationLastServerTimeStampKey,
             SecurityLevelKey,
             ZMConversationLastUnreadKnockDateKey,
@@ -390,7 +405,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             AccessRoleStringKey,
             LanguageKey,
             //、 新增
-            ZMConversationAutoReplyFromOtherKey,
+            ZMConversationAutoReplyFromOtherKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
@@ -683,6 +698,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic lastModifiedDate;
 @dynamic normalizedUserDefinedName;
 @dynamic hiddenMessages;
+@dynamic membersAliasname;
 
 + (NSSet *)keyPathsForValuesAffectingIsArchived
 {

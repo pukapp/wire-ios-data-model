@@ -49,6 +49,16 @@ NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 // 新增
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
+NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
+NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
+
+NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
+NSString *const ZMConversationInfoOTRCreatorChangeKey = @"creator";
+NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
+NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
+
+NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-000000000000";
+
 @implementation ZMConversation (Transport)
 
 - (void)updateClearedFromPostPayloadEvent:(ZMUpdateEvent *)event
@@ -132,6 +142,7 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
         // Backend is sending the miliseconds, we need to convert to seconds.
         self.syncedMessageDestructionTimeout = messageTimerNumber.doubleValue / 1000;
     }
+    [UserAliasname createFromTransportData:transportData managedObjectContext:self.managedObjectContext inConversation:self];
 }
 
 - (void)updateMembersWithPayload:(NSDictionary *)members
@@ -206,6 +217,7 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
             [self updateCleared:timeStamp synchronize:NO];
         }
     }
+    self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
 }
 
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary

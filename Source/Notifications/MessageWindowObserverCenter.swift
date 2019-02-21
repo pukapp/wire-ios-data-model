@@ -156,7 +156,7 @@ class MessageWindowSnapshot : NSObject, ZMConversationObserver, ZMMessageObserve
     /// Processes conversationChangeInfo for conversations in window when messages changed
     func conversationDidChange(_ changeInfo: ConversationChangeInfo) {
         guard let conversation = conversation, changeInfo.conversation == conversation else { return }
-        if(changeInfo.messagesChanged || changeInfo.clearedChanged) {
+        if(changeInfo.messagesChanged || changeInfo.clearedChanged || changeInfo.selfRemarkChanged || changeInfo.headerImgChanged || changeInfo.replyTypeChanged) {
             shouldRecalculate = true
             zmLog.debug("Recalculating window due to conversation change \(changeInfo.customDebugDescription)")
         }

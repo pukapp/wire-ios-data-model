@@ -38,6 +38,7 @@
     <entity name="Conversation" representedClassName="ZMConversation" syncable="YES">
         <attribute name="accessModeStrings" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="accessRoleString" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="appletsIcon" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="archivedChangedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="autoReply" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="autoReplyFromOther" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
@@ -51,7 +52,11 @@
         <attribute name="internalEstimatedUnreadSelfMentionCount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="internalEstimatedUnreadSelfReplyCount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="internalIsArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isOnlyCreatorInvite" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isOpenCreatorInviteVerify" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isOpenUrlJoin" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isSelfAnActiveMember" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="joinGroupUrl" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="language" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="lastModifiedDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastReadServerTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
@@ -66,6 +71,7 @@
         <attribute name="remoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="remoteIdentifier_data" optional="YES" attributeType="Binary" indexed="YES" syncable="YES"/>
         <attribute name="securityLevel" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="selfRemark" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="silencedChangedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="syncedMessageDestructionTimeout" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="teamRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
@@ -76,6 +82,7 @@
         <relationship name="creator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="conversationsCreated" inverseEntity="User" syncable="YES"/>
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="lastServerSyncedActiveParticipants" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="User" inverseName="lastServerSyncedActiveConversations" inverseEntity="User" syncable="YES"/>
+        <relationship name="membersAliasname" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="conversations" inverseEntity="Team" syncable="YES"/>
         <compoundIndexes>
@@ -235,6 +242,11 @@
         <relationship name="showingUserRemoved" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="removedUsers" inverseEntity="SystemMessage" syncable="YES"/>
         <relationship name="systemMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="users" inverseEntity="SystemMessage" syncable="YES"/>
     </entity>
+    <entity name="UserAliasname" syncable="YES">
+        <attribute name="aliasName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="remoteIdentifier" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="inConverstion" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="membersAliasname" inverseEntity="Conversation" syncable="YES"/>
+    </entity>
     <entity name="UserClient" representedClassName=".UserClient" syncable="YES">
         <attribute name="activationAddress" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="activationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
@@ -270,7 +282,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="225"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="0" positionY="0" width="128" height="675"/>
+        <element name="Conversation" positionX="0" positionY="0" width="128" height="780"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-234" positionY="27" width="128" height="60"/>
@@ -285,5 +297,6 @@
         <element name="TextMessage" positionX="-153" positionY="-117" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="765"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="465"/>
+        <element name="UserAliasname" positionX="-225" positionY="36" width="128" height="90"/>
     </elements>
 </model>

@@ -105,7 +105,8 @@ public class ConversationListObserverCenter : NSObject, ZMConversationObserver, 
         guard    changes.nameChanged              || changes.connectionStateChanged  || changes.isArchivedChanged
               || changes.mutedMessageTypesChanged || changes.lastModifiedDateChanged || changes.conversationListIndicatorChanged
               || changes.clearedChanged           || changes.securityLevelChanged    || changes.teamChanged
-              || changes.messagesChanged
+              || changes.messagesChanged          || changes.selfRemarkChanged       || changes.headerImgChanged
+              || changes.replyTypeChanged
         else { return }
         zmLog.debug("conversationDidChange with changes \(changes.customDebugDescription)")
         forwardToSnapshots{$0.processConversationChanges(changes)}

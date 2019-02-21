@@ -32,6 +32,14 @@ extern NSString *const ZMConversationInfoOTRMutedReferenceKey;
 extern NSString *const ZMConversationInfoOTRMutedStatusValueKey;
 extern NSString *const ZMConversationInfoOTRArchivedValueKey;
 extern NSString *const ZMConversationInfoOTRArchivedReferenceKey;
+//new add
+extern NSString *const ZMConversationInfoOTRSelfRemarkBoolKey;
+extern NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey;
+extern NSString *const ZMPayConversationRemoteID;
+extern NSString *const ZMConversationInfoOTRSelfVerifyKey;
+extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
+extern NSString *const ZMConversationInfoOTRCanAddKey;
+extern NSString *const ZMCOnversationInfoOTROpenUrlJoinKey;
 
 @interface ZMConversation (Transport)
 

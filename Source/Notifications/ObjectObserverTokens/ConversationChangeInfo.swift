@@ -23,9 +23,6 @@ extension ZMConversation : ObjectInSnapshot {
     
     @objc public static var observableKeys : Set<String> {
         return Set([#keyPath(ZMConversation.messages),
-                    #keyPath(ZMConversation.groupImageSmallKey),
-                    #keyPath(ZMConversation.groupImageMediumKey),
-                    #keyPath(ZMConversation.autoReply),
                     #keyPath(ZMConversation.lastModifiedDate),
                     #keyPath(ZMConversation.isArchived),
                     #keyPath(ZMConversation.conversationListIndicator),
@@ -43,7 +40,11 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.remoteIdentifier),
                     #keyPath(ZMConversation.localMessageDestructionTimeout),
                     #keyPath(ZMConversation.syncedMessageDestructionTimeout),
-                    #keyPath(ZMConversation.language)
+                    #keyPath(ZMConversation.language),
+                    //new add
+                    #keyPath(ZMConversation.groupImageSmallKey),
+                    #keyPath(ZMConversation.groupImageMediumKey),
+                    #keyPath(ZMConversation.autoReply),
             ])
     }
 
@@ -73,6 +74,11 @@ extension ZMConversation : ObjectInSnapshot {
     public var headerImgChanged : Bool {
         return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey)) ||
                changedKeysContain(keys:#keyPath(ZMConversation.groupImageMediumKey))
+    }
+    
+    // new add
+    public var selfRemarkChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.selfRemark))
     }
     
     public var languageChanged : Bool {

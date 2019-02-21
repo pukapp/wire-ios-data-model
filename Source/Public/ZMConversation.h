@@ -117,6 +117,12 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic, copy, nullable) NSString *joinGroupUrl;
 // 群应用icon组(逗号分割)
 @property (nonatomic, copy, nullable) NSString *appletsIcon;
+//群昵称
+@property (nonatomic, copy, nullable)NSString *selfRemark;
+//是否开启群主验证邀请
+@property (nonatomic) BOOL isOpenCreatorInviteVerify;
+//是否开启仅限群主邀请
+@property (nonatomic) BOOL isOnlyCreatorInvite;
 
 /// 群头像
 @property (nullable, nonatomic, copy) NSString *groupImageMediumKey;
@@ -164,5 +170,4 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic, copy, readonly, nonnull) NSString *connectionMessage;
 
 @end
-
 
