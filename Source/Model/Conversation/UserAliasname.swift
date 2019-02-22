@@ -8,6 +8,7 @@
 
 import UIKit
 
+@objc
 @objcMembers public class UserAliasname: ZMManagedObject {
 
     public enum Fields : String {
@@ -46,21 +47,31 @@ extension UserAliasname {
         
         guard let remoteid = remoteIdentifier else {return}
         
-        guard let set = inConversation?.membersAliasname else {
+        let insert = {
             let entry = UserAliasname.insertNewObject(in: managedObjectContext)
             entry.remoteIdentifier = remoteIdentifier
             entry.aliasName = aliasName
             entry.inConverstion = inConversation
+        }
+        
+        guard let set = inConversation?.membersAliasname else {
+            insert()
             return
         }
         
-        for aliasname in set {
-            guard let ali = aliasname as? UserAliasname else {continue}
+        var exist: Bool = false
+        
+        for ali in set {
             guard let id = ali.remoteIdentifier else {continue}
             if id == remoteid && ali.inConverstion?.remoteIdentifier?.transportString() == inConversation?.remoteIdentifier?.transportString() {
                 ali.aliasName = aliasName
+                exist = true
                 break
             }
+        }
+        
+        if !exist {
+            insert()
         }
     }
     
@@ -122,7 +133,7 @@ extension UserAliasname {
         guard let self_ = members["self"] as? Dictionary<String,Any> else {return}
         for other in others {
             guard let id = other["id"] as? String else {continue}
-            guard let aliasname = other["aliasname"] as? String else {return}
+            guard let aliasname = other["aliasname"] as? String else {continue}
             UserAliasname.insert(aliasName: aliasname, remoteIdentifier: id, managedObjectContext: managedObjectContext, inConversation: inConversation)
         }
         guard let self_id = self_["id"] as? String else {return}
@@ -135,12 +146,29 @@ extension UserAliasname {
         guard let conv = conversation else {return nil}
         guard let userid = userId else {return nil}
         let aliasNameEntry =  conv.membersAliasname.first { (aliasname) -> Bool in
-            guard let alias = aliasname as? UserAliasname else {return false}
-            return alias.remoteIdentifier == userid
-        } as? UserAliasname
+            return aliasname.remoteIdentifier == userid
+        }
         return aliasNameEntry?.aliasName
     }
     
+    @objc(migrateOldAliasnameWith:)
+    static public func migrateOldAliasname(with managedObjectContext:NSManagedObjectContext) {
+        let path: ()->String = {
+            let home = NSHomeDirectory() as NSString
+            return (home.appendingPathComponent("Documents") as NSString).appendingPathComponent("alinames.plist")
+        }
+        guard FileManager.default.fileExists(atPath: path()) else {return}
+        guard  let arrayData = NSKeyedUnarchiver.unarchiveObject(withFile: path()) as? NSArray else {return}
+        for item in arrayData {
+            guard let itemdic = item as? NSDictionary else {continue}
+            guard let aliasname = itemdic["aliasname"] as? String else {continue}
+            guard let userid = itemdic["userid"] as? String else {continue}
+            guard let convid = itemdic["convid"] as? String else {continue}
+            guard let convuuid = UUID(uuidString: convid) else {continue}
+            let conversation = ZMConversation(remoteID: convuuid, createIfNeeded: false, in: managedObjectContext)
+            UserAliasname.insert(aliasName: aliasname, remoteIdentifier: userid, managedObjectContext: managedObjectContext, inConversation: conversation)
+        }
+    }
     
     static private func insert(aliasName: String?,remoteIdentifier: String?, managedObjectContext: NSManagedObjectContext, inConversation: ZMConversation?) -> Void {
         let entry = UserAliasname.insertNewObject(in: managedObjectContext)
@@ -148,4 +176,5 @@ extension UserAliasname {
         entry.aliasName = aliasName
         entry.inConverstion = inConversation
     }
+    
 }

@@ -131,7 +131,6 @@ NS_ASSUME_NONNULL_END
 @property (nonatomic, nullable) NSUUID *teamRemoteIdentifier;
 @property (readonly, nonatomic, nonnull) NSMutableOrderedSet *mutableMessages;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *hiddenMessages;
-@property (readonly, nonatomic, nonnull) NSOrderedSet<UserAliasname *> *membersAliasname;
 @property (nonatomic, nullable) ZMConnection *connection;
 @property (readonly, nonatomic) enum ZMConnectionStatus relatedConnectionState; // This is a computed property, needed for snapshoting
 @property (nonatomic, nonnull) ZMUser *creator;
