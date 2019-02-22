@@ -35,6 +35,8 @@
             message = [self genericMessageWithBase64String:base64Content updateEvent:updateEvent];
         }
             break;
+            
+        case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd: {
             NSString *base64Content = [[updateEvent.payload dictionaryForKey:@"data"] stringForKey:@"text"];
             message = [self genericMessageWithBase64String:base64Content updateEvent:updateEvent];

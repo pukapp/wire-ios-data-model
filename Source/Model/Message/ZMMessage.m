@@ -465,6 +465,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case ZMUpdateEventTypeConversationKnock:
             return [[payload dictionaryForKey:@"data"] uuidForKey:@"nonce"];
 
+        case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         {
