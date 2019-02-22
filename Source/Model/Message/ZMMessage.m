@@ -466,6 +466,19 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             return [[payload dictionaryForKey:@"data"] uuidForKey:@"nonce"];
 
         case ZMUpdateEventTypeConversationBgpMessageAdd:
+        {
+            NSString *base64Content = [[payload dictionaryForKey:@"data"] stringForKey: @"text"];
+            ZMGenericMessage *message;
+            @try {
+                message = [ZMGenericMessage messageWithBase64String:base64Content];
+            }
+            @catch(NSException *e) {
+                ZMLogError(@"Cannot create message from protobuffer: %@ event payload: %@", e, payload);
+                return nil;
+            }
+            return [NSUUID uuidWithTransportString:message.messageId];
+        }
+
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         {
