@@ -188,6 +188,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic groupImageMediumKey;
 @dynamic groupImageSmallKey;
 
+@dynamic membersAliasname;
+
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
 @synthesize lastReadTimestampUpdateCounter;
@@ -698,7 +700,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic lastModifiedDate;
 @dynamic normalizedUserDefinedName;
 @dynamic hiddenMessages;
-@dynamic membersAliasname;
 
 + (NSSet *)keyPathsForValuesAffectingIsArchived
 {
