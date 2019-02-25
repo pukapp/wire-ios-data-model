@@ -35,7 +35,8 @@ public extension ZMConversation {
         switch conversationType {
         case .oneOnOne, .connection: return result ?? ZMConversation.emptyConversationEllipsis
         case .group: return result ?? ZMConversation.emptyGroupConversationName
-        case .self, .invalid: return result ?? ""
+//        case .self, .invalid: return result ?? ""
+        default: return result ?? ""
         }
     }
     
@@ -48,7 +49,8 @@ public extension ZMConversation {
         case .group: return groupDisplayName()
         case .oneOnOne: return oneOnOneDisplayName()
         case .self: return managedObjectContext.map(ZMUser.selfUser)?.name
-        case .invalid: return nil
+//        case .invalid: return nil
+        default: return nil
         }
     }
     

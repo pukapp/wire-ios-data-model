@@ -153,21 +153,21 @@ extension UserAliasname {
     
     @objc(migrateOldAliasnameWith:)
     static public func migrateOldAliasname(with managedObjectContext:NSManagedObjectContext) {
-        let path: ()->String = {
-            let home = NSHomeDirectory() as NSString
-            return (home.appendingPathComponent("Documents") as NSString).appendingPathComponent("alinames.plist")
-        }
-        guard FileManager.default.fileExists(atPath: path()) else {return}
-        guard  let arrayData = NSKeyedUnarchiver.unarchiveObject(withFile: path()) as? NSArray else {return}
-        for item in arrayData {
-            guard let itemdic = item as? NSDictionary else {continue}
-            guard let aliasname = itemdic["aliasname"] as? String else {continue}
-            guard let userid = itemdic["userid"] as? String else {continue}
-            guard let convid = itemdic["convid"] as? String else {continue}
-            guard let convuuid = UUID(uuidString: convid) else {continue}
-            let conversation = ZMConversation(remoteID: convuuid, createIfNeeded: false, in: managedObjectContext)
-            UserAliasname.insert(aliasName: aliasname, remoteIdentifier: userid, managedObjectContext: managedObjectContext, inConversation: conversation)
-        }
+//        let path: ()->String = {
+//            let home = NSHomeDirectory() as NSString
+//            return (home.appendingPathComponent("Documents") as NSString).appendingPathComponent("alinames.plist")
+//        }
+//        guard FileManager.default.fileExists(atPath: path()) else {return}
+//        guard  let arrayData = NSKeyedUnarchiver.unarchiveObject(withFile: path()) as? NSArray else {return}
+//        for item in arrayData {
+//            guard let itemdic = item as? NSDictionary else {continue}
+//            guard let aliasname = itemdic["aliasname"] as? String else {continue}
+//            guard let userid = itemdic["userid"] as? String else {continue}
+//            guard let convid = itemdic["convid"] as? String else {continue}
+//            guard let convuuid = UUID(uuidString: convid) else {continue}
+//            let conversation = ZMConversation(remoteID: convuuid, createIfNeeded: false, in: managedObjectContext)
+//            UserAliasname.insert(aliasName: aliasname, remoteIdentifier: userid, managedObjectContext: managedObjectContext, inConversation: conversation)
+//        }
     }
     
     static private func insert(aliasName: String?,remoteIdentifier: String?, managedObjectContext: NSManagedObjectContext, inConversation: ZMConversation?) -> Void {
