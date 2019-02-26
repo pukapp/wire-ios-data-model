@@ -59,7 +59,9 @@
 
 - (NSString *)senderClientID
 {
-    if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd || self.type == ZMUpdateEventTypeConversationOtrAssetAdd) {
+    if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd ||
+        self.type == ZMUpdateEventTypeConversationOtrAssetAdd ||
+        self.type == ZMUpdateEventTypeConversationBgpMessageAdd) {
         return [[self.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"sender"];
     }
     return nil;
@@ -67,7 +69,9 @@
 
 - (NSString *)recipientClientID
 {
-    if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd || self.type == ZMUpdateEventTypeConversationOtrAssetAdd) {
+    if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd ||
+        self.type == ZMUpdateEventTypeConversationOtrAssetAdd ||
+        self.type == ZMUpdateEventTypeConversationBgpMessageAdd) {
         return [[self.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"recipient"];
     }
     return nil;
@@ -80,7 +84,8 @@
         case ZMUpdateEventTypeConversationAssetAdd:
         case ZMUpdateEventTypeConversationKnock:
             return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"nonce"];
-            
+
+        case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         case ZMUpdateEventTypeConversationOtrAssetAdd:

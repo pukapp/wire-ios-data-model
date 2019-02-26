@@ -23,7 +23,7 @@ extension ZMConversation {
         guard let team = team else { return nil }
         guard let serviceID = service.serviceIdentifier else { return nil }
         let sameTeam = predicateForConversations(in: team)
-        let groupConversation = NSPredicate(format: "%K == %d", ZMConversationConversationTypeKey, ZMConversationType.group.rawValue)
+        let groupConversation = NSPredicate(format: "%K == %d OR %K == %d", ZMConversationConversationTypeKey, ZMConversationType.group.rawValue, ZMConversationConversationTypeKey, ZMConversationType.hugeGroup.rawValue)
         let selfIsActiveMember = NSPredicate(format: "%K == YES", #keyPath(ZMConversation.isSelfAnActiveMember))
         let onlyOneOtherParticipant = NSPredicate(format: "%K.@count == 1", ZMConversationLastServerSyncedActiveParticipantsKey)
         let hasParticipantWithServiceIdentifier = NSPredicate(format: "ANY %K.%K == %@", ZMConversationLastServerSyncedActiveParticipantsKey, #keyPath(ZMUser.serviceIdentifier), serviceID)

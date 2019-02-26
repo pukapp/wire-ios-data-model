@@ -465,6 +465,20 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case ZMUpdateEventTypeConversationKnock:
             return [[payload dictionaryForKey:@"data"] uuidForKey:@"nonce"];
 
+        case ZMUpdateEventTypeConversationBgpMessageAdd:
+        {
+            NSString *base64Content = [[payload dictionaryForKey:@"data"] stringForKey: @"text"];
+            ZMGenericMessage *message;
+            @try {
+                message = [ZMGenericMessage messageWithBase64String:base64Content];
+            }
+            @catch(NSException *e) {
+                ZMLogError(@"Cannot create message from protobuffer: %@ event payload: %@", e, payload);
+                return nil;
+            }
+            return [NSUUID uuidWithTransportString:message.messageId];
+        }
+
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         {
@@ -1148,7 +1162,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 - (void)deleteEphemeral;
 {
     ZMLogDebug(@"deleting ephemeral %@", self.nonce.transportString);
-    if (self.conversation.conversationType != ZMConversationTypeGroup) {
+    if (self.conversation.conversationType != ZMConversationTypeGroup &&
+        self.conversation.conversationType != ZMConversationTypeHugeGroup) {
         self.destructionDate = nil;
     }
     [ZMMessage deleteForEveryone:self];

@@ -31,12 +31,10 @@ public extension ZMConversation {
     /// fallback placeholder name is used.
     ///
     @objc public var displayName: String {
-        let result = self.meaningfulDisplayName
         switch conversationType {
-        case .oneOnOne, .connection: return result ?? ZMConversation.emptyConversationEllipsis
-        case .group: return result ?? ZMConversation.emptyGroupConversationName
-//        case .self, .invalid: return result ?? ""
-        default: return result ?? ""
+        case .oneOnOne, .connection: return meaningfulDisplayName ?? ZMConversation.emptyConversationEllipsis
+        case .group, .hugeGroup: return meaningfulDisplayName ?? ZMConversation.emptyGroupConversationName
+        default: return meaningfulDisplayName ?? ""
         }
     }
     
@@ -46,10 +44,9 @@ public extension ZMConversation {
     @objc public var meaningfulDisplayName: String? {
         switch conversationType {
         case .connection: return connectionDisplayName()
-        case .group: return groupDisplayName()
+        case .group, .hugeGroup: return groupDisplayName()
         case .oneOnOne: return oneOnOneDisplayName()
         case .self: return managedObjectContext.map(ZMUser.selfUser)?.name
-//        case .invalid: return nil
         default: return nil
         }
     }
@@ -68,7 +65,7 @@ public extension ZMConversation {
     }
 
     private func groupDisplayName() -> String? {
-        precondition(conversationType == .group)
+        precondition([.group, .hugeGroup].contains(conversationType))
 
         if let userDefined = userDefinedName, !userDefined.isEmpty {
             return userDefined

@@ -148,7 +148,7 @@ extension ZMConversation {
         guard !activeParticipants.contains(user) else { return }
         
         switch conversationType {
-        case .group:
+        case .group, .hugeGroup:
             appendSystemMessage(type: .participantsAdded, sender: user, users: Set(arrayLiteral: user), clients: nil, timestamp: date)
             internalAddParticipants(Set(arrayLiteral: user))
         case .oneOnOne, .connection:
