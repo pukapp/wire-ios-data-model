@@ -125,7 +125,6 @@
         <attribute name="destructionDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
         <attribute name="isExpired" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="isFromHugeGroup" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isGet" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isNeedReply" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isNeedUpload" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
@@ -288,7 +287,7 @@
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="135"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="435"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="420"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>

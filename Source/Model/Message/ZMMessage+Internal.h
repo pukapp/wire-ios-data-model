@@ -180,8 +180,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 
 @interface ZMMessage ()
-// 新增 是否是万人群内消息 默认 NO
-@property (nonatomic) BOOL isFromHugeGroup;
 // 新增是否需要回复标记,默认为false
 @property (nonatomic) BOOL isNeedReply;
 // 新增是否需要上传,默认为false

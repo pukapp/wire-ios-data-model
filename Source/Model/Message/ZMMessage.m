@@ -132,7 +132,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic isObfuscated;
 @dynamic normalizedText;
 
-@dynamic isFromHugeGroup;
 @dynamic isNeedReply;
 @dynamic isNeedUpload;
 @dynamic isSelfSend;
