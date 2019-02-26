@@ -45,6 +45,9 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.groupImageSmallKey),
                     #keyPath(ZMConversation.groupImageMediumKey),
                     #keyPath(ZMConversation.autoReply),
+                    #keyPath(ZMConversation.isOpenUrlJoin),
+                    #keyPath(ZMConversation.isOnlyCreatorInvite),
+                    #keyPath(ZMConversation.isOpenCreatorInviteVerify),
             ])
     }
 
@@ -74,6 +77,16 @@ extension ZMConversation : ObjectInSnapshot {
     public var headerImgChanged : Bool {
         return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey)) ||
                changedKeysContain(keys:#keyPath(ZMConversation.groupImageMediumKey))
+    }
+    
+    /// 开启链接加入允许开启
+    public var canOpenUrlChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite)) ||
+               changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
+    }
+    
+    public var openUrlChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOpenUrlJoin))
     }
     
     // new add
@@ -154,6 +167,7 @@ extension ZMConversation : ObjectInSnapshot {
         return ["replyTypeChanged: \(replyTypeChanged)",
                 "messagesChanged: \(messagesChanged)",
                 "headerImgChanged: \(headerImgChanged)",
+                "canOpenUrlChanged: \(canOpenUrlChanged)",
                 "participantsChanged: \(participantsChanged)",
                 "nameChanged: \(nameChanged)",
                 "unreadCountChanged: \(unreadCountChanged)",
