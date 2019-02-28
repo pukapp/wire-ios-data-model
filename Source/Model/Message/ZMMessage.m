@@ -370,7 +370,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 + (void)addReaction:(ZMReaction *)reaction senderID:(NSUUID *)senderID conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
-    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
+//    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
+    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
+    ZMUser *user = [ZMUser userWithRemoteID:senderID createIfNeeded:YES inContext:moc];
     NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
     ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
                                                forConversation:conversation
