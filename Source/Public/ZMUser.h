@@ -106,6 +106,8 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 @property (nonatomic) ZMRobotState zuChongZhiState;
 @property (nonatomic) ZMRobotState pkRobotState;
 @property (nonatomic) ZMRobotType robotType;
+// 钱包开启状态
+@property (nonatomic) BOOL walletOpened;
 
 /// Request a refresh of the user data from the backend.
 /// This is useful for non-connected user, that we will otherwise never refetch

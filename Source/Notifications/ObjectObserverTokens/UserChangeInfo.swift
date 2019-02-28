@@ -43,7 +43,8 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.clients),
             #keyPath(ZMUser.handle),
             #keyPath(ZMUser.team),
-            #keyPath(ZMUser.availability)
+            #keyPath(ZMUser.availability),
+            #keyPath(ZMUser.walletOpened),
         ]
     }
 
@@ -134,6 +135,10 @@ extension ZMUser : ObjectInSnapshot {
     
     public var availabilityChanged : Bool {
         return changedKeys.contains(#keyPath(ZMUser.availability))
+    }
+    
+    public var walletStateChanged : Bool {
+        return changedKeysContain(keys:#keyPath(ZMUser.walletOpened))
     }
 
     public let user: UserType

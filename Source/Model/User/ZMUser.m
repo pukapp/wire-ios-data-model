@@ -207,6 +207,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 @dynamic zuChongZhiState;
 @dynamic robotType;
 @dynamic pkRobotState;
+@dynamic walletOpened;
 
 
 - (NSString *)newName;
@@ -605,6 +606,9 @@ static NSString *const AiAddressKey = @"aiAddress";
     NSString *address = [transportData optionalStringForKey:@"user_address"];
     if (address != nil || authoritative) {
         self.aiAddress = address;
+    }
+    if (transportData[@"wallet"] != [NSNull null]) {
+        self.walletOpened = [transportData[@"wallet"] boolValue];
     }
     
     NSArray *robotStateArray = [transportData optionalArrayForKey:@"bots"];

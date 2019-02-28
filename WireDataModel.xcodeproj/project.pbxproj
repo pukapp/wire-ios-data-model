@@ -788,6 +788,7 @@
 		EB76B3EC2223E45300877083 /* zmessaging2.4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.4.xcdatamodel; sourceTree = "<group>"; };
 		EB76B3ED2223E45300877083 /* zmessaging1.28.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging1.28.xcdatamodel; sourceTree = "<group>"; };
 		EB76B3EE2223E45300877083 /* zmessaging2.39.3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.39.3.xcdatamodel; sourceTree = "<group>"; };
+		EBEC06332227ECC400F7850C /* zmessaging2.39.12.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.39.12.xcdatamodel; sourceTree = "<group>"; };
 		EBFAD003222400D40073BA66 /* zmessaging2.40.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.40.0.xcdatamodel; sourceTree = "<group>"; };
 		EEA9C5061F3C9F3500DC39EC /* PersistentStorageInitialization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistentStorageInitialization.swift; sourceTree = "<group>"; };
 		EEE83B491FBB496B00FC0296 /* ZMMessageTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMMessageTimerTests.swift; sourceTree = "<group>"; };
@@ -2932,6 +2933,7 @@
 		EB76B3C72223E45300877083 /* zmessaging.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				EBEC06332227ECC400F7850C /* zmessaging2.39.12.xcdatamodel */,
 				EBFAD003222400D40073BA66 /* zmessaging2.40.0.xcdatamodel */,
 				EB76B3CB2223E45300877083 /* zmessaging2.39.11.xcdatamodel */,
 				EB76B3C82223E45300877083 /* zmessaging2.25.0.xcdatamodel */,
