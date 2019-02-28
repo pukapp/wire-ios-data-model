@@ -375,7 +375,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         NSString * const KeysIgnoredForTrackingModifications[] = {
             ZMConversationConnectionKey,
             ZMConversationConversationTypeKey,
-            CreatorKey,
             DraftMessageDataKey,
             LastModifiedDateKey,
             ZMNormalizedUserDefinedNameKey,
