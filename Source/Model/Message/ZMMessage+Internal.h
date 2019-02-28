@@ -190,7 +190,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL  isGet;
 // 标记币币兑换状态
 @property (nonatomic) ZMBiBiCashType bibiCashType;
-
+// 群主是否确认邀请
+@property (nonatomic) BOOL isConfrimInvite;
 
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;

@@ -137,6 +137,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic isSelfSend;
 @dynamic isGet;
 @dynamic bibiCashType;
+@dynamic isConfrimInvite;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
