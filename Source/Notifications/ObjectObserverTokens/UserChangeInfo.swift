@@ -44,6 +44,9 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.handle),
             #keyPath(ZMUser.team),
             #keyPath(ZMUser.availability),
+            #keyPath(ZMUser.zuChongZhiState),
+            #keyPath(ZMUser.pkRobotState),
+            #keyPath(ZMUser.darwinState),
             #keyPath(ZMUser.walletOpened),
         ]
     }
@@ -135,6 +138,10 @@ extension ZMUser : ObjectInSnapshot {
     
     public var availabilityChanged : Bool {
         return changedKeys.contains(#keyPath(ZMUser.availability))
+    }
+    
+    public var robotStateChanged : Bool {
+        return changedKeysContain(keys:#keyPath(ZMUser.zuChongZhiState), #keyPath(ZMUser.pkRobotState), #keyPath(ZMUser.darwinState))
     }
     
     public var walletStateChanged : Bool {
