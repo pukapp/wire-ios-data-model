@@ -29,11 +29,7 @@ public final class ZMConversationMessageWindow: NSObject {
     }
 
     @objc public var messages: NSOrderedSet {
-        if self.conversation.remoteIdentifier?.transportString() == "00000000-0000-0000-0000-000000000000" {
-            return mutableMessages
-        }else{
-            return mutableMessages.reversed
-        }
+        return mutableMessages.reversed
     }
 
     @objc public init(conversation: ZMConversation, size: UInt) {
