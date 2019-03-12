@@ -49,7 +49,7 @@ public extension ZMGenericMessage {
     
     @objc
     public static func message(withBase64String base64String: String) -> ZMGenericMessage? {
-        guard let data = Data(base64Encoded: base64String) else { return nil }
+        guard let data = Data(base64Encoded: base64String, options: .ignoreUnknownCharacters) else { return nil }
         
         let builder = ZMGenericMessageBuilder()
         builder.merge(from: data)
