@@ -48,7 +48,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.isOpenUrlJoin),
                     #keyPath(ZMConversation.isOnlyCreatorInvite),
                     #keyPath(ZMConversation.isOpenCreatorInviteVerify),
-                    #keyPath(ZMConversation.creator)
+                    #keyPath(ZMConversation.creator),
+                    #keyPath(ZMConversation.selfRemark),
             ])
     }
 
@@ -84,6 +85,10 @@ extension ZMConversation : ObjectInSnapshot {
     public var canOpenUrlChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite)) ||
                changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
+    }
+    
+    public var conversationSelfRemarkChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.selfRemark))
     }
     
     public var groupCreatorChanged: Bool {
