@@ -53,7 +53,7 @@ NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
 
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
-NSString *const ZMConversationInfoOTRCreatorChangeKey = @"creator";
+NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 
