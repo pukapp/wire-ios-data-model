@@ -44,6 +44,7 @@ extern NSString * __nonnull const AvailabilityKey;
 @property (nonnull, nonatomic) NSSet<Team *> *createdTeams;
 
 @property (nonnull, nonatomic, readonly) NSString *normalizedName;
+@property (nonnull, nonatomic, readonly) NSString *normalizedRemark;
 @property (nonnull, nonatomic, readonly) NSString *normalizedEmailAddress;
 
 @property (nullable, nonatomic) NSData *imageMediumData;

@@ -48,6 +48,7 @@ static NSString *const SelfUserObjectIDKey = @"ZMSelfUserManagedObjectID";
 static NSString *const SessionObjectIDAsStringKey = @"SessionObjectID";
 static NSString *const SelfUserKey = @"ZMSelfUser";
 static NSString *const NormalizedNameKey = @"normalizedName";
+static NSString *const NormalizedRemarkKey = @"normalizedRemark";
 static NSString *const NormalizedEmailAddressKey = @"normalizedEmailAddress";
 static NSString *const RemoteIdentifierKey = @"remoteIdentifier";
 
@@ -141,6 +142,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 @property (nonatomic) NSString *normalizedName;
 @property (nonatomic, copy) NSString *name;
 @property (nonatomic, copy) NSString *reMark;
+@property (nonatomic) NSString *normalizedRemark;
 @property (nonatomic) ZMAccentColor accentColorValue;
 @property (nonatomic, copy) NSString *emailAddress;
 @property (nonatomic, copy) NSData *imageMediumData;
@@ -196,6 +198,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 @dynamic name;
 @dynamic normalizedEmailAddress;
 @dynamic normalizedName;
+@dynamic normalizedRemark;
 @dynamic phoneNumber;
 @dynamic clients;
 @dynamic handle;
@@ -399,6 +402,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 @implementation ZMUser (Internal)
 
 @dynamic normalizedName;
+@dynamic normalizedRemark;
 @dynamic connection;
 @dynamic showingUserAdded;
 @dynamic showingUserRemoved;
@@ -423,6 +427,7 @@ static NSString *const AiAddressKey = @"aiAddress";
         NSMutableSet *ignoredKeys = [[super ignoredKeys] mutableCopy];
         [ignoredKeys addObjectsFromArray:@[
                                            NormalizedNameKey,
+                                           NormalizedRemarkKey,
                                            ConversationsCreatedKey,
                                            ActiveCallConversationsKey,
                                            ConnectionKey,
@@ -969,6 +974,7 @@ static NSString *const AiAddressKey = @"aiAddress";
     [self willChangeValueForKey:RemarkKey];
     [self setPrimitiveValue:[[reMark copy] stringByRemovingExtremeCombiningCharacters] forKey:RemarkKey];
     [self didChangeValueForKey:RemarkKey];
+    self.normalizedRemark = [self.reMark normalizedString];
 }
 
 //- (void)setAliasname:(NSString *)aliasname {

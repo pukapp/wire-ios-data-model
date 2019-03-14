@@ -173,7 +173,9 @@ extension ZMUser {
             let namePredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedName) : "%K MATCHES %@"], matchingSearch: normalizedQuery)
             let normalizedHandle = normalizedQuery.strippingLeadingAtSign()
             let handlePredicate = NSPredicate(format: "%K BEGINSWITH %@", #keyPath(ZMUser.handle), normalizedHandle)
-            allPredicates.append([namePredicate, handlePredicate].compactMap {$0})
+            ///新增备注搜索
+            let remarkPredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedRemark) : "%K MATCHES %@"], matchingSearch: normalizedQuery)
+            allPredicates.append([namePredicate, handlePredicate, remarkPredicate].compactMap {$0})
         }
         
         let orPredicates = allPredicates.map { NSCompoundPredicate(orPredicateWithSubpredicates: $0) }

@@ -215,6 +215,7 @@
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="normalizedEmailAddress" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="normalizedName" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="normalizedRemark" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="phoneNumber" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="pkRobotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="previewProfileAssetIdentifier" optional="YES" attributeType="String" syncable="YES"/>
@@ -296,7 +297,7 @@
         <element name="SystemMessage" positionX="27" positionY="57" width="128" height="255"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
-        <element name="User" positionX="-434" positionY="-72" width="128" height="780"/>
+        <element name="User" positionX="-434" positionY="-72" width="128" height="795"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="465"/>
     </elements>
