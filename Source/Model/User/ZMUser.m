@@ -214,8 +214,10 @@ static NSString *const AiAddressKey = @"aiAddress";
 {
     if (self.reMark) {
         return self.reMark;
-    }else{
+    }else if (self.name){
         return self.name;
+    }else{
+        return @"";
     }
 }
 
