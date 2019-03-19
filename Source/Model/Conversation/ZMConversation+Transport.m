@@ -86,6 +86,12 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     if (transportData[ConversationInfoNameKey] != [NSNull null]) {
         self.userDefinedName = [transportData stringForKey:ConversationInfoNameKey];
     }
+    // 群成员数量
+    NSNumber *membersCountNumber = [transportData optionalNumberForKey:@"memsum"];
+    if (membersCountNumber != nil) {
+        // Backend is sending the miliseconds, we need to convert to seconds.
+        self.membersCount = membersCountNumber.integerValue;
+    }
     
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];

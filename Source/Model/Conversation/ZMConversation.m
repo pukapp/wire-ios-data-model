@@ -189,6 +189,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic groupImageSmallKey;
 
 @dynamic membersAliasname;
+@dynamic membersCount;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;

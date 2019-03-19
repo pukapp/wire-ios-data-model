@@ -127,7 +127,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isOpenCreatorInviteVerify;
 //是否开启仅限群主邀请
 @property (nonatomic) BOOL isOnlyCreatorInvite;
-
+//群成员数量
+@property (nonatomic) NSInteger membersCount;
 /// 群头像
 @property (nullable, nonatomic, copy) NSString *groupImageMediumKey;
 @property (nullable, nonatomic, copy) NSString *groupImageSmallKey;
