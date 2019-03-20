@@ -90,6 +90,7 @@
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         case ZMUpdateEventTypeConversationOtrAssetAdd:
         case ZMUpdateEventTypeConversationWalletNotify:
+        case ZMUpdateEventTypeConversationMemberJoinask:
         {
             ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:self];
             return [NSUUID uuidWithTransportString:message.messageId];
