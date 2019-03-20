@@ -68,7 +68,19 @@
             VerifyReturnNil(message != nil);
         }
             break;
-            
+        case ZMUpdateEventTypeConversationMemberJoinask: {
+            NSDictionary *base64Content = [updateEvent.payload dictionaryForKey:@"data"];
+            if (![NSJSONSerialization isValidJSONObject:base64Content]){
+                break;
+            }
+            NSData *data = [NSJSONSerialization dataWithJSONObject:base64Content options:NSJSONWritingPrettyPrinted error:nil];
+            NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            ZMTextJson *temp = [ZMTextJson textWith:jsonString];
+            ZMGenericMessage *msg = [ZMGenericMessage messageWithContent:temp nonce:[updateEvent uuid]];
+            message = [self genericMessageWithBase64String:msg.data.base64String updateEvent:updateEvent];
+            VerifyReturnNil(message != nil);
+        }
+            break;
         default:
             break;
     }
