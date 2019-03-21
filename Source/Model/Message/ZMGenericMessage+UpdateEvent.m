@@ -55,11 +55,11 @@
         }
             break;
         case ZMUpdateEventTypeConversationWalletNotify: {
-            NSDictionary *base64Content = [updateEvent.payload dictionaryForKey:@"data"];
-            if (![NSJSONSerialization isValidJSONObject:base64Content]){
+            NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
+            if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
                 break;
             }
-            NSData *data = [NSJSONSerialization dataWithJSONObject:base64Content options:NSJSONWritingPrettyPrinted error:nil];
+            NSData *data = [NSJSONSerialization dataWithJSONObject:dataDictionary options:NSJSONWritingPrettyPrinted error:nil];
             NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
             
             ZMTextJson *temp = [ZMTextJson textWith:jsonString];
@@ -69,14 +69,18 @@
         }
             break;
         case ZMUpdateEventTypeConversationMemberJoinask: {
-            NSDictionary *base64Content = [updateEvent.payload dictionaryForKey:@"data"];
-            if (![NSJSONSerialization isValidJSONObject:base64Content]){
+            NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
+            if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
                 break;
             }
-            NSData *data = [NSJSONSerialization dataWithJSONObject:base64Content options:NSJSONWritingPrettyPrinted error:nil];
+            NSData *data = [NSJSONSerialization dataWithJSONObject:dataDictionary options:NSJSONWritingPrettyPrinted error:nil];
             NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
             ZMTextJson *temp = [ZMTextJson textWith:jsonString];
-            ZMGenericMessage *msg = [ZMGenericMessage messageWithContent:temp nonce:[updateEvent uuid]];
+            NSUUID *messageUuid = [[dataDictionary dictionaryForKey:@"msgData"] optionalUuidForKey:@"code"];
+            if (messageUuid == nil) {
+                break;
+            }
+            ZMGenericMessage *msg = [ZMGenericMessage messageWithContent:temp nonce:messageUuid];
             message = [self genericMessageWithBase64String:msg.data.base64String updateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
