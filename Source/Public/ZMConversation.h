@@ -132,6 +132,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 /// 群头像
 @property (nullable, nonatomic, copy) NSString *groupImageMediumKey;
 @property (nullable, nonatomic, copy) NSString *groupImageSmallKey;
+@property (nullable, nonatomic, copy) NSData *imageMediumData;
+@property (nullable, nonatomic, copy) NSData *imageSmallProfileData;
 
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
