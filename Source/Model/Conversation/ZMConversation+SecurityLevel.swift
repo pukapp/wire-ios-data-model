@@ -159,6 +159,8 @@ extension ZMConversation {
             }
             
             user.connection?.needsToBeUpdatedFromBackend = true
+        case .hugeGroup:
+            return
         default:
             break
         }
