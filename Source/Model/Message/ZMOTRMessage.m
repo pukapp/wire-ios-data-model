@@ -210,6 +210,10 @@ NSString * const DeliveredKey = @"delivered";
                                                    inManagedObjectContext:moc
                                                            prefetchResult:prefetchResult];
         
+        if (clientMessage && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
+            clientMessage.delivered = true
+        }
+        
         if (clientMessage.isZombieObject) {
             return nil;
         }
@@ -233,7 +237,7 @@ NSString * const DeliveredKey = @"delivered";
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
             isNewMessage = YES;
-        } else if (![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
+        } else if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
             if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
                 clientMessage.isConfrimInvite = true;
             }
