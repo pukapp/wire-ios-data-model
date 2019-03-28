@@ -211,7 +211,7 @@ NSString * const DeliveredKey = @"delivered";
                                                            prefetchResult:prefetchResult];
         
         if (clientMessage && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
-            clientMessage.delivered = true
+            clientMessage.delivered = YES;
         }
         
         if (clientMessage.isZombieObject) {
