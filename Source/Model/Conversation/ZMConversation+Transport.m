@@ -40,6 +40,9 @@ static NSString *const ConversationInfoAccessModeKey = @"access";
 static NSString *const ConversationInfoAccessRoleKey = @"access_role";
 static NSString *const ConversationInfoMessageTimer = @"message_timer";
 
+static NSString *const ConversationInfoApps = @"apps";
+static NSString *const ConversationInfoTopApps = @"top_apps";
+
 NSString *const ZMConversationInfoOTRMutedValueKey = @"otr_muted";
 NSString *const ZMConversationInfoOTRMutedStatusValueKey = @"otr_muted_status";
 NSString *const ZMConversationInfoOTRMutedReferenceKey = @"otr_muted_ref";
@@ -145,6 +148,10 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
         [self updateTeamWithIdentifier:teamId];
     }
     
+    NSArray *apps = [transportData optionalArrayForKey:ConversationInfoApps];
+    NSArray *topapps = [transportData optionalArrayForKey:ConversationInfoTopApps];
+    [self updateWithApps:apps topApps:topapps];
+    
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];
     self.accessRoleString = [transportData optionalStringForKey:ConversationInfoAccessRoleKey];
     
@@ -230,6 +237,15 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
         }
     }
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
+}
+
+- (void)updateWithApps:(NSArray *)apps topApps:(NSArray *)topApps {
+    if (apps && apps.count > 0) {
+        self.apps = [apps componentsJoinedByString:@","];
+    }
+    if (topApps && topApps.count > 0) {
+        self.topapps = [topApps componentsJoinedByString:@","];
+    }
 }
 
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary

@@ -134,6 +134,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nullable, nonatomic, copy) NSString *groupImageSmallKey;
 @property (nullable, nonatomic, copy) NSData *imageMediumData;
 @property (nullable, nonatomic, copy) NSData *imageSmallProfileData;
+//群应用
+@property (nullable, nonatomic, copy) NSString *topapps;
+@property (nullable, nonatomic, copy) NSString *apps;
 
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
