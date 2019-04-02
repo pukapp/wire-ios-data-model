@@ -88,6 +88,9 @@ NSString *const ZMConversationOpenUrlJoinKey = @"isOpenUrlJoin";
 NSString *const ZMConversationGroupImageSmallKey = @"groupImageSmallKey";
 NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
 
+NSString *const ZMConversationAppsKey = @"apps";
+NSString *const ZMConversationTopAppsKey = @"topapps";
+
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
@@ -418,7 +421,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             AccessRoleStringKey,
             LanguageKey,
             //、 新增
-            ZMConversationAutoReplyFromOtherKey
+            ZMConversationAutoReplyFromOtherKey,
+            ZMConversationAppsKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
@@ -520,6 +524,14 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     if (self.managedObjectContext.zm_isSyncContext) {
         [self calculateLastUnreadMessages];
     }
+}
+
+- (void)setTopapps:(NSString *)topapps {
+    NSString *primitiveTopApps = [self primitiveValueForKey:ZMConversationTopAppsKey];
+    if ([topapps isEqualToString:primitiveTopApps]) {return;}
+    [self willChangeValueForKey:ZMConversationTopAppsKey];
+    [self setPrimitiveValue:topapps forKey:ZMConversationTopAppsKey];
+    [self didChangeValueForKey:ZMConversationTopAppsKey];
 }
 
 - (NSUUID *)remoteIdentifier;
