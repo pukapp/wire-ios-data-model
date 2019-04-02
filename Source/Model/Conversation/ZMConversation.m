@@ -90,6 +90,8 @@ NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
 
 NSString *const ZMConversationAppsKey = @"apps";
 NSString *const ZMConversationTopAppsKey = @"topapps";
+NSString *const ZMConversationAddAppsKey = @"AddApps";
+NSString *const ZMConversationDeleteAppsKey = @"deleteApps";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
@@ -198,6 +200,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 @dynamic apps;
 @dynamic topapps;
+@dynamic addApps;
+@dynamic deleteApps;
 
 @dynamic membersAliasname;
 @dynamic membersCount;
