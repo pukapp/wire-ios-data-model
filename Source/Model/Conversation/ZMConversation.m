@@ -477,12 +477,29 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests
 {
+    return [self insertGroupConversationIntoUserSession:session
+                                       withParticipants:participants
+                                                   name:name
+                                                 inTeam:team
+                                            allowGuests:allowGuests
+                                                topapps:nil];
+}
+
++ (nonnull instancetype)insertGroupConversationIntoUserSession:(nonnull id<ZMManagedObjectContextProvider> )session
+                                              withParticipants:(nonnull NSArray<ZMUser *> *)participants
+                                                          name:(nullable NSString*)name
+                                                        inTeam:(nullable Team *)team
+                                                   allowGuests:(BOOL)allowGuests
+                                                       topapps:(NSString *)topapps
+
+{
     VerifyReturnNil(session != nil);
     return [self insertGroupConversationIntoManagedObjectContext:session.managedObjectContext
                                                 withParticipants:participants
                                                             name:name
                                                           inTeam:team
-                                                     allowGuests:allowGuests];
+                                                     allowGuests:allowGuests
+                                                         topapps:topapps];
 }
 
 + (nonnull instancetype)insertHugeGroupConversationIntoUserSession:(nonnull id<ZMManagedObjectContextProvider> )session
@@ -922,7 +939,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                 withParticipants:participants
                                                             name:name
                                                           inTeam:team
-                                                     allowGuests:YES];
+                                                     allowGuests:YES
+                                                         topapps:nil];
 }
 
 + (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc
@@ -930,6 +948,21 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                                     name:(nullable NSString *)name
                                                                   inTeam:(nullable Team *)team
                                                              allowGuests:(BOOL)allowGuests
+{
+    return [self insertGroupConversationIntoManagedObjectContext:moc
+                                                withParticipants:participants
+                                                            name:name
+                                                          inTeam:team
+                                                     allowGuests:allowGuests
+                                                         topapps:nil];
+}
+
++ (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc
+                                                        withParticipants:(nonnull NSArray <ZMUser *>*)participants
+                                                                    name:(nullable NSString *)name
+                                                                  inTeam:(nullable Team *)team
+                                                             allowGuests:(BOOL)allowGuests
+                                                                 topapps:(NSString *)topapps
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
 
@@ -945,6 +978,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     conversation.userDefinedName = name;
     if (nil != team) {
         conversation.allowGuests = allowGuests;
+    }
+    if (nil != topapps) {
+        conversation.topapps = topapps;
     }
     
     for (ZMUser *participant in participants) {
