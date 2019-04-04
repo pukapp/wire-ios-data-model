@@ -41,6 +41,7 @@ extern NSString *const ZMConversationInfoOTRSelfVerifyKey;
 extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
 extern NSString *const ZMConversationInfoOTRCanAddKey;
 extern NSString *const ZMCOnversationInfoOTROpenUrlJoinKey;
+extern NSString *const ZMCOnversationInfoOTRAllowViewMembersKey;
 
 @interface ZMConversation (Transport)
 

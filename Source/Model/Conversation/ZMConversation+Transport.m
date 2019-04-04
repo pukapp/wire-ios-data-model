@@ -59,6 +59,7 @@ NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
+NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
 
 NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-000000000000";
 
@@ -95,7 +96,8 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
         // Backend is sending the miliseconds, we need to convert to seconds.
         self.membersCount = membersCountNumber.integerValue;
     }
-    
+    /// 允许查看群成员
+    self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
     /// 开启url链接加入
     self.isOpenUrlJoin = [transportData[ZMCOnversationInfoOTROpenUrlJoinKey] boolValue];
     /// 群聊邀请确认

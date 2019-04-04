@@ -84,6 +84,7 @@ NSString *const ZMConversationSelfRemarkKey = @"selfRemark";
 NSString *const ZMConversationIsOpenCreatorInviteVerifyKey = @"isOpenCreatorInviteVerify";
 NSString *const ZMConversationOnlyCreatorInviteKey = @"isOnlyCreatorInvite";
 NSString *const ZMConversationOpenUrlJoinKey = @"isOpenUrlJoin";
+NSString *const ZMConversationAllowViewMembersKey = @"isAllowViewMembers";
 
 NSString *const ZMConversationGroupImageSmallKey = @"groupImageSmallKey";
 NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
@@ -187,6 +188,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isOpenUrlJoin;
 @dynamic isOpenCreatorInviteVerify;
 @dynamic isOnlyCreatorInvite;
+@dynamic isAllowViewMembers;
 
 @dynamic joinGroupUrl;
 @dynamic appletsIcon;
