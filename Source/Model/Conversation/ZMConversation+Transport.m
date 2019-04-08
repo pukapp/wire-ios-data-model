@@ -56,6 +56,7 @@ NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
 
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
+NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
@@ -101,7 +102,9 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     /// 开启url链接加入
     self.isOpenUrlJoin = [transportData[ZMCOnversationInfoOTROpenUrlJoinKey] boolValue];
     /// 群聊邀请确认
-    self.isOpenCreatorInviteVerify = [transportData[ZMConversationInfoOTRSelfVerifyKey] boolValue];
+    self.isOpenCreatorInviteVerify = [transportData[ZMConversationInfoMemberInviteVerfyKey] boolValue];
+    /// 群聊邀请确认
+    self.isOpenMemberInviteVerify = [transportData[ZMConversationInfoOTRSelfVerifyKey] boolValue];
     /// 仅限群主拉人
     self.isOnlyCreatorInvite = [transportData[ZMConversationInfoOTRCanAddKey] boolValue];
     if(transportData[@"assets"] != [NSNull null]) {

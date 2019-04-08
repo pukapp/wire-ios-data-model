@@ -127,6 +127,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isOpenCreatorInviteVerify;
 //是否开启仅限群主邀请
 @property (nonatomic) BOOL isOnlyCreatorInvite;
+//是否开启成员被邀请确认
+@property (nonatomic) BOOL isOpenMemberInviteVerify;
 //群成员数量
 @property (nonatomic) NSInteger membersCount;
 // 允许查看群成员

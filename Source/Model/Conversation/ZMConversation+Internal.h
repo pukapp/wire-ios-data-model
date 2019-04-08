@@ -90,6 +90,8 @@ extern NSString *const ZMConversationAutoReplyFromOtherKey;
 
 extern NSString *const ZMConversationSelfRemarkKey;
 extern NSString *const ZMConversationIsOpenCreatorInviteVerifyKey;
+
+extern NSString *const ZMConversationIsOpenMemberInviteVerifyKey;
 extern NSString *const ZMConversationOnlyCreatorInviteKey;
 extern NSString *const ZMConversationOpenUrlJoinKey;
 extern NSString *const ZMConversationAllowViewMembersKey;

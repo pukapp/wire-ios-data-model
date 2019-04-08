@@ -49,6 +49,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.isOnlyCreatorInvite),
                     #keyPath(ZMConversation.isAllowViewMembers),
                     #keyPath(ZMConversation.isOpenCreatorInviteVerify),
+                    #keyPath(ZMConversation.isOpenMemberInviteVerify),
                     #keyPath(ZMConversation.creator),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
@@ -94,6 +95,12 @@ extension ZMConversation : ObjectInSnapshot {
     public var canOpenUrlChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite)) ||
                changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
+    }
+    
+    /// 群主确认或者成员确认改变
+    public var isOpenInviteVerifyChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify)) ||
+            changedKeysContain(keys: #keyPath(ZMConversation.isOpenMemberInviteVerify))
     }
     
     public var conversationSelfRemarkChanged: Bool {
