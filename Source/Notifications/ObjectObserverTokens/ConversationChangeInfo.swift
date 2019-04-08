@@ -99,8 +99,7 @@ extension ZMConversation : ObjectInSnapshot {
     
     /// 群主确认或者成员确认改变
     public var isOpenInviteVerifyChanged: Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify)) ||
-            changedKeysContain(keys: #keyPath(ZMConversation.isOpenMemberInviteVerify))
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
     }
     
     public var conversationSelfRemarkChanged: Bool {

@@ -192,6 +192,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) ZMBiBiCashType bibiCashType;
 // 群主是否确认邀请
 @property (nonatomic) BOOL isConfrimInvite;
+// 用户是否确认拒绝被邀请
+@property (nonatomic) BOOL isRefuse;
 
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;

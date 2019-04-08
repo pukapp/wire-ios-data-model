@@ -102,9 +102,9 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     /// 开启url链接加入
     self.isOpenUrlJoin = [transportData[ZMCOnversationInfoOTROpenUrlJoinKey] boolValue];
     /// 群聊邀请确认
-    self.isOpenCreatorInviteVerify = [transportData[ZMConversationInfoMemberInviteVerfyKey] boolValue];
+    self.isOpenCreatorInviteVerify = [transportData[ZMConversationInfoOTRSelfVerifyKey] boolValue];
     /// 群聊邀请确认
-    self.isOpenMemberInviteVerify = [transportData[ZMConversationInfoOTRSelfVerifyKey] boolValue];
+    self.isOpenMemberInviteVerify = [transportData[ZMConversationInfoMemberInviteVerfyKey] boolValue];
     /// 仅限群主拉人
     self.isOnlyCreatorInvite = [transportData[ZMConversationInfoOTRCanAddKey] boolValue];
     if(transportData[@"assets"] != [NSNull null]) {
