@@ -81,10 +81,7 @@ public protocol UserType: NSObjectProtocol {
     /// You should stop from observing the searchUser and start observing the user from there on
     func connect(message: String)
     
-    //新增
-    //显示名称(remark>name)
-    var inewName: String { get }
-    
+
     //群聊中名称显示(remark>aliasname>name)
     func displayNameInConversation(conevrsation:ZMConversation?) -> String
     

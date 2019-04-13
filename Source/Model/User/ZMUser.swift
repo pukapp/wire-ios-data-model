@@ -24,14 +24,8 @@ extension ZMUser: UserConnectionType { }
 
 extension ZMUser: UserType {
     
-    public var inewName: String {
-        get {
-            return self.newName()
-        }
-    }
-    
     public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
-        return UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: self.remoteIdentifier.transportString()) ?? inewName
+        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: self.remoteIdentifier.transportString()) ?? self.name ?? ""
     }
     
     public func isGuest(in conversation: ZMConversation) -> Bool {
@@ -354,17 +348,10 @@ extension ZMUser {
 }
 
 extension ZMUser {
-    
+        
     @objc(displayNameInConversation:)
     public func displayName(in conversation: ZMConversation?) -> String {
-        guard let conversation = conversation else { return self.newName() }
-        guard let remoteIdentifier = remoteIdentifier else { return self.newName() }
-
-        if let remark = self.reMark { return remark }
-        if let aliasName = UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) {
-            return aliasName
-        }
-        return self.name ?? ""
+        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? ""
     }
 }
 

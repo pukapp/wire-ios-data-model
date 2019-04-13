@@ -977,11 +977,6 @@ static NSString *const AiAddressKey = @"aiAddress";
     self.normalizedRemark = [self.reMark normalizedString];
 }
 
-//- (void)setAliasname:(NSString *)aliasname {
-//    [self willChangeValueForKey:AliasnameKey];
-//    [self setPrimitiveValue:[aliasname copy] forKey:AliasnameKey];
-//    [self didChangeValueForKey:AliasnameKey];
-//}
 
 @end
 
