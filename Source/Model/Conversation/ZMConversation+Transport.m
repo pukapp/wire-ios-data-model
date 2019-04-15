@@ -108,9 +108,12 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     /// 仅限群主拉人
     self.isOnlyCreatorInvite = [transportData[ZMConversationInfoOTRCanAddKey] boolValue];
     /// 会话绑定的社区id
-//    if ([transportData optionalStringForKey:@"forumid"]) {
-//        self.communityID = [transportData optionalStringForKey:@"forumid"];
-//    };
+    NSNumber *forumIdNumber = [transportData optionalNumberForKey:@"forumid"];
+    if (forumIdNumber != nil) {
+        // Backend is sending the miliseconds, we need to convert to seconds.
+        self.membersCount = membersCountNumber.integerValue;
+        self.communityID = [forumIdNumber stringValue];
+    }
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
