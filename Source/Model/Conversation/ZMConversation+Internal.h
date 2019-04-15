@@ -96,7 +96,7 @@ extern NSString *const ZMConversationOnlyCreatorInviteKey;
 extern NSString *const ZMConversationOpenUrlJoinKey;
 extern NSString *const ZMConversationAllowViewMembersKey;
 extern NSString *const CreatorKey;
-extern NSString *const ZMConversationTopAppsKey;
+extern NSString *const ZMConversationTopWebAppsKey;
 
 NS_ASSUME_NONNULL_END
 

@@ -53,7 +53,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.creator),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
-                    #keyPath(ZMConversation.topapps)
+                    #keyPath(ZMConversation.topWebApps)
             ])
     }
 
@@ -78,7 +78,7 @@ extension ZMConversation : ObjectInSnapshot {
         return changedKeysContain(keys: #keyPath(ZMConversation.apps))
     }
     public var topAppsChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.topapps))
+        return changedKeysContain(keys: #keyPath(ZMConversation.topWebApps))
     }
     /// 新增对别人的回复类型改变
     public var replyTypeChanged : Bool {

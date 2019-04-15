@@ -35,6 +35,7 @@
 @class LinkPreview;
 @class Team;
 @class UserAliasname;
+@class ZMWebApp;
 
 @protocol ZMConversationMessage;
 
@@ -141,6 +142,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //群应用
 @property (nullable, nonatomic, copy) NSString *topapps;
 @property (nullable, nonatomic, copy) NSString *apps;
+
+@property (nullable, nonatomic) NSOrderedSet<ZMWebApp *> *topWebApps;
 
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;

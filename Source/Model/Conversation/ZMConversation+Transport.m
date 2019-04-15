@@ -154,8 +154,13 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     }
     
     NSArray *apps = [transportData optionalArrayForKey:ConversationInfoApps];
-    NSArray *topapps = [transportData optionalArrayForKey:ConversationInfoTopApps];
-    [self updateWithApps:apps topApps:topapps];
+    if (nil != apps) {
+        [self updateWithApps:apps];
+    }
+    NSArray *topApps = [transportData optionalArrayForKey:ConversationInfoTopApps];
+    if (nil != topApps) {
+        [self updateWithTopApps:topApps];
+    }
     
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];
     self.accessRoleString = [transportData optionalStringForKey:ConversationInfoAccessRoleKey];
@@ -244,13 +249,30 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
 }
 
-- (void)updateWithApps:(NSArray *)apps topApps:(NSArray *)topApps {
+- (void)updateWithApps:(NSArray *)apps {
     if (apps && apps.count > 0) {
         self.apps = [apps componentsJoinedByString:@","];
     }
-    if (topApps && topApps.count > 0) {
-        self.topapps = [topApps componentsJoinedByString:@","];
+}
+
+- (void)updateWithTopApps:(NSArray *)topApps {
+
+    NSMutableOrderedSet<ZMWebApp *> *topWebApps = [NSMutableOrderedSet orderedSet];
+    
+    for (NSDictionary *appDict in [topApps asDictionaries]) {
+        
+        NSString *userId = [appDict stringForKey:@"app_id"];
+        if (userId == nil) {
+            continue;
+        }
+        [topWebApps addObject:[ZMWebApp createOrUpdateWebApp:appDict context:self.managedObjectContext]];
     }
+    self.topWebApps = topWebApps;
+
+    NSArray *topAppIds = [topWebApps.array mapWithBlock:^id(ZMWebApp *webApp) {
+        return webApp.appId;
+    }];
+    self.topapps = [topAppIds componentsJoinedByString:@","];
 }
 
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary
