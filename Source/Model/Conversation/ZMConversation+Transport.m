@@ -111,7 +111,6 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     NSNumber *forumIdNumber = [transportData optionalNumberForKey:@"forumid"];
     if (forumIdNumber != nil) {
         // Backend is sending the miliseconds, we need to convert to seconds.
-        self.membersCount = membersCountNumber.integerValue;
         self.communityID = [forumIdNumber stringValue];
     }
     
@@ -277,11 +276,6 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
         [topWebApps addObject:[ZMWebApp createOrUpdateWebApp:appDict context:self.managedObjectContext]];
     }
     self.topWebApps = topWebApps;
-
-    NSArray *topAppIds = [topWebApps.array mapWithBlock:^id(ZMWebApp *webApp) {
-        return webApp.appId;
-    }];
-    self.topapps = [topAppIds componentsJoinedByString:@","];
 }
 
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary
