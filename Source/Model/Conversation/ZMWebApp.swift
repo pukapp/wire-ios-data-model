@@ -7,6 +7,7 @@
 //
 
 import UIKit
+
 enum WebAppLoadMode: Int {
     case secretUrlLoad = 0          //secret服务器URL加载
     case zipLoad = 1                //zip下载本地加载
@@ -36,6 +37,7 @@ public let ZMWebAppIdentifierKey = "appId"
     @NSManaged public var type: Int64
     @NSManaged public var index: Int64
     @NSManaged public var loadModel: Int64
+    @NSManaged public var conversations: Set<ZMConversation>
     
     public override static func entityName() -> String {
         return "WebApp"

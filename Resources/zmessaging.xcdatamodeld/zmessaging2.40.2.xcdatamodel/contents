@@ -92,7 +92,7 @@
         <relationship name="membersAliasname" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="conversations" inverseEntity="Team" syncable="YES"/>
-        <relationship name="topWebApps" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="WebApp" syncable="YES"/>
+        <relationship name="topWebApps" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="WebApp" inverseName="conversations" inverseEntity="WebApp" syncable="YES"/>
         <compoundIndexes>
             <compoundIndex>
                 <index value="internalIsArchived"/>
@@ -301,6 +301,7 @@
         <attribute name="updateUrl" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="url" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="version" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="topWebApps" inverseEntity="Conversation" syncable="YES"/>
     </entity>
     <elements>
         <element name="AddressBookEntry" positionX="9" positionY="153" width="128" height="90"/>
@@ -308,7 +309,6 @@
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
         <element name="Conversation" positionX="178" positionY="42" width="128" height="900"/>
-        <element name="WebApp" positionX="-234" positionY="-117" width="128" height="225"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
@@ -324,5 +324,6 @@
         <element name="User" positionX="-434" positionY="-72" width="128" height="795"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="465"/>
+        <element name="WebApp" positionX="-234" positionY="-117" width="128" height="240"/>
     </elements>
 </model>
