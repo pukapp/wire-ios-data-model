@@ -108,7 +108,7 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     /// 仅限群主拉人
     self.isOnlyCreatorInvite = [transportData[ZMConversationInfoOTRCanAddKey] boolValue];
     /// 会话绑定的社区id
-    self.communityID = [NSString stringWithFormat:@"%ld",[transportData[@"forumid"] integerValue]];
+    self.communityID = [transportData optionalNumberForKey:@"forumid"].stringValue;
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
