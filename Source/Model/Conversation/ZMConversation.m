@@ -549,13 +549,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
 }
 
-
-- (void)setTopWebApps:(NSOrderedSet<ZMWebApp *> *)topWebApps {
-    [self willChangeValueForKey:ZMConversationTopWebAppsKey];
-    [self setPrimitiveValue:topWebApps forKey:ZMConversationTopWebAppsKey];
-    [self didChangeValueForKey:ZMConversationTopWebAppsKey];
-}
-
 - (NSUUID *)remoteIdentifier;
 {
     return [self transientUUIDForKey:RemoteIdentifierKey];

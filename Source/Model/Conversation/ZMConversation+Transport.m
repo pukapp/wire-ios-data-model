@@ -113,7 +113,6 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
         // Backend is sending the miliseconds, we need to convert to seconds.
         self.communityID = [forumIdNumber stringValue];
     }
-    
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
