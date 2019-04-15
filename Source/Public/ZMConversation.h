@@ -141,7 +141,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //群应用
 @property (nullable, nonatomic, copy) NSString *topapps;
 @property (nullable, nonatomic, copy) NSString *apps;
-
+///绑定的社区ID
+@property (nullable, nonatomic, assign) NSString *communityID;
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 
