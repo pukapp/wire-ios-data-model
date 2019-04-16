@@ -41,7 +41,7 @@ static NSString *const ConversationInfoAccessRoleKey = @"access_role";
 static NSString *const ConversationInfoMessageTimer = @"message_timer";
 
 static NSString *const ConversationInfoApps = @"apps";
-static NSString *const ConversationInfoTopApps = @"top_apps";
+
 
 NSString *const ZMConversationInfoOTRMutedValueKey = @"otr_muted";
 NSString *const ZMConversationInfoOTRMutedStatusValueKey = @"otr_muted_status";
@@ -49,20 +49,20 @@ NSString *const ZMConversationInfoOTRMutedReferenceKey = @"otr_muted_ref";
 NSString *const ZMConversationInfoOTRArchivedValueKey = @"otr_archived";
 NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 
+
 // 新增
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
 NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
-
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
 NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
-
 NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-000000000000";
+NSString *const ZMConversationInfoTopApps = @"top_apps_detail";
 
 @implementation ZMConversation (Transport)
 
@@ -164,7 +164,7 @@ NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-0000000000
     if (nil != apps) {
         [self updateWithApps:apps];
     }
-    NSArray *topApps = [transportData optionalArrayForKey:ConversationInfoTopApps];
+    NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopApps];
     if (nil != topApps) {
         [self updateWithTopApps:topApps];
     }
