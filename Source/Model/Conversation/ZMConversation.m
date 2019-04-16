@@ -496,7 +496,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                           name:(nullable NSString*)name
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests
-                                                       topapps:(NSString *)topapps
+                                                       topapps:(NSArray *)topapps
 
 {
     VerifyReturnNil(session != nil);
@@ -960,7 +960,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                                     name:(nullable NSString *)name
                                                                   inTeam:(nullable Team *)team
                                                              allowGuests:(BOOL)allowGuests
-                                                                 topapps:(NSString *)topapps
+                                                                 topapps:(NSArray *)topapps
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
 
@@ -978,7 +978,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         conversation.allowGuests = allowGuests;
     }
     if (nil != topapps) {
-        conversation.topapps = topapps;
+        conversation.topWebApps = [NSOrderedSet orderedSetWithArray:topapps];
     }
     
     for (ZMUser *participant in participants) {

@@ -173,7 +173,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
                                                           name:(nullable NSString*)name
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests
-                                                       topapps:(nullable NSString *)topapps;
+                                                       topapps:(nullable NSArray *)topapps;
 
 /// 创建万人群
 + (nonnull instancetype)insertHugeGroupConversationIntoUserSession:(nonnull id<ZMManagedObjectContextProvider> )session
