@@ -53,7 +53,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.creator),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
-                    #keyPath(ZMConversation.topWebApps)
+                    #keyPath(ZMConversation.topWebApps),
+                    #keyPath(ZMConversation.communityID)
             ])
     }
 
@@ -73,7 +74,9 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
-    
+    public var communityIDChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.communityID))
+    }
     public var appsChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.apps))
     }
