@@ -98,6 +98,8 @@ extern NSString *const ZMConversationAllowViewMembersKey;
 extern NSString *const CreatorKey;
 extern NSString *const ZMConversationTopWebAppsKey;
 
+extern NSString *const ZMConversationIsPlaceTopKey;
+
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)

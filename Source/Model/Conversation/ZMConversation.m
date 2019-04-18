@@ -93,6 +93,9 @@ NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
 NSString *const ZMConversationAppsKey = @"apps";
 NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
 
+NSString *const ZMConversationIsPlaceTopKey = @"isPlaceTop";
+
+
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
@@ -204,6 +207,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic topapps;
 @dynamic topWebApps;
 @dynamic communityID;
+    
+@dynamic isPlaceTop;
 
 @dynamic membersAliasname;
 @dynamic membersCount;
@@ -428,7 +433,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             LanguageKey,
             //、 新增
             ZMConversationAutoReplyFromOtherKey,
-            ZMConversationAppsKey
+            ZMConversationAppsKey,
+            ZMConversationIsPlaceTopKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
@@ -616,7 +622,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 + (NSArray *)defaultSortDescriptors
 {
-    return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsArchivedKey ascending:YES],
+    return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsPlaceTopKey ascending:NO],
+             [NSSortDescriptor sortDescriptorWithKey:ZMConversationIsArchivedKey ascending:YES],
              [NSSortDescriptor sortDescriptorWithKey:LastModifiedDateKey ascending:NO],
              [NSSortDescriptor sortDescriptorWithKey:ZMConversationRemoteIdentifierDataKey ascending:YES],];
 }

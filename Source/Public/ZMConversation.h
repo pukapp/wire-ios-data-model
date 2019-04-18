@@ -146,6 +146,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nullable, nonatomic) NSOrderedSet<ZMWebApp *> *topWebApps;
 ///绑定的社区ID
 @property (nullable, nonatomic, copy) NSString *communityID;
+    
+@property (nonatomic) BOOL isPlaceTop;
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 
