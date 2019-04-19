@@ -54,7 +54,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
                     #keyPath(ZMConversation.topWebApps),
-                    #keyPath(ZMConversation.communityID)
+                    #keyPath(ZMConversation.communityID),
+                    #keyPath(ZMConversation.isPlaceTop)
             ])
     }
 
@@ -74,9 +75,15 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
+    // 聊天置顶状态变化
+    public var placeTopStatusChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isPlaceTop))
+    }
+    
     public var communityIDChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.communityID))
     }
+    
     public var appsChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.apps))
     }
