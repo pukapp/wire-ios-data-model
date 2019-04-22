@@ -56,13 +56,13 @@ public extension ZMWebApp {
             else { return nil }
         let payloadAsDictionary = payloadData as NSDictionary
         let name = payloadAsDictionary.string(forKey: "app_name")
-        let intro = payloadAsDictionary.optionalString(forKey: "label")
-        let brief = payloadAsDictionary.optionalString(forKey: "label")
-        let icon = payloadAsDictionary.string(forKey: "app_name")
-        let url = payloadAsDictionary.string(forKey: "app_name")
-        let updateUrl = payloadAsDictionary.optionalString(forKey: "label")
-        let owner = payloadAsDictionary.optionalString(forKey: "label")
-        let version = payloadAsDictionary.optionalString(forKey: "label")
+        let intro = payloadAsDictionary.optionalString(forKey: "intro")
+        let brief = payloadAsDictionary.optionalString(forKey: "brief")
+        let icon = payloadAsDictionary.string(forKey: "app_icon")
+        let url = payloadAsDictionary.string(forKey: "app_url")
+        let updateUrl = payloadAsDictionary.optionalString(forKey: "update_url")
+        let owner = payloadAsDictionary.optionalString(forKey: "owner")
+        let version = payloadAsDictionary.optionalString(forKey: "version")
         
         let fetchedWebApp = fetchExistingWebApp(with: id, in: context)
         let webApp = fetchedWebApp ?? ZMWebApp.insertNewObject(in: context)
