@@ -805,6 +805,11 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return moc.conversationListDirectory.pendingConnectionConversations;
 }
 
++ (ZMConversationList *)hugeGroupConversationsInContext:(NSManagedObjectContext *)moc
+{
+    return moc.conversationListDirectory.hugeGroupConversations;
+}
+
 - (void)sortMessages
 {
     NSOrderedSet *sorted = [NSOrderedSet orderedSetWithArray:[self.messages sortedArrayUsingDescriptors:[ZMMessage defaultSortDescriptors]]];
