@@ -33,6 +33,7 @@
 @property (nonatomic, readonly, nonnull) ZMConversationList* archivedConversations; ///< archived, not pending
 @property (nonatomic, readonly, nonnull) ZMConversationList* pendingConnectionConversations; ///< pending
 @property (nonatomic, readonly, nonnull) ZMConversationList *clearedConversations; /// conversations with deleted messages (clearedTimestamp is set)
+@property (nonatomic, readonly, nonnull) ZMConversationList *hugeGroupConversations; /// conversations with type == 5
 
 - (nonnull NSArray *)allConversationLists;
 
