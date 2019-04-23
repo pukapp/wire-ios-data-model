@@ -212,11 +212,14 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 @dynamic membersAliasname;
 @dynamic membersCount;
+@dynamic isAllowMemberAddEachOther;
+@dynamic isVisibleForMemberChange;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
 @synthesize lastReadTimestampUpdateCounter;
 @synthesize unreadTimeStamps;
+
 
 
 -(void)setAutoReply:(ZMAutoReplyType)autoReply{
