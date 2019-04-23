@@ -66,6 +66,13 @@ extension ZMConversation {
 
         return .init(format: "%K == NULL", #keyPath(ZMConversation.team))
     }
+    
+    @objc(predicateForHugeGroupConversations)
+    class func predicateForHugeGroupConversations() -> NSPredicate {
+        let basePredicate = predicateForFilteringResults()
+        let hugeGroupConversationPredicate = NSPredicate(format: "\(ZMConversationConversationTypeKey) == \(ZMConversationType.hugeGroup.rawValue)")
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [basePredicate, hugeGroupConversationPredicate])
+    }
 
     @objc(predicateForPendingConversations)
     class func predicateForPendingConversations() -> NSPredicate {
