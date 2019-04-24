@@ -149,7 +149,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 // 置顶聊天
 @property (nonatomic) BOOL isPlaceTop;
 // 成员是否可以互相添加好友
-@property (nonatomic) BOOL isAllowMemberAddEachOther;
+@property (nonatomic) BOOL isForbidMemberAddEachOther;
 // 成员变动其他群成员是否可见
 @property (nonatomic) BOOL isVisibleForMemberChange;
 - (BOOL)canMarkAsUnread;
