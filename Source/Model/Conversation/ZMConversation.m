@@ -94,8 +94,8 @@ NSString *const ZMConversationAppsKey = @"apps";
 NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
 
 NSString *const ZMConversationIsPlaceTopKey = @"isPlaceTop";
-NSString *const ZMConversationisForbidMemberAddEachOtherKey = @"add_friend";
-NSString *const ZMConversationisVisibleForMemberChangeKey = @"view_chg_mem_notify";
+NSString *const ZMConversationIsAllowMemberAddEachOtherKey = @"isAllowMemberAddEachOther";
+NSString *const ZMConversationIsVisibleForMemberChangeKey = @"isVisibleForMemberChange";
 
 
 static NSString *const ConnectedUserKey = @"connectedUser";
@@ -214,7 +214,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 @dynamic membersAliasname;
 @dynamic membersCount;
-@dynamic isForbidMemberAddEachOther;
+@dynamic isAllowMemberAddEachOther;
 @dynamic isVisibleForMemberChange;
 
 @synthesize pendingLastReadServerTimestamp;

@@ -40,7 +40,7 @@ static NSString *const ConversationInfoAccessModeKey = @"access";
 static NSString *const ConversationInfoAccessRoleKey = @"access_role";
 static NSString *const ConversationInfoMessageTimer = @"message_timer";
 
-static NSString *const ConversationInfoApps = @"apps";
+static NSString *const ConversationInfoAppsKey = @"apps";
 
 
 NSString *const ZMConversationInfoOTRMutedValueKey = @"otr_muted";
@@ -62,7 +62,9 @@ NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
 NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-000000000000";
-NSString *const ZMConversationInfoTopApps = @"top_apps_detail";
+NSString *const ZMConversationInfoTopAppsKey = @"top_apps_detail";
+NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
+NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
 
 @implementation ZMConversation (Transport)
 
@@ -114,9 +116,9 @@ NSString *const ZMConversationInfoTopApps = @"top_apps_detail";
         self.communityID = [forumIdNumber stringValue];
     }
     // 成员是否可以互相添加好友
-    self.isForbidMemberAddEachOther = [transportData[ZMConversationisForbidMemberAddEachOtherKey] boolValue];
+    self.isAllowMemberAddEachOther = [transportData[ZMConversationInfoIsAllowMemberAddEachOtherKey] boolValue];
     // 成员变动其他群成员是否可见
-    self.isVisibleForMemberChange = [transportData[ZMConversationisVisibleForMemberChangeKey] boolValue];
+    self.isVisibleForMemberChange = [transportData[ZMConversationInfoIsVisibleForMemberChangeKey] boolValue];
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
@@ -164,11 +166,11 @@ NSString *const ZMConversationInfoTopApps = @"top_apps_detail";
         [self updateTeamWithIdentifier:teamId];
     }
     
-    NSArray *apps = [transportData optionalArrayForKey:ConversationInfoApps];
+    NSArray *apps = [transportData optionalArrayForKey:ConversationInfoAppsKey];
     if (nil != apps) {
         [self updateWithApps:apps];
     }
-    NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopApps];
+    NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopAppsKey];
     if (nil != topApps) {
         [self updateWithTopApps:topApps];
     }

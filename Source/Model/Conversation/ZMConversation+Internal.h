@@ -99,8 +99,8 @@ extern NSString *const CreatorKey;
 extern NSString *const ZMConversationTopWebAppsKey;
 
 extern NSString *const ZMConversationIsPlaceTopKey;
-extern NSString *const ZMConversationisForbidMemberAddEachOtherKey;
-extern NSString *const ZMConversationisVisibleForMemberChangeKey;
+extern NSString *const ZMConversationIsAllowMemberAddEachOtherKey;
+extern NSString *const ZMConversationIsVisibleForMemberChangeKey;
 
 NS_ASSUME_NONNULL_END
 
