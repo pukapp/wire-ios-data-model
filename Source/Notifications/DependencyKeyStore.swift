@@ -127,6 +127,8 @@ class DependencyKeyStore {
     /// ["foo" : keysAffectingValueForKey(foo), "bar" : keysAffectingValueForKey(bar)]
     private static func setupAffectedKeys(classIdentifier: String, observableKeys: Set<String>) -> [String : Set<String>] {
         switch classIdentifier {
+            // keyPathsForValuesAffectingValue:forKey:
+            // Return a set of key paths for properties whose values affect the value of the keyed property.
         case ZMConversation.entityName():
             return observableKeys.mapToDictionary{ZMConversation.keyPathsForValuesAffectingValue(forKey: $0)}
         case ZMUser.entityName():
