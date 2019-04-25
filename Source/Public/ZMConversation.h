@@ -152,6 +152,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isAllowMemberAddEachOther;
 // 成员变动其他群成员是否可见
 @property (nonatomic) BOOL isVisibleForMemberChange;
+//全员禁言
+@property (nonatomic) BOOL isDisableSendMsg;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 

@@ -86,7 +86,9 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeMessageDeletedForEveryone,
     ZMSystemMessageTypePerformedCall,
     ZMSystemMessageTypeTeamMemberLeave,
-    ZMSystemMessageTypeMessageTimerUpdate
+    ZMSystemMessageTypeMessageTimerUpdate,
+    ZMSystemMessageTypeAllDisableSendMsg,
+    ZMSystemMessageTypeMemberDisableSendMsg
 };
 
 @protocol ZMJsonTextMessageData <NSObject>
@@ -140,7 +142,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
 @property (nonatomic, nullable) id <ZMSystemMessageData> parentMessage;
 @property (nonatomic, readonly) BOOL userIsTheSender;
 @property (nonatomic, nullable) NSNumber *messageTimer;
-
+@property (nonatomic, nullable) NSNumber *blockTime;
 @end
 
 

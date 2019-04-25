@@ -920,6 +920,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic childMessages;
 @dynamic parentMessage;
 @dynamic messageTimer;
+@dynamic blockTime;
 @dynamic relevantForConversationStatus;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
@@ -939,7 +940,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                               inManagedObjectContext:(NSManagedObjectContext *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
-    ZMSystemMessageType type = [self.class systemMessageTypeFromEventType:updateEvent.type];
+    ZMSystemMessageType type = [self.class systemMessageTypeFromEvent:updateEvent];
     if (type == ZMSystemMessageTypeInvalid) {
         return nil;
     }
@@ -969,6 +970,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.systemMessageType = type;
     message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
+    message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
     
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     
@@ -1045,6 +1047,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             case ZMSystemMessageTypeParticipantsAdded:
             case ZMSystemMessageTypeParticipantsRemoved:
             case ZMSystemMessageTypeMessageTimerUpdate:
+            case ZMSystemMessageTypeAllDisableSendMsg:
+            case ZMSystemMessageTypeMemberDisableSendMsg:
                 return NO;
         }
     }];
@@ -1062,9 +1066,16 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
 }
 
-+ (ZMSystemMessageType)systemMessageTypeFromEventType:(ZMUpdateEventType)type
++ (ZMSystemMessageType)systemMessageTypeFromEvent:(ZMUpdateEvent *)event
 {
+    ZMUpdateEventType type = event.type;
     NSNumber *number = self.eventTypeToSystemMessageTypeMap[@(type)];
+    if (type == ZMUpdateEventTypeConversationUpdate && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoBlockTimeKey]) {
+        number = @(ZMSystemMessageTypeAllDisableSendMsg);
+    }
+    if (type == ZMUpdateEventTypeConversationUpdateBlockTime && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoBlockTimeKey]) {
+        number = @(ZMSystemMessageTypeMemberDisableSendMsg);
+    }
     if(number == nil) {
         return ZMSystemMessageTypeInvalid;
     }

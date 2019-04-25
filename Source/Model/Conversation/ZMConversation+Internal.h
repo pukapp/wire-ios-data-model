@@ -101,6 +101,7 @@ extern NSString *const ZMConversationTopWebAppsKey;
 extern NSString *const ZMConversationIsPlaceTopKey;
 extern NSString *const ZMConversationIsAllowMemberAddEachOtherKey;
 extern NSString *const ZMConversationIsVisibleForMemberChangeKey;
+extern NSString *const ZMConversationIsDisableSendMsgKey;
 
 NS_ASSUME_NONNULL_END
 
