@@ -154,7 +154,11 @@ extension ZMAssetClientMessage: ImageAssetStorage {
     }
     
     @objc public func requiredImageFormats() -> NSOrderedSet {
-        return self.asset?.requiredImageFormats ?? NSOrderedSet()
+        if self.isUploadOriginalImage {
+            return NSOrderedSet(object: ZMImageFormat.original.rawValue)
+        } else {
+            return self.asset?.requiredImageFormats ?? NSOrderedSet()
+        }
     }
     
     @objc public func isInline(for format: ZMImageFormat) -> Bool {
@@ -178,15 +182,18 @@ extension ZMAssetClientMessage: ImageAssetStorage {
     @objc public func processingDidFinish() {
         guard let moc = self.managedObjectContext else { return }
         moc.zm_fileAssetCache.deleteAssetData(self,
-                                              format: .original,
+                                              format: self.imageFormat,
                                               encrypted: false)
         moc.enqueueDelayedSave()
     }
     
-    var imageFormat: ZMImageFormat {
-        let genericMessage = self.mediumGenericMessage ?? self.previewGenericMessage
-        return genericMessage?.imageAssetData?.imageFormat() ?? .invalid
-        
+    public var imageFormat: ZMImageFormat {
+        if self.isUploadOriginalImage {
+            return ZMImageFormat.original
+        } else {
+            let genericMessage = self.mediumGenericMessage ?? self.previewGenericMessage
+            return genericMessage?.imageAssetData?.imageFormat() ?? .invalid
+        }
     }
 
 }

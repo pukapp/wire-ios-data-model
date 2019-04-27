@@ -22,6 +22,13 @@ import Foundation
 /// An asset message (image, file, ...)
 @objcMembers public class ZMAssetClientMessage: ZMOTRMessage {
 
+    @NSManaged public var isUploadOriginalImage: Bool
+    
+    ///设置过期时间
+    override public static func defaultExpirationTime() -> TimeInterval {
+        return 60
+    }
+    
     /// In memory cache
     var cachedGenericAssetMessage: ZMGenericMessage? = nil
     
@@ -152,7 +159,8 @@ import Foundation
                 hasEncryptionKeys = true
             }
         } else if self.imageMessageData != nil {
-            if let imageAsset = self.genericMessage(for: .medium)?.imageAssetData, imageAsset.hasOtrKey() {
+            let format: ZMImageFormat = self.isUploadOriginalImage ? .original : .medium
+            if let imageAsset = self.genericMessage(for: format)?.imageAssetData, imageAsset.hasOtrKey() {
                 hasEncryptionKeys = true
             }
         }
