@@ -170,7 +170,9 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @property (nonatomic, readonly) BOOL userIsTheSender; // Set to true if sender is the only user in users array. E.g. when a wireless user joins conversation
 @property (nonatomic) NSNumber * _Nullable messageTimer;
-@property (nonatomic) NSNumber * _Nullable blockTime;// Only filled for .messageTimerUpdate
+@property (nonatomic) NSNumber * _Nullable blockTime;
+@property (nonatomic) NSString * _Nullable blockUser;
+// Only filled for .messageTimerUpdate
 @property (nonatomic) BOOL relevantForConversationStatus; // If true (default), the message is considered to be shown inside the conversation list
 
 + (ZMSystemMessage * _Nullable)fetchLatestPotentialGapSystemMessageInConversation:(ZMConversation * _Nonnull)conversation;

@@ -55,6 +55,7 @@ NSString *const ZMConversationMutedStatusKey = @"mutedStatus";
 NSString *const ZMConversationMessagesKey = @"messages";
 NSString *const ZMConversationHiddenMessagesKey = @"hiddenMessages";
 NSString *const ZMConversationMembersAliasnameKey = @"membersAliasname";
+NSString *const ZMConversationMembersSendMsgStatusesKey = @"membersSendMsgStatuses";
 NSString *const ZMConversationLastServerSyncedActiveParticipantsKey = @"lastServerSyncedActiveParticipants";
 NSString *const ZMConversationHasUnreadKnock = @"hasUnreadKnock";
 NSString *const ZMConversationUserDefinedNameKey = @"userDefinedName";
@@ -213,6 +214,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isPlaceTop;
 
 @dynamic membersAliasname;
+@dynamic membersSendMsgStatuses;
 @dynamic membersCount;
 @dynamic isAllowMemberAddEachOther;
 @dynamic isVisibleForMemberChange;
@@ -414,6 +416,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             ZMConversationMessagesKey,
             ZMConversationHiddenMessagesKey,
             ZMConversationMembersAliasnameKey,
+            ZMConversationMembersSendMsgStatusesKey,
             ZMConversationLastServerTimeStampKey,
             SecurityLevelKey,
             ZMConversationLastUnreadKnockDateKey,

@@ -36,6 +36,7 @@
 @class Team;
 @class UserAliasname;
 @class ZMWebApp;
+@class UserDisableSendMsgStatus;
 
 @protocol ZMConversationMessage;
 
@@ -92,6 +93,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (readonly, nonatomic, nonnull) NSOrderedSet<ZMUser *> *activeParticipants;
 //新增群昵称
 @property (readonly, nonatomic, nonnull) NSSet<UserAliasname *> *membersAliasname;
+//群禁言
+@property (readonly, nonatomic, nonnull) NSSet<UserDisableSendMsgStatus *> *membersSendMsgStatuses;
 @property (readonly, nonatomic, nonnull) ZMUser *creator;
 @property (nonatomic, readonly) BOOL isPendingConnectionConversation;
 @property (nonatomic, readonly) NSUInteger estimatedUnreadCount;

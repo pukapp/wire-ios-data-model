@@ -59,6 +59,7 @@ NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
 NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
+NSString *const ZMConversationInfoBlockUserKey = @"block_user";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
@@ -187,6 +188,8 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         self.syncedMessageDestructionTimeout = messageTimerNumber.doubleValue / 1000;
     }
     [UserAliasname createFromTransportData:transportData managedObjectContext:self.managedObjectContext inConversation:self];
+    
+    [UserDisableSendMsgStatus createFrom:transportData managedObjectContext:self.managedObjectContext inConversation:self.remoteIdentifier.transportString];
 }
 
 - (void)updateMembersWithPayload:(NSDictionary *)members

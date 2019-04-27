@@ -921,6 +921,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic parentMessage;
 @dynamic messageTimer;
 @dynamic blockTime;
+@dynamic blockUser;
 @dynamic relevantForConversationStatus;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
@@ -971,6 +972,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
     message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
+    message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
     
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     

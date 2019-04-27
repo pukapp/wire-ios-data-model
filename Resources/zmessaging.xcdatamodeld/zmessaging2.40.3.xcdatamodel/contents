@@ -95,6 +95,7 @@
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="lastServerSyncedActiveParticipants" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="User" inverseName="lastServerSyncedActiveConversations" inverseEntity="User" syncable="YES"/>
         <relationship name="membersAliasname" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
+        <relationship name="membersSendMsgStatuses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserDisableSendMsgStatus" inverseName="withConversation" inverseEntity="UserDisableSendMsgStatus" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="conversations" inverseEntity="Team" syncable="YES"/>
         <relationship name="topWebApps" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="WebApp" inverseName="conversations" inverseEntity="WebApp" syncable="YES"/>
@@ -178,6 +179,7 @@
     <entity name="SystemMessage" representedClassName="ZMSystemMessage" parentEntity="Message" syncable="YES">
         <attribute name="allTeamUsersAdded" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="blockTime" optional="YES" attributeType="Integer 64" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="blockUser" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="messageTimer" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsUpdatingUsers" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
@@ -294,6 +296,13 @@
         <relationship name="trustedClients" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="trustedByClients" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="clients" inverseEntity="User" syncable="YES"/>
     </entity>
+    <entity name="UserDisableSendMsgStatus" representedClassName=".UserDisableSendMsgStatus" syncable="YES">
+        <attribute name="block_time" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="needUpload" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="userid" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="withConversation" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Conversation" inverseName="membersSendMsgStatuses" inverseEntity="Conversation" syncable="YES"/>
+    </entity>
     <entity name="WebApp" representedClassName=".ZMWebApp" syncable="YES">
         <attribute name="appId" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="brief" optional="YES" attributeType="String" syncable="YES"/>
@@ -314,7 +323,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="225"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="975"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="990"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
@@ -324,12 +333,13 @@
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
-        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="270"/>
+        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="285"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="795"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="465"/>
         <element name="WebApp" positionX="-234" positionY="-117" width="128" height="240"/>
+        <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="120"/>
     </elements>
 </model>

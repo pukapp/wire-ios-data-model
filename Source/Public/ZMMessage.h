@@ -143,6 +143,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
 @property (nonatomic, readonly) BOOL userIsTheSender;
 @property (nonatomic, nullable) NSNumber *messageTimer;
 @property (nonatomic, nullable) NSNumber *blockTime;
+@property (nonatomic, nullable) NSString *blockUser;
 @end
 
 

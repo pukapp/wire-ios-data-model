@@ -27,6 +27,7 @@
 @class AddressBookEntry;
 @class Member;
 @class Team;
+@class UserDisableSendMsgStatus;
 
 // 机器人模式
 // 1 : 已关闭
