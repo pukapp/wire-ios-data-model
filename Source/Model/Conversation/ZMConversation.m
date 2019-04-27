@@ -1122,14 +1122,14 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return message;
 }
 
-- (ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(NSUUID *)nonce imageData:(NSData *)imageData
+- (ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(NSUUID *)nonce imageData:(NSData *)imageData isOriginal:(BOOL)isOriginal
 {
     ZMAssetClientMessage *message =
     [[ZMAssetClientMessage alloc] initWithOriginalImage:imageData
                                                   nonce:nonce
                                    managedObjectContext:self.managedObjectContext
                                            expiresAfter:self.messageDestructionTimeoutValue];
-
+    message.isUploadOriginalImage = isOriginal;
     message.sender = [ZMUser selfUserInContext:self.managedObjectContext];
     
     [message setExpirationDate];

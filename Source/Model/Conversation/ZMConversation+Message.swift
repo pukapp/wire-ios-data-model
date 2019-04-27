@@ -86,11 +86,11 @@ extension ZMConversation {
         return append(imageFromData: imageData)
     }
     
-    @discardableResult @objc(appendImageFromData:nonce:)
-    public func append(imageFromData imageData: Data, nonce: UUID = UUID()) -> ZMConversationMessage? {
+    @discardableResult @objc(appendImageFromData:isOriginal:nonce:)
+    public func append(imageFromData imageData: Data, isOriginal: Bool = false, nonce: UUID = UUID()) -> ZMConversationMessage? {
         do {
             let imageDataWithoutMetadata = try imageData.wr_removingImageMetadata()
-            return appendAssetClientMessage(withNonce: nonce, imageData: imageDataWithoutMetadata)
+            return appendAssetClientMessage(withNonce: nonce, imageData: imageDataWithoutMetadata, isOriginal: isOriginal)
         } catch let error {
             log.error("Cannot remove image metadata: \(error)")
             return nil
@@ -146,9 +146,9 @@ extension ZMConversation {
         return append(location: location)
     }
     
-    @discardableResult @objc(appendMessageWithImageData:)
-    public func _append(imageFromData imageData: Data) -> ZMConversationMessage? {
-        return append(imageFromData: imageData)
+    @discardableResult @objc(appendMessageWithImageData:isOriginal:)
+    public func _append(imageFromData imageData: Data, isOriginal: Bool) -> ZMConversationMessage? {
+        return append(imageFromData: imageData, isOriginal: isOriginal)
     }
     
     @discardableResult @objc(appendMessageWithFileMetadata:)

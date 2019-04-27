@@ -185,7 +185,7 @@ NS_ASSUME_NONNULL_END
 - (nullable ZMClientMessage *)appendClientMessageWithGenericMessage:(nonnull ZMGenericMessage *)genericMessage;
 
 
-- (nullable ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(nonnull NSUUID *)nonce imageData:(nonnull NSData *)imageData;
+- (nullable ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(nonnull NSUUID *)nonce imageData:(nonnull NSData *)imageData isOriginal:(BOOL)isOriginal;
 
 
 - (void)appendNewConversationSystemMessageIfNeeded;
