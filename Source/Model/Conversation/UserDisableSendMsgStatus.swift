@@ -57,6 +57,7 @@ extension UserDisableSendMsgStatus {
             if !fromPushChannel {
                entry.needUpload = true
             }
+            conver.disableSendLastModifiedDate = Date()
         }
         var exist: Bool = false
         conver.membersSendMsgStatuses.forEach { (status) in
@@ -65,6 +66,7 @@ extension UserDisableSendMsgStatus {
                 if !fromPushChannel {
                     status.setLocallyModifiedKeys([ZMConversationInfoBlockTimeKey])
                 }
+                conver.disableSendLastModifiedDate = Date()
                 exist = true
                 return
             }

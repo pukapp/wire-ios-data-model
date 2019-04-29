@@ -104,6 +104,7 @@ NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
 static NSString *const IsPendingConnectionConversationKey = @"isPendingConnectionConversation";
 static NSString *const LastModifiedDateKey = @"lastModifiedDate";
+static NSString *const DisableSendLastModifiedDateKey = @"disableSendLastModifiedDate";
 static NSString *const LastReadMessageKey = @"lastReadMessage";
 static NSString *const lastEditableMessageKey = @"lastEditableMessage";
 static NSString *const NeedsToBeUpdatedFromBackendKey = @"needsToBeUpdatedFromBackend";
@@ -175,6 +176,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic userDefinedName;
 @dynamic messages;
 @dynamic lastModifiedDate;
+@dynamic disableSendLastModifiedDate;
 @dynamic creator;
 @dynamic normalizedUserDefinedName;
 @dynamic conversationType;
@@ -408,6 +410,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             ZMConversationConversationTypeKey,
             DraftMessageDataKey,
             LastModifiedDateKey,
+            DisableSendLastModifiedDateKey,
             ZMNormalizedUserDefinedNameKey,
             ZMConversationLastServerSyncedActiveParticipantsKey,
             VoiceChannelKey,

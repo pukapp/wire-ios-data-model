@@ -89,6 +89,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 @property (readonly, nonatomic) ZMConversationType conversationType;
 @property (readonly, nonatomic, nullable) NSDate *lastModifiedDate;
+@property (nonatomic, nullable) NSDate *disableSendLastModifiedDate;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *messages;
 @property (readonly, nonatomic, nonnull) NSOrderedSet<ZMUser *> *activeParticipants;
 //新增群昵称
