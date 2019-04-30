@@ -99,7 +99,7 @@ public enum MessageDestructionTimeout: Equatable {
     case synced(MessageDestructionTimeoutValue)
 }
 
-fileprivate let longStyleFormatter: DateComponentsFormatter = {
+let longStyleFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.includesApproximationPhrase = false
     formatter.maximumUnitCount = 1
