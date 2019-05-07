@@ -966,6 +966,10 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inContext:moc];
         [usersSet addObject:user];
     }
+    // 当添加或者删除成员是，若群变动不可见，也不是群主，且加人信息里不包含自己。该系统消息不需要入库
+    if ((type == ZMSystemMessageTypeParticipantsAdded || type == ZMSystemMessageTypeParticipantsRemoved) && !conversation.isVisibleForMemberChange && !conversation.creator.isSelfUser && ![usersSet containsObject:[ZMUser self]]){
+        return nil;
+    }
     
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
