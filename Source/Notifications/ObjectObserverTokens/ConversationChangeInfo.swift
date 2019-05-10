@@ -99,7 +99,8 @@ extension ZMConversation : ObjectInSnapshot {
     
     /// 头像改变
     public var headerImgChanged : Bool {
-        return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey),#keyPath(ZMConversation.groupImageMediumKey))
+        return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey)) ||
+               changedKeysContain(keys:#keyPath(ZMConversation.groupImageMediumKey))
     }
     
     /// 开启链接加入允许开启

@@ -99,7 +99,7 @@ public final class ZMConversationMessageWindow: NSObject {
 
 extension ZMMessage {
 
-    /// a message that should be destructed, but isObfuscated flag is false and it still exist in Core Data
+    /// a message that should be destructed, but isObfuscated flag is false and it still exist in Core Date
     fileprivate var isExpirationZombie: Bool {
         guard let destructionDate = self.destructionDate else { return false }
 

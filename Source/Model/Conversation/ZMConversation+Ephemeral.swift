@@ -20,24 +20,24 @@
 public enum MessageDestructionTimeoutValue: RawRepresentable, Hashable {
 
     case none
-    case fiveSeconds
-    case fifteenSeconds
-    case thirtySeconds
-    case oneMinute
-    case fiveMinute
+    case tenSeconds
+    case fiveMinutes
+    case oneHour
     case oneDay
+    case oneWeek
+    case fourWeeks
 
     case custom(TimeInterval)
 
     public init(rawValue: TimeInterval) {
         switch rawValue {
         case 0: self = .none
-        case 5: self = .fiveSeconds
-        case 15: self = .fifteenSeconds
-        case 30: self = .thirtySeconds
-        case 60: self = .oneMinute
-        case 300: self = .fiveMinute
+        case 10: self = .tenSeconds
+        case 300: self = .fiveMinutes
+        case 3600: self = .oneHour
         case 86400: self = .oneDay
+        case 604800: self = .oneWeek
+        case 2419200: self = .fourWeeks
         default: self = .custom(rawValue)
         }
     }
@@ -45,12 +45,12 @@ public enum MessageDestructionTimeoutValue: RawRepresentable, Hashable {
     public var rawValue: TimeInterval {
         switch self {
         case .none: return 0
-        case .fiveSeconds: return 5
-        case .fifteenSeconds: return 15
-        case .thirtySeconds: return 30
-        case .oneMinute: return 60
-        case .fiveMinute: return 300
+        case .tenSeconds: return 10
+        case .fiveMinutes: return 300
+        case .oneHour: return 3600
         case .oneDay: return 86400
+        case .oneWeek: return 604800
+        case .fourWeeks: return 2419200
         case .custom(let duration): return duration
         }
     }
@@ -73,12 +73,12 @@ public extension MessageDestructionTimeoutValue {
     static var all: [MessageDestructionTimeoutValue] {
         return [
             .none,
-            .fiveSeconds,
-            .fifteenSeconds,
-            .thirtySeconds,
-            .oneMinute,
-            .fiveMinute,
-            .oneDay
+            .tenSeconds,
+            .fiveMinutes,
+            .oneHour,
+            .oneDay,
+            .oneWeek,
+            .fourWeeks
         ]
     }
 }
