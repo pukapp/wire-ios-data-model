@@ -54,6 +54,8 @@
             }
         }
             break;
+            
+        case ZMUpdateEventTypeConversationUserServiceNoticeAdd:
         case ZMUpdateEventTypeConversationWalletNotify: {
             NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
             if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
@@ -68,6 +70,7 @@
             VerifyReturnNil(message != nil);
         }
             break;
+            
         case ZMUpdateEventTypeConversationMemberJoinask: {
             NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
             if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
