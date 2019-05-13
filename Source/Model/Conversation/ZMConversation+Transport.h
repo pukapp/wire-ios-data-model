@@ -36,7 +36,6 @@ extern NSString *const ZMConversationInfoOTRArchivedReferenceKey;
 //new add
 extern NSString *const ZMConversationInfoOTRSelfRemarkBoolKey;
 extern NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey;
-extern NSString *const ZMPayConversationRemoteID;
 extern NSString *const ZMConversationInfoOTRSelfVerifyKey;
 extern NSString *const ZMConversationInfoMemberInviteVerfyKey;
 extern NSString *const ZMConversationInfoOTRCreatorChangeKey;

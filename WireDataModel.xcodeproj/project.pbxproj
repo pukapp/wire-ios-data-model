@@ -156,7 +156,6 @@
 		87FFC71A20DBF2820005076E /* store2-47-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 87FFC71920DBF2820005076E /* store2-47-0.wiredatabase */; };
 		A01D508422770A6400E7AF52 /* ZMConversation+SendDisable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01D508322770A6400E7AF52 /* ZMConversation+SendDisable.swift */; };
 		A04AC76F221E9E0F0005C9E3 /* UserAliasname.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */; };
-		A0E0796A222ED55C009E8400 /* ZMConversation+Systemnofi.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E07969222ED55C009E8400 /* ZMConversation+Systemnofi.swift */; };
 		A0EDE7202271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */; };
 		BF0D07FB1E4C7B7A00B934EB /* TextSearchQueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0D07F91E4C7B1100B934EB /* TextSearchQueryTests.swift */; };
 		BF103F9D1F0112F30047FDE5 /* ManagedObjectObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF103F9C1F0112F30047FDE5 /* ManagedObjectObserver.swift */; };
@@ -679,7 +678,6 @@
 		A01D508322770A6400E7AF52 /* ZMConversation+SendDisable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+SendDisable.swift"; sourceTree = "<group>"; };
 		A03FBCE42248D65F00B2B2A4 /* zmessaging2.40.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.40.1.xcdatamodel; sourceTree = "<group>"; };
 		A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAliasname.swift; sourceTree = "<group>"; };
-		A0E07969222ED55C009E8400 /* ZMConversation+Systemnofi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+Systemnofi.swift"; sourceTree = "<group>"; };
 		A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDisableSendMsgStatus.swift; sourceTree = "<group>"; };
 		BF0D07F91E4C7B1100B934EB /* TextSearchQueryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextSearchQueryTests.swift; sourceTree = "<group>"; };
 		BF103F9C1F0112F30047FDE5 /* ManagedObjectObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedObjectObserver.swift; sourceTree = "<group>"; };
@@ -1420,7 +1418,6 @@
 				5EDDC7A52088CE3B00B24850 /* ZMConversation+Invalid.swift */,
 				A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */,
 				EBDC04DC22603873008CB9BE /* ZMWebApp.swift */,
-				A0E07969222ED55C009E8400 /* ZMConversation+Systemnofi.swift */,
 				A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */,
 			);
 			path = Conversation;
@@ -2608,7 +2605,6 @@
 				BF10B58B1E6432ED00E7036E /* Message.swift in Sources */,
 				BF491CE81F063EEB0055EE44 /* AccountManager.swift in Sources */,
 				F9A7067E1CAEE01D00C2F5FE /* ZMGenericMessageData.m in Sources */,
-				A0E0796A222ED55C009E8400 /* ZMConversation+Systemnofi.swift in Sources */,
 				16D95A421FCEF87B00C96069 /* ZMUser+Availability.swift in Sources */,
 				F9331C881CB419B500139ECC /* NSFetchRequest+ZMRelationshipKeyPaths.m in Sources */,
 				F9C3488D1E2E219C0015D69D /* MessageWindowObserverCenter.swift in Sources */,

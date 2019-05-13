@@ -63,7 +63,6 @@ NSString *const ZMConversationInfoBlockUserKey = @"block_user";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
-NSString *const ZMPayConversationRemoteID = @"00000000-0000-0000-0000-000000000000";
 NSString *const ZMConversationInfoTopAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
