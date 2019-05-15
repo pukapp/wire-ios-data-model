@@ -191,6 +191,10 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return YES;
 }
 
+- (BOOL)shouldGenerateFirstUnread {
+    return YES;
+}
+
 + (NSPredicate *)predicateForObjectsThatNeedToBeUpdatedUpstream;
 {
     return [NSPredicate predicateWithValue:NO];
@@ -916,11 +920,13 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic addedUsers;
 @dynamic removedUsers;
 @dynamic needsUpdatingUsers;
+@dynamic isService;
 @dynamic duration;
 @dynamic childMessages;
 @dynamic parentMessage;
 @dynamic messageTimer;
 @dynamic blockTime;
+@dynamic serviceMessage;
 @dynamic blockUser;
 @dynamic relevantForConversationStatus;
 
@@ -977,6 +983,18 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.serverTimestamp = updateEvent.timeStamp;
     message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
     message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
+    
+    if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify) {
+        ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
+        serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
+        serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
+        serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
+        serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
+        message.serviceMessage = serviceMessage;
+        conversation.lastServiceMessage = serviceMessage;
+        conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateForKey:@"time"];
+        message.isService = YES;
+    }
     
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     
@@ -1055,6 +1073,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             case ZMSystemMessageTypeMessageTimerUpdate:
             case ZMSystemMessageTypeAllDisableSendMsg:
             case ZMSystemMessageTypeMemberDisableSendMsg:
+            case ZMSystemMessageTypeServiceMessage:
                 return NO;
         }
     }];
@@ -1100,7 +1119,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return @{
              @(ZMUpdateEventTypeConversationMemberJoin) : @(ZMSystemMessageTypeParticipantsAdded),
              @(ZMUpdateEventTypeConversationMemberLeave) : @(ZMSystemMessageTypeParticipantsRemoved),
-             @(ZMUpdateEventTypeConversationRename) : @(ZMSystemMessageTypeConversationNameChanged)
+             @(ZMUpdateEventTypeConversationRename) : @(ZMSystemMessageTypeConversationNameChanged),
+             @(ZMUpdateEventTypeConversationServiceNotify) : @(ZMSystemMessageTypeServiceMessage)
              };
 }
 
@@ -1110,6 +1130,23 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 }
 
 - (BOOL)shouldGenerateUnreadCount;
+{
+    switch (self.systemMessageType) {
+        case ZMSystemMessageTypeParticipantsRemoved:
+        case ZMSystemMessageTypeParticipantsAdded:
+        {
+            ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+            return [self.users containsObject:selfUser] && !self.sender.isSelfUser;
+        }
+        case ZMSystemMessageTypeMissedCall:
+        case ZMSystemMessageTypeServiceMessage:
+            return YES;
+        default:
+            return NO;
+    }
+}
+
+- (BOOL)shouldGenerateFirstUnread;
 {
     switch (self.systemMessageType) {
         case ZMSystemMessageTypeParticipantsRemoved:

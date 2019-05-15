@@ -25,7 +25,7 @@ public final class ZMConversationMessageWindow: NSObject {
     fileprivate let mutableMessages: NSMutableOrderedSet
 
     var activeSize: UInt {
-        return min(size, UInt(conversation.messages.count))
+        return min(size, UInt(conversation.messagesFilterService.count))
     }
 
     @objc public var messages: NSOrderedSet {
@@ -41,8 +41,8 @@ public final class ZMConversationMessageWindow: NSObject {
 
         // find first unread, offset size from there
         if let firstUnreadMessage = conversation.firstUnreadMessage {
-            let firstUnreadIndex = UInt(conversation.messages.index(of: firstUnreadMessage))
-            self.size = max(0, UInt(conversation.messages.count) - firstUnreadIndex + size)
+            let firstUnreadIndex = UInt(conversation.messagesFilterService.index(of: firstUnreadMessage))
+            self.size = max(0, UInt(conversation.messagesFilterService.count) - firstUnreadIndex + size)
         }
 
         recalculateMessages()
@@ -57,7 +57,7 @@ public final class ZMConversationMessageWindow: NSObject {
     }
 
     @objc func recalculateMessages() {
-        let messages = conversation.messages
+        let messages = conversation.messagesFilterService
         let numberOfMessages = Int(activeSize)
         let range = NSRange(location: messages.count - numberOfMessages, length: numberOfMessages)
         let newMessages = NSMutableOrderedSet(orderedSet: messages, range: range, copyItems: false)

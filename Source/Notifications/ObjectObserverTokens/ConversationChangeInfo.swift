@@ -57,7 +57,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.communityID),
                     #keyPath(ZMConversation.isPlaceTop),
                     #keyPath(ZMConversation.isDisableSendMsg),
-                    #keyPath(ZMConversation.disableSendLastModifiedDate)
+                    #keyPath(ZMConversation.disableSendLastModifiedDate),
+                    #keyPath(ZMConversation.lastServiceMessageTimeStamp),
             ])
     }
 
@@ -112,12 +113,14 @@ extension ZMConversation : ObjectInSnapshot {
     public var disableSendMsgChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isDisableSendMsg))
     }
-    
+    //是否有新的社区通知消息
+    public var lastServiceMessageChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.lastServiceMessageTimeStamp))
+    }
     //群成员禁言
     public var disableSendMsgLastModifiedDateChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.disableSendLastModifiedDate))
     }
-    
     /// 群主确认或者成员确认改变
     public var isOpenInviteVerifyChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))

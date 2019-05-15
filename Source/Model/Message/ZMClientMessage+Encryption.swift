@@ -97,7 +97,7 @@ extension ZMAssetClientMessage: EncryptedPayloadGenerator {
 
 
 extension ZMGenericMessage {
-        
+    
     public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?) -> (data: Data, strategy: MissingClientsStrategy)? {
         guard let context = conversation.managedObjectContext else { return nil }
         

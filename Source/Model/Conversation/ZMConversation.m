@@ -178,9 +178,11 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic lastModifiedDate;
 @dynamic disableSendLastModifiedDate;
 @dynamic creator;
+@dynamic lastServiceMessage;
 @dynamic normalizedUserDefinedName;
 @dynamic conversationType;
 @dynamic clearedTimeStamp;
+@dynamic lastServiceMessageTimeStamp;
 @dynamic lastReadServerTimeStamp;
 @dynamic lastServerTimeStamp;
 @dynamic internalIsArchived;
@@ -262,6 +264,15 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 - (NSUInteger)estimatedUnreadSelfReplyCount
 {
     return (unsigned long)self.internalEstimatedUnreadSelfReplyCount;
+}
+
+- (NSOrderedSet *)messagesFilterService {
+    return [self.messages filteredOrderedSetUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, id ZM_UNUSED bindings) {
+        if ([evaluatedObject isKindOfClass:[ZMSystemMessage class]] && ((ZMSystemMessage *)evaluatedObject).isService) {
+            return NO;
+        }
+        return YES;
+    }]];
 }
 
 + (NSSet *)keyPathsForValuesAffectingEstimatedUnreadCount

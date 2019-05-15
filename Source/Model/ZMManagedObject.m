@@ -421,7 +421,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
 - (void)resetLocallyModifiedKeys:(NSSet *)keys;
 {
     NSMutableSet *newKeys = [self.keysThatHaveLocalModifications mutableCopy];
-    [newKeys minusSet:keys];
+    [newKeys minusSet:keys];//删除newKeys中和keys中相同的元素
     self.modifiedKeys = (newKeys.count == 0) ? nil : [newKeys copy];
 }
 
@@ -441,7 +441,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     if (self.modifiedKeys == nil) {
         return NO;
     }
-    return [self.keysThatHaveLocalModifications intersectsSet:keys];
+    return [self.keysThatHaveLocalModifications intersectsSet:keys];//取k交集
 }
 
 - (BOOL)hasLocalModificationsForKey:(NSString *)key;

@@ -339,7 +339,7 @@ extension ZMConversation {
             }
         }
         
-        return unreadMessagesIncludingInvisible.lazy.map(replaceChildWithParent).filter({ $0.visibleInConversation != nil }).first(where: { $0.shouldGenerateUnreadCount() })
+        return unreadMessagesIncludingInvisible.lazy.map(replaceChildWithParent).filter({ $0.visibleInConversation != nil }).first(where: { $0.shouldGenerateFirstUnread() })
     }
     
     // Returns first unread message mentioning the self user

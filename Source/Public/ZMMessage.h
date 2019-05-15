@@ -32,6 +32,7 @@
 @protocol ZMKnockMessageData;
 @protocol ZMFileMessageData;
 @protocol UserClientType;
+@class ServiceMessage;
 
 
 #pragma mark - ZMImageMessageData
@@ -88,7 +89,8 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeTeamMemberLeave,
     ZMSystemMessageTypeMessageTimerUpdate,
     ZMSystemMessageTypeAllDisableSendMsg,
-    ZMSystemMessageTypeMemberDisableSendMsg
+    ZMSystemMessageTypeMemberDisableSendMsg,
+    ZMSystemMessageTypeServiceMessage,
 };
 
 @protocol ZMJsonTextMessageData <NSObject>
@@ -144,6 +146,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
 @property (nonatomic, nullable) NSNumber *messageTimer;
 @property (nonatomic, nullable) NSNumber *blockTime;
 @property (nonatomic, nullable) NSString *blockUser;
+@property (nonatomic, nullable) ServiceMessage *serviceMessage;
 @end
 
 

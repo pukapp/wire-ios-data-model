@@ -46,6 +46,9 @@
     if (self.type == ZMUpdateEventTypeConversationWalletNotify) {
         return [NSUUID uuidWithTransportString:@"00000000-0000-0000-0000-000000000000"];
     }
+    if (self.type == ZMUpdateEventTypeConversationServiceNotify) {
+        return [NSUUID uuidWithTransportString:@"00000000-0000-0000-0000-000000000002"];
+    }
     return [self.payload optionalUuidForKey:@"from"];
 }
 

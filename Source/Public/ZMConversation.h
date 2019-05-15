@@ -91,11 +91,13 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (readonly, nonatomic, nullable) NSDate *lastModifiedDate;
 @property (nonatomic, nullable) NSDate *disableSendLastModifiedDate;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *messages;
+@property (readonly, nonatomic, nonnull) NSOrderedSet *messagesFilterService;
 @property (readonly, nonatomic, nonnull) NSOrderedSet<ZMUser *> *activeParticipants;
 //新增群昵称
 @property (readonly, nonatomic, nonnull) NSSet<UserAliasname *> *membersAliasname;
 //群禁言
 @property (readonly, nonatomic, nonnull) NSSet<UserDisableSendMsgStatus *> *membersSendMsgStatuses;
+@property (nonatomic) ServiceMessage * _Nullable lastServiceMessage;
 @property (readonly, nonatomic, nonnull) ZMUser *creator;
 @property (nonatomic, readonly) BOOL isPendingConnectionConversation;
 @property (nonatomic, readonly) NSUInteger estimatedUnreadCount;
@@ -158,6 +160,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isVisibleForMemberChange;
 //全员禁言
 @property (nonatomic) BOOL isDisableSendMsg;
+
+@property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;

@@ -80,7 +80,7 @@ extension NSManagedObjectContext {
         windowSnapshots.forEach { (snapshot: MessageWindowSnapshot) in
             changes.values.forEach{
                 if let convChanges = $0 as? [ConversationChangeInfo] {
-                    zmLog.debug("Conversations did change: \n \(convChanges.map{$0.customDebugDescription}.joined(separator: "\n"))")
+                    print("Conversations did change: \n \(convChanges.map{$0.customDebugDescription}.joined(separator: "\n"))")
                     convChanges.forEach{snapshot.conversationDidChange($0)}
                 }
                 if let userChanges = $0 as? [UserChangeInfo] {
@@ -156,7 +156,7 @@ class MessageWindowSnapshot : NSObject, ZMConversationObserver, ZMMessageObserve
     /// Processes conversationChangeInfo for conversations in window when messages changed
     func conversationDidChange(_ changeInfo: ConversationChangeInfo) {
         guard let conversation = conversation, changeInfo.conversation == conversation else { return }
-        if(changeInfo.messagesChanged || changeInfo.clearedChanged || changeInfo.selfRemarkChanged || changeInfo.headerImgChanged || changeInfo.replyTypeChanged) {
+        if(changeInfo.messagesChanged || changeInfo.clearedChanged || changeInfo.selfRemarkChanged || changeInfo.headerImgChanged || changeInfo.replyTypeChanged || changeInfo.lastServiceMessageChanged) {
             shouldRecalculate = true
             zmLog.debug("Recalculating window due to conversation change \(changeInfo.customDebugDescription)")
         }

@@ -32,6 +32,7 @@
 @class ZMMessageConfirmation;
 @class ZMReaction;
 @class ZMClientMessage;
+@class ServiceMessage;
 
 @protocol UserClientType;
 
@@ -88,6 +89,7 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 - (void)updateWithPostPayload:(NSDictionary * _Nonnull)payload updatedKeys:(__unused NSSet * _Nullable)updatedKeys;
 - (void)resend;
 - (BOOL)shouldGenerateUnreadCount;
+- (BOOL)shouldGenerateFirstUnread;
 
 /// Removes the message and deletes associated content
 /// @param clearingSender Whether information about the sender should be removed or not
@@ -162,6 +164,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) NSSet<ZMUser *> * _Nonnull removedUsers; // Only filled for ZMSystemMessageTypePotentialGap
 @property (nonatomic, copy) NSString * _Nullable text;
 @property (nonatomic) BOOL needsUpdatingUsers;
+@property (nonatomic) BOOL isService;
 
 @property (nonatomic) NSTimeInterval duration; // Only filled for .performedCall
 @property (nonatomic) NSSet<id <ZMSystemMessageData>>  * _Nonnull childMessages; // Only filled for .performedCall & .missedCall
@@ -170,7 +173,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @property (nonatomic, readonly) BOOL userIsTheSender; // Set to true if sender is the only user in users array. E.g. when a wireless user joins conversation
 @property (nonatomic) NSNumber * _Nullable messageTimer;
+
 @property (nonatomic) NSNumber * _Nullable blockTime;
+@property (nonatomic) ServiceMessage * _Nullable serviceMessage;
+
 @property (nonatomic) NSString * _Nullable blockUser;
 // Only filled for .messageTimerUpdate
 @property (nonatomic) BOOL relevantForConversationStatus; // If true (default), the message is considered to be shown inside the conversation list

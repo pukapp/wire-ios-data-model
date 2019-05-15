@@ -64,6 +64,14 @@ public extension ZMConversationMessage {
     public var isSystem: Bool {
         return systemMessageData != nil
     }
+    
+    public var isService: Bool {
+        if let systemMessage = self as? ZMSystemMessage, systemMessage.serviceMessage != nil {
+            return true
+        }
+        return false
+    }
+    
     /// 新增的系统通知消息
     public var isNewSystem: Bool {
         guard let jsonMessageData = jsonTextMessageData?.jsonMessageText?.data(using: .utf8),
