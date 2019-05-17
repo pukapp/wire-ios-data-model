@@ -220,28 +220,26 @@ NSString * const DeliveredKey = @"delivered";
         
         BOOL isNewMessage = NO;
         if (clientMessage == nil) {
-            if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-                // 第二条MemberJoinask模拟的消息不入库
-                if (message.hasTextJson){
-                    NSString *jsonText = message.textJson.content;
-                    NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:[jsonText dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
-    
-                        NSDictionary *data = dic[@"msgData"];
-                        int type = [data[@"type"] intValue];
-                        if (type == 2){
-                            return nil;
-                        }
-                }
-            }
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
             isNewMessage = YES;
         } else if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
-            if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-                clientMessage.isConfrimInvite = true;
-            }
             return nil;
+        }
+        
+        if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
+            // 被同步的设备需要在这里修改邀请成员消息的已确认属性
+            if (message.hasTextJson){
+                NSString *jsonText = message.textJson.content;
+                NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:[jsonText dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
+                
+                NSDictionary *data = dic[@"msgData"];
+                int type = [data[@"type"] intValue];
+                if (type == 2){
+                    clientMessage.isConfrimInvite = true;
+                }
+            }
         }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
