@@ -44,9 +44,6 @@
 extension UserDisableSendMsgStatus {
     
     static public func update(managedObjectContext: NSManagedObjectContext, block_time: NSNumber?, user: String?, conversation: String?, fromPushChannel: Bool = false) {
-        defer {
-            managedObjectContext.saveOrRollback()
-        }
         guard let block_time = block_time, let u = user, let conv = conversation, let uuid = UUID(uuidString: conv) else {return}
         guard let conver = ZMConversation(remoteID: uuid, createIfNeeded: false, in: managedObjectContext) else {return}
         let insert = {
