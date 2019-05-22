@@ -97,8 +97,9 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     // 群成员数量
     NSNumber *membersCountNumber = [transportData optionalNumberForKey:@"memsum"];
     if (membersCountNumber != nil) {
-        // Backend is sending the miliseconds, we need to convert to seconds.
-        self.membersCount = membersCountNumber.integerValue;
+        self.membersCount = self.conversationType == ZMConversationTypeHugeGroup
+        ? membersCountNumber.integerValue
+        : (NSInteger)self.activeParticipants.count;
     }
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
