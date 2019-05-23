@@ -16,6 +16,7 @@
     @NSManaged public var appid: String?
     @NSManaged public var isRead: Bool
     @NSManaged public var inConversation: ZMConversation?
+    @NSManaged public var inWebApp: ZMWebApp?
     
     
     @NSManaged public var systemMessage: ZMSystemMessage?

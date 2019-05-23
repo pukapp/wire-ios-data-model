@@ -992,6 +992,10 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
         message.serviceMessage = serviceMessage;
         conversation.lastServiceMessage = serviceMessage;
+        ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
+        if (webapp) {
+            serviceMessage.inWebApp = webapp;
+        }
         conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateForKey:@"time"];
         message.isService = YES;
     }

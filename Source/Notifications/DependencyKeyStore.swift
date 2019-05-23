@@ -20,42 +20,42 @@ import Foundation
 
 private var zmLog = ZMSLog(tag: "DependencyKeyStore")
 
-struct Observable {
-    
-    private let affectingKeyStore: DependencyKeyStore
-    let classIdentifier : String
-    private let affectingKeys : [String : Set<String>]
-    private let affectedKeys : [String : Set<String>]
-    
-    /// Keys that we want to report changes for
-    var observableKeys : Set<String> {
-        return affectingKeyStore.observableKeys[classIdentifier] ?? Set()
-    }
-    
-    /// Union of observable keys and their affecting keys
-    var allKeys : Set<String> {
-        return affectingKeyStore.allKeys[classIdentifier] ?? Set()
-    }
-    
-    init(classIdentifier: String, affectingKeyStore: DependencyKeyStore) {
-        self.classIdentifier = classIdentifier
-        self.affectingKeyStore = affectingKeyStore
-        self.affectingKeys = affectingKeyStore.affectingKeys[classIdentifier] ?? [:]
-        self.affectedKeys = affectingKeyStore.effectedKeys[classIdentifier] ?? [:]
-    }
-    
-    func keyPathsForValuesAffectingValue(for key: String) -> Set<String>{
-        return affectingKeys[key] ?? Set()
-    }
-    
-    func observableKeysAffectedByValue(for key: String) -> Set<String>{
-        var keys = affectedKeys[key] ?? Set()
-        if observableKeys.contains(key) {
-            keys.insert(key)
-        }
-        return keys
-    }
-}
+//struct Observable {
+//    
+//    private let affectingKeyStore: DependencyKeyStore
+//    let classIdentifier : String
+//    private let affectingKeys : [String : Set<String>]
+//    private let affectedKeys : [String : Set<String>]
+//    
+//    /// Keys that we want to report changes for
+//    var observableKeys : Set<String> {
+//        return affectingKeyStore.observableKeys[classIdentifier] ?? Set()
+//    }
+//    
+//    /// Union of observable keys and their affecting keys
+//    var allKeys : Set<String> {
+//        return affectingKeyStore.allKeys[classIdentifier] ?? Set()
+//    }
+//    
+//    init(classIdentifier: String, affectingKeyStore: DependencyKeyStore) {
+//        self.classIdentifier = classIdentifier
+//        self.affectingKeyStore = affectingKeyStore
+//        self.affectingKeys = affectingKeyStore.affectingKeys[classIdentifier] ?? [:]
+//        self.affectedKeys = affectingKeyStore.effectedKeys[classIdentifier] ?? [:]
+//    }
+//    
+//    func keyPathsForValuesAffectingValue(for key: String) -> Set<String>{
+//        return affectingKeys[key] ?? Set()
+//    }
+//    
+//    func observableKeysAffectedByValue(for key: String) -> Set<String>{
+//        var keys = affectedKeys[key] ?? Set()
+//        if observableKeys.contains(key) {
+//            keys.insert(key)
+//        }
+//        return keys
+//    }
+//}
 
 
 /// Maps the observable keys to affectedKeys and vice versa
