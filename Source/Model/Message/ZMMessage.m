@@ -992,6 +992,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
         message.serviceMessage = serviceMessage;
         conversation.lastServiceMessage = serviceMessage;
+        NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
+        serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
         ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
         if (webapp) {
             serviceMessage.inWebApp = webapp;

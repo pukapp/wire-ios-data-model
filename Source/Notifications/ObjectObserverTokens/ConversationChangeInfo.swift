@@ -113,7 +113,7 @@ extension ZMConversation : ObjectInSnapshot {
     public var disableSendMsgChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isDisableSendMsg))
     }
-    //是否有新的社区通知消息
+    //是否有新的通知消息
     public var lastServiceMessageChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.lastServiceMessageTimeStamp))
     }

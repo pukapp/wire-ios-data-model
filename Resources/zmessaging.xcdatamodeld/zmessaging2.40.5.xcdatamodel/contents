@@ -184,7 +184,7 @@
         <attribute name="type" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="url" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="inConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="lastServiceMessage" inverseEntity="Conversation" syncable="YES"/>
-        <relationship name="inWebApp" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WebApp" inverseName="lastServiceMessage" inverseEntity="WebApp" syncable="YES"/>
+        <relationship name="inWebApp" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WebApp" inverseName="lastServiceMessages" inverseEntity="WebApp" syncable="YES"/>
         <relationship name="systemMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="serviceMessage" inverseEntity="SystemMessage" syncable="YES"/>
     </entity>
     <entity name="Session" representedClassName="ZMSession" syncable="YES">
@@ -333,7 +333,7 @@
         <attribute name="url" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="version" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="topWebApps" inverseEntity="Conversation" syncable="YES"/>
-        <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inWebApp" inverseEntity="ServiceMessage" syncable="YES"/>
+        <relationship name="lastServiceMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inWebApp" inverseEntity="ServiceMessage" syncable="YES"/>
     </entity>
     <elements>
         <element name="AddressBookEntry" positionX="9" positionY="153" width="128" height="90"/>
