@@ -210,6 +210,11 @@ NSString * const DeliveredKey = @"delivered";
                                                    inManagedObjectContext:moc
                                                            prefetchResult:prefetchResult];
         
+        ///由于topic推送机制，在万人群发消息的时候也会给自己发送一条推送消息，所以这里判断senderClientID为空则说明是自己发送的消息，并且是万人群，则直接不做任何处理
+        if (clientMessage && !clientMessage.senderClientID && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
+            return nil;
+        }
+        ///万人群忽略送达的状态
         if (clientMessage && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
             clientMessage.delivered = YES;
         }
