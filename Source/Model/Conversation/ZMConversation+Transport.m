@@ -60,6 +60,7 @@ NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
 NSString *const ZMConversationInfoBlockUserKey = @"block_user";
+NSString *const ZMConversationInfoOratorKey = @"orator";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
@@ -176,6 +177,16 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopAppsKey];
     if (nil != topApps) {
         [self updateWithTopApps:topApps];
+    }
+    NSArray *orator = [transportData optionalArrayForKey:ZMConversationInfoOratorKey];
+    if (orator && orator.count > 0) {
+        [orator enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            NOT_USED(idx);
+            NOT_USED(stop);
+            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inContext:self.managedObjectContext];
+            user.needsToBeUpdatedFromBackend = YES;
+        }];
+        self.orator = orator.set;
     }
     
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];

@@ -161,6 +161,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //全员禁言
 @property (nonatomic) BOOL isDisableSendMsg;
 
+@property (nonatomic) NSSet<NSString *> * _Nullable orator;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 - (BOOL)canMarkAsUnread;

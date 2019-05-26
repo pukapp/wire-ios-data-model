@@ -2889,6 +2889,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F9C9A67C1CAD7A790039E10C /* ios-test-host.xcconfig */;
 			buildSettings = {
+				CLANG_WARN_UNREACHABLE_CODE = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/WireDataModelTestTarget/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = com.wire.WireDataModelTestTarget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2899,6 +2905,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F9C9A67C1CAD7A790039E10C /* ios-test-host.xcconfig */;
 			buildSettings = {
+				CLANG_WARN_UNREACHABLE_CODE = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/WireDataModelTestTarget/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = com.wire.WireDataModelTestTarget;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -59,6 +59,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.isDisableSendMsg),
                     #keyPath(ZMConversation.disableSendLastModifiedDate),
                     #keyPath(ZMConversation.lastServiceMessageTimeStamp),
+                    #keyPath(ZMConversation.orator),
             ])
     }
 
@@ -124,6 +125,10 @@ extension ZMConversation : ObjectInSnapshot {
     /// 群主确认或者成员确认改变
     public var isOpenInviteVerifyChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
+    }
+    //群演讲者变动
+    public var oratorChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.orator))
     }
     
     public var conversationSelfRemarkChanged: Bool {
