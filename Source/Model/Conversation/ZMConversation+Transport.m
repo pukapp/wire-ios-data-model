@@ -95,13 +95,15 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     if (transportData[ConversationInfoNameKey] != [NSNull null]) {
         self.userDefinedName = [transportData stringForKey:ConversationInfoNameKey];
     }
+    
+    self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
+    
     // 群成员数量
     NSNumber *membersCountNumber = [transportData optionalNumberForKey:@"memsum"];
-    if (membersCountNumber != nil) {
-        self.membersCount = self.conversationType == ZMConversationTypeHugeGroup
-        ? membersCountNumber.integerValue
-        : (NSInteger)self.activeParticipants.count;
-    }
+    self.membersCount = self.conversationType == ZMConversationTypeHugeGroup
+    ? membersCountNumber.integerValue
+    : (NSInteger)self.activeParticipants.count;
+    
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
     /// 开启url链接加入
@@ -135,8 +137,6 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
             }
         }
     }
-    
-    self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
     
     if (serverTimeStamp != nil) {
         [self updateLastModified:serverTimeStamp];
