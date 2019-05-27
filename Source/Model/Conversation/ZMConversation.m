@@ -775,6 +775,12 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     [lastMessageCanBeMarkedUnread markAsUnread];
 }
 
+- (void)deleteConversation {
+    ZMConversation *existingConversation = [ZMConversation conversationWithRemoteID:self.remoteIdentifier createIfNeeded:NO inContext:self.managedObjectContext];
+    [self.managedObjectContext deleteObject:existingConversation];
+    [self.managedObjectContext saveOrRollback];
+}
+
 @end
 
 

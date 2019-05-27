@@ -201,6 +201,10 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
                                                             inTeam:(nullable Team *)team
                                                        allowGuests:(BOOL)allowGuests;
 
+
+/// 删除群
+- (void)deleteConversation;
+
 /// If that conversation exists, it is returned, @c nil otherwise.
 + (nullable instancetype)existingOneOnOneConversationWithUser:(nonnull ZMUser *)otherUser inUserSession:(nonnull id<ZMManagedObjectContextProvider> )session;
 
