@@ -128,9 +128,6 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     // 成员变动其他群成员是否可见
     self.isVisibleForMemberChange = [transportData[ZMConversationInfoIsVisibleForMemberChangeKey] boolValue];
     self.isDisableSendMsg = !([[transportData optionalNumberForKey:ZMConversationInfoBlockTimeKey] integerValue] == 0);
-    
-    /// 聊天置顶功能
-    self.isPlaceTop = [transportData[ZMConversationInfoPlaceTopKey] boolValue];
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
