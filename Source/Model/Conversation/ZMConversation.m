@@ -233,12 +233,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 
 
--(void)setAutoReply:(ZMAutoReplyType)autoReply{
-    [self willChangeValueForKey:ZMConversationAutoReplyKey];
-    [self setPrimitiveValue:@(autoReply) forKey:ZMConversationAutoReplyKey];
-    [self didChangeValueForKey:ZMConversationAutoReplyKey];
-}
-
 - (BOOL)isArchived
 {
     return self.internalIsArchived;
@@ -458,8 +452,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             LanguageKey,
             //、 新增
             ZMConversationAutoReplyFromOtherKey,
-            ZMConversationAppsKey,
-            ZMConversationIsPlaceTopKey
+            ZMConversationAppsKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];

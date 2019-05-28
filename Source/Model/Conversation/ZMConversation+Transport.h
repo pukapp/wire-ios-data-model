@@ -48,6 +48,7 @@ extern NSString *const ZMCOnversationInfoOTRAllowViewMembersKey;
 extern NSString *const ZMConversationInfoTopAppsKey;
 extern NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey;
 extern NSString *const ZMConversationInfoIsVisibleForMemberChangeKey;
+extern NSString *const ZMConversationInfoPlaceTopKey;
 
 @interface ZMConversation (Transport)
 

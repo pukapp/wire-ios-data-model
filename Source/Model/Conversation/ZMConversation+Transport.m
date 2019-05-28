@@ -53,6 +53,9 @@ NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 // 新增
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
+// 聊天置顶
+NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
+
 NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
@@ -125,6 +128,9 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     // 成员变动其他群成员是否可见
     self.isVisibleForMemberChange = [transportData[ZMConversationInfoIsVisibleForMemberChangeKey] boolValue];
     self.isDisableSendMsg = !([[transportData optionalNumberForKey:ZMConversationInfoBlockTimeKey] integerValue] == 0);
+    
+    /// 聊天置顶功能
+    self.isPlaceTop = [transportData[ZMConversationInfoPlaceTopKey] boolValue];
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
@@ -276,6 +282,7 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         }
     }
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
+    self.isPlaceTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
 }
 
 - (void)updateWithApps:(NSArray *)apps {
