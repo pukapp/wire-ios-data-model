@@ -15,6 +15,7 @@
     @NSManaged public var url: String?
     @NSManaged public var appid: String?
     @NSManaged public var isRead: Bool
+    @NSManaged public var isAnimated: Bool
     @NSManaged public var inConversation: ZMConversation?
     @NSManaged public var inWebApp: ZMWebApp?
     
