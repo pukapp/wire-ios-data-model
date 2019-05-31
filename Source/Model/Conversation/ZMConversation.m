@@ -218,6 +218,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isPlaceTop;
 
 @dynamic orator;
+@dynamic isServiceNotice;
 
 @dynamic membersAliasname;
 @dynamic membersSendMsgStatuses;

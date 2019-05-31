@@ -165,6 +165,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
+// 是否公众号
+@property (nonatomic) BOOL isServiceNotice;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 
