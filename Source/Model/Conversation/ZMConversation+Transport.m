@@ -100,13 +100,6 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     }
     
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
-    
-    // 群成员数量
-    NSNumber *membersCountNumber = [transportData optionalNumberForKey:@"memsum"];
-    self.membersCount = self.conversationType == ZMConversationTypeHugeGroup
-    ? membersCountNumber.integerValue
-    : (NSInteger)self.activeParticipants.count;
-    
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
     /// 开启url链接加入
@@ -191,6 +184,12 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         }];
         self.orator = orator.set;
     }
+    
+    // 群成员数量
+    NSNumber *membersCountNumber = [transportData optionalNumberForKey:@"memsum"];
+    self.membersCount = self.conversationType == ZMConversationTypeHugeGroup
+    ? membersCountNumber.integerValue
+    : (NSInteger)self.activeParticipants.count;
     
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];
     self.accessRoleString = [transportData optionalStringForKey:ConversationInfoAccessRoleKey];
