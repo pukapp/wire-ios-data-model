@@ -151,9 +151,9 @@ extension Int64 {
             disableValue = .none
         } else if -1 == value {
             disableValue = .forever
-        } else if 0...600 ~= value {
+        } else if 0...601 ~= value {
             disableValue = .tenSeconds
-        } else if 600...3600 ~= value {
+        } else if 601...3600 ~= value {
             disableValue = .oneHours
         } else if 3600...43200 ~= value {
             disableValue = .twelveHours
