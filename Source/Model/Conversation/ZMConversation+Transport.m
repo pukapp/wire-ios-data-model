@@ -56,6 +56,8 @@ static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 // 聊天置顶
 NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
 
+NSString *const ZMConversationInfoIsServiceNoticeKey = @"is_service_notice";
+
 NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
