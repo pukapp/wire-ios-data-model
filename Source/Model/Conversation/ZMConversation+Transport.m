@@ -280,7 +280,7 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         }
     }
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
-    self.isPlaceTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
+    self.isPlacedTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
 }
 
 - (void)updateWithApps:(NSArray *)apps {

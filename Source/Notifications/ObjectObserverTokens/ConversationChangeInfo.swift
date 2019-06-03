@@ -55,7 +55,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.apps),
                     #keyPath(ZMConversation.topWebApps),
                     #keyPath(ZMConversation.communityID),
-                    #keyPath(ZMConversation.isPlaceTop),
+                    #keyPath(ZMConversation.isPlacedTop),
                     #keyPath(ZMConversation.isDisableSendMsg),
                     #keyPath(ZMConversation.disableSendLastModifiedDate),
                     #keyPath(ZMConversation.lastServiceMessageTimeStamp),
@@ -81,7 +81,7 @@ extension ZMConversation : ObjectInSnapshot {
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
     // 聊天置顶状态变化
     public var placeTopStatusChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.isPlaceTop))
+        return changedKeysContain(keys: #keyPath(ZMConversation.isPlacedTop))
     }
     
     public var communityIDChanged : Bool {

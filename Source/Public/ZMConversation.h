@@ -153,7 +153,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 ///绑定的社区ID
 @property (nullable, nonatomic, copy) NSString *communityID;
 // 置顶聊天
-@property (nonatomic) BOOL isPlaceTop;
+@property (nonatomic) BOOL isPlacedTop;
 // 成员是否可以互相添加好友
 @property (nonatomic) BOOL isAllowMemberAddEachOther;
 // 成员变动其他群成员是否可见

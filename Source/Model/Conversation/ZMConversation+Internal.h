@@ -98,7 +98,7 @@ extern NSString *const ZMConversationAllowViewMembersKey;
 extern NSString *const CreatorKey;
 extern NSString *const ZMConversationTopWebAppsKey;
 
-extern NSString *const ZMConversationIsPlaceTopKey;
+extern NSString *const ZMConversationIsPlacedTopKey;
 extern NSString *const ZMConversationIsAllowMemberAddEachOtherKey;
 extern NSString *const ZMConversationIsVisibleForMemberChangeKey;
 extern NSString *const ZMConversationIsDisableSendMsgKey;

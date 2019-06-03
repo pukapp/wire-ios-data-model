@@ -94,7 +94,7 @@ NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
 NSString *const ZMConversationAppsKey = @"apps";
 NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
 
-NSString *const ZMConversationIsPlaceTopKey = @"isPlaceTop";
+NSString *const ZMConversationIsPlacedTopKey = @"isPlacedTop";
 NSString *const ZMConversationIsAllowMemberAddEachOtherKey = @"isAllowMemberAddEachOther";
 NSString *const ZMConversationIsVisibleForMemberChangeKey = @"isVisibleForMemberChange";
 NSString *const ZMConversationIsDisableSendMsgKey = @"isDisableSendMsg";
@@ -215,7 +215,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic topWebApps;
 @dynamic communityID;
     
-@dynamic isPlaceTop;
+@dynamic isPlacedTop;
 
 @dynamic orator;
 @dynamic isServiceNotice;
@@ -641,7 +641,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 + (NSArray *)defaultSortDescriptors
 {
-    return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsPlaceTopKey ascending:NO],
+    return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsPlacedTopKey ascending:NO],
              [NSSortDescriptor sortDescriptorWithKey:ZMConversationIsArchivedKey ascending:YES],
              [NSSortDescriptor sortDescriptorWithKey:LastModifiedDateKey ascending:NO],
              [NSSortDescriptor sortDescriptorWithKey:ZMConversationRemoteIdentifierDataKey ascending:YES],];
