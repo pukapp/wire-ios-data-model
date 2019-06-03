@@ -85,6 +85,14 @@ public extension ZMConversation {
         precondition(conversationType == .oneOnOne)
 
         let other = lastServerSyncedActiveParticipants.firstObject as? ZMUser ?? connectedUser
+        // 下一个版本删掉
+        if other?.robotType == .service && self.isServiceNotice == false{
+            managedObjectContext?.perform {
+                self.isServiceNotice = true
+                self.managedObjectContext?.saveOrRollback()
+            }
+
+        }
         if let name = other?.newName(), !name.isEmpty {
             return name
         } else {

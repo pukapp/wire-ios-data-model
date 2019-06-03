@@ -453,7 +453,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             LanguageKey,
             //、 新增
             ZMConversationAutoReplyFromOtherKey,
-            ZMConversationAppsKey
+            ZMConversationAppsKey,
+            @"isServiceNotice"
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
