@@ -638,9 +638,6 @@ static NSString *const AiAddressKey = @"aiAddress";
     NSNumber *robotTypeId = [transportData optionalNumberForKey:@"nature"];
     if (robotTypeId != nil || authoritative) {
         self.robotType = [ZMUser robotTypeFromTransportData:robotTypeId];
-        if (self.robotType == ZMRobotTypeService) {
-            self.connection.conversation.isServiceNotice = true;
-        }
     }
     
     NSString *remark = [transportData optionalStringForKey:@"remark"];
