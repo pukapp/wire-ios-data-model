@@ -473,3 +473,33 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     }
     
 }
+
+extension ZMSearchUser {
+    @objc
+    public func getZMUser(complete: @escaping (ZMUser) -> Void) {
+        guard let remoteIdentifier = self.remoteIdentifier else { return }
+        
+        let name = self.name
+        let accentColorValue = self.accentColorValue
+        
+        contextProvider?.syncManagedObjectContext.performGroupedBlock {
+            guard let context = self.contextProvider?.syncManagedObjectContext,
+                let user = ZMUser(remoteID: remoteIdentifier, createIfNeeded: true, in: context) else { return }
+            
+            user.name = name
+            user.accentColorValue = accentColorValue
+            user.needsToBeUpdatedFromBackend = true
+            
+            context.saveOrRollback()
+            
+            let objectId = user.objectID
+            self.contextProvider?.managedObjectContext.performGroupedBlock {
+                self.user = self.contextProvider?.managedObjectContext.object(with: objectId) as? ZMUser
+                if let user = self.user {
+                    complete(user)
+                }
+                self.contextProvider?.managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
+            }
+        }
+    }
+}
