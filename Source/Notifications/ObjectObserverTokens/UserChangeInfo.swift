@@ -48,6 +48,7 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.pkRobotState),
             #keyPath(ZMUser.darwinState),
             #keyPath(ZMUser.walletOpened),
+            #keyPath(ZMUser.payValidTime)
         ]
     }
 
@@ -146,6 +147,10 @@ extension ZMUser : ObjectInSnapshot {
     
     public var walletStateChanged : Bool {
         return changedKeysContain(keys:#keyPath(ZMUser.walletOpened))
+    }
+    
+    public var payValidTimeChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMUser.payValidTime))
     }
 
     public let user: UserType

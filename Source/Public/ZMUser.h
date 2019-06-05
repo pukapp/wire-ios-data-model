@@ -113,6 +113,9 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 // 钱包开启状态
 @property (nonatomic) BOOL walletOpened;
 
+/// 支付有效时间，单位/秒，16位整型
+@property (nonatomic) NSInteger payValidTime;
+
 /// Request a refresh of the user data from the backend.
 /// This is useful for non-connected user, that we will otherwise never refetch
 - (void)refreshData;

@@ -211,6 +211,7 @@ static NSString *const AiAddressKey = @"aiAddress";
 @dynamic robotType;
 @dynamic pkRobotState;
 @dynamic walletOpened;
+@dynamic payValidTime;
 
 
 - (NSString *)newName;
@@ -617,6 +618,8 @@ static NSString *const AiAddressKey = @"aiAddress";
     if (transportData[@"wallet"] != [NSNull null]) {
         self.walletOpened = [transportData[@"wallet"] boolValue];
     }
+    NSNumber *seconds = [transportData optionalNumberForKey:@"pay_valid_time"];
+    self.payValidTime = seconds.integerValue;
     
     NSArray *robotStateArray = [transportData optionalArrayForKey:@"bots"];
     
