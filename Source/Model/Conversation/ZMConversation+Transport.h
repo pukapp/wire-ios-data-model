@@ -40,6 +40,7 @@ extern NSString *const ZMConversationInfoOTRSelfVerifyKey;
 extern NSString *const ZMConversationInfoMemberInviteVerfyKey;
 extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
 extern NSString *const ZMConversationInfoBlockTimeKey;
+extern NSString *const ZMConversationInfoBlockDurationKey;
 extern NSString *const ZMConversationInfoBlockUserKey;
 extern NSString *const ZMConversationInfoOratorKey;
 extern NSString *const ZMConversationInfoManagerKey;

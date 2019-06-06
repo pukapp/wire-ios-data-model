@@ -926,6 +926,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic parentMessage;
 @dynamic messageTimer;
 @dynamic blockTime;
+@dynamic blockDuration;
 @dynamic serviceMessage;
 @dynamic blockUser;
 @dynamic managerType;
@@ -984,6 +985,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.serverTimestamp = updateEvent.timeStamp;
     message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
     message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
+    message.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
     
     if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify) {
         ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];

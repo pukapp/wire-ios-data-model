@@ -175,6 +175,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) NSNumber * _Nullable messageTimer;
 
 @property (nonatomic) NSNumber * _Nullable blockTime;
+@property (nonatomic) NSNumber * _Nullable blockDuration;
+
 @property (nonatomic) ServiceMessage * _Nullable serviceMessage;
 
 @property (nonatomic) NSString * _Nullable blockUser;

@@ -145,19 +145,18 @@ public extension MessageDestructionSendDisableValue {
 extension Int64 {
     
     public var displayString: String {
-        let value = self - Int64(NSDate().timeIntervalSince1970)
         var disableValue: MessageDestructionSendDisableValue?
-        if 0 == value {
+        if 0 == self {
             disableValue = .none
-        } else if -1 == value {
+        } else if -1 == self {
             disableValue = .forever
-        } else if 0...601 ~= value {
+        } else if 600 == self {
             disableValue = .tenSeconds
-        } else if 601...3600 ~= value {
+        } else if 3600 == self {
             disableValue = .oneHours
-        } else if 3600...43200 ~= value {
+        } else if 43200 == self {
             disableValue = .twelveHours
-        } else if 43200...86400 ~= value {
+        } else if 86400 == self {
             disableValue = .oneDay
         }
         return disableValue?.displayString ?? ""

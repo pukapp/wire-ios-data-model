@@ -10,6 +10,7 @@
 @objcMembers public class UserDisableSendMsgStatus: ZMManagedObject {
     
     @NSManaged public var block_time: Int64
+    @NSManaged public var block_duration: Int64
     @NSManaged public var withConversation: ZMConversation?
     @NSManaged public var userid: String?
     @NSManaged public var needUpload: Bool
@@ -43,12 +44,13 @@
 
 extension UserDisableSendMsgStatus {
     
-    static public func update(managedObjectContext: NSManagedObjectContext, block_time: NSNumber?, user: String?, conversation: String?, fromPushChannel: Bool = false) {
-        guard let block_time = block_time, let u = user, let conv = conversation, let uuid = UUID(uuidString: conv) else {return}
+    static public func update(managedObjectContext: NSManagedObjectContext, block_time: NSNumber?, block_duration: NSNumber?, user: String?, conversation: String?, fromPushChannel: Bool = false) {
+        guard let block_time = block_time, let duration = block_duration, let u = user, let conv = conversation, let uuid = UUID(uuidString: conv) else {return}
         guard let conver = ZMConversation(remoteID: uuid, createIfNeeded: false, in: managedObjectContext) else {return}
         let insert = {
             let entry = UserDisableSendMsgStatus.insertNewObject(in: managedObjectContext)
             entry.block_time = block_time.int64Value
+            entry.block_duration = duration.int64Value
             entry.userid = u
             entry.withConversation = conver
             if !fromPushChannel {
@@ -60,6 +62,7 @@ extension UserDisableSendMsgStatus {
         conver.membersSendMsgStatuses.forEach { (status) in
             if status.userid == u {
                 status.block_time = block_time.int64Value
+                status.block_duration = duration.int64Value
                 if !fromPushChannel {
                     status.setLocallyModifiedKeys([ZMConversationInfoBlockTimeKey])
                 }
@@ -143,10 +146,12 @@ extension UserDisableSendMsgStatus {
         for other in others {
             guard let id = other["id"] as? String  else {continue}
             guard let block_time = other["block_time"] as? Int64 else {continue}
-            UserDisableSendMsgStatus.update(managedObjectContext: managedObjectContext, block_time: NSNumber.init(value: block_time), user: id, conversation: inConversation, fromPushChannel: true)
+            guard let block_duration = other["block_duration"] as? Int64 else {continue}
+            UserDisableSendMsgStatus.update(managedObjectContext: managedObjectContext, block_time: NSNumber.init(value: block_time), block_duration: NSNumber.init(value: block_duration), user: id, conversation: inConversation, fromPushChannel: true)
         }
         guard let self_blocktime = self_["block_time"] as? Int64 else {return}
+        guard let self_blockduration = self_["block_duration"] as? Int64 else {return}
         let selfuser = ZMUser.selfUser(in: managedObjectContext).remoteIdentifier.transportString()
-        UserDisableSendMsgStatus.update(managedObjectContext: managedObjectContext, block_time: NSNumber.init(value: self_blocktime), user: selfuser, conversation: inConversation, fromPushChannel: true)
+        UserDisableSendMsgStatus.update(managedObjectContext: managedObjectContext, block_time: NSNumber.init(value: self_blocktime), block_duration: NSNumber.init(value: self_blockduration), user: selfuser, conversation: inConversation, fromPushChannel: true)
     }
 }
