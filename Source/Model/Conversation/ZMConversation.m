@@ -98,6 +98,8 @@ NSString *const ZMConversationIsPlacedTopKey = @"isPlacedTop";
 NSString *const ZMConversationIsAllowMemberAddEachOtherKey = @"isAllowMemberAddEachOther";
 NSString *const ZMConversationIsVisibleForMemberChangeKey = @"isVisibleForMemberChange";
 NSString *const ZMConversationIsDisableSendMsgKey = @"isDisableSendMsg";
+NSString *const ZMConversationManagerAddKey = @"managerAdd";
+NSString *const ZMConversationManagerDelKey = @"managerDel";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
@@ -129,8 +131,6 @@ static NSString *const TeamKey = @"team";
 
 static NSString *const AccessModeStringsKey = @"accessModeStrings";
 static NSString *const AccessRoleStringKey = @"accessRoleString";
-
-
 
 NSTimeInterval ZMConversationDefaultLastReadTimestampSaveDelay = 3.0;
 
@@ -218,6 +218,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isPlacedTop;
 
 @dynamic orator;
+@dynamic manager;
+@dynamic managerAdd;
+@dynamic managerDel;
 @dynamic isServiceNotice;
 
 @dynamic membersAliasname;

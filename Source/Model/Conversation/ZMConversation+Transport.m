@@ -64,6 +64,9 @@ NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
 NSString *const ZMConversationInfoBlockUserKey = @"block_user";
 NSString *const ZMConversationInfoOratorKey = @"orator";
+NSString *const ZMConversationInfoManagerKey = @"manager";
+NSString *const ZMConversationInfoManagerAddKey = @"man_add";
+NSString *const ZMConversationInfoManagerDelKey = @"man_del";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
@@ -183,6 +186,16 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
             user.needsToBeUpdatedFromBackend = YES;
         }];
         self.orator = orator.set;
+    }
+    NSArray *managers = [transportData optionalArrayForKey:ZMConversationInfoManagerKey];
+    if (managers && managers.count > 0) {
+        [managers enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            NOT_USED(idx);
+            NOT_USED(stop);
+            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inContext:self.managedObjectContext];
+            user.needsToBeUpdatedFromBackend = YES;
+        }];
+        self.manager = managers.set;
     }
     
     // 群成员数量

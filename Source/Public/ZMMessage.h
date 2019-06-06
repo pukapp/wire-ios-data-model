@@ -91,6 +91,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeAllDisableSendMsg,
     ZMSystemMessageTypeMemberDisableSendMsg,
     ZMSystemMessageTypeServiceMessage,
+    ZMSystemMessageTypeManagerMsg,///管理员系统消息
 };
 
 @protocol ZMJsonTextMessageData <NSObject>

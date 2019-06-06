@@ -163,6 +163,10 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 @property (nonatomic) NSSet<NSString *> * _Nullable orator;
 
+@property (nonatomic) NSSet<NSString *> * _Nullable manager;
+@property (nonatomic) NSSet<NSString *> * _Nullable managerAdd;
+@property (nonatomic) NSSet<NSString *> * _Nullable managerDel;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 // 是否公众号
