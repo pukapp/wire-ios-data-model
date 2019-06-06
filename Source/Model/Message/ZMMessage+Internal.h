@@ -178,6 +178,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) ServiceMessage * _Nullable serviceMessage;
 
 @property (nonatomic) NSString * _Nullable blockUser;
+@property (nonatomic) ZMSystemManagerMessageType managerType;
 // Only filled for .messageTimerUpdate
 @property (nonatomic) BOOL relevantForConversationStatus; // If true (default), the message is considered to be shown inside the conversation list
 

@@ -928,6 +928,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic blockTime;
 @dynamic serviceMessage;
 @dynamic blockUser;
+@dynamic managerType;
 @dynamic relevantForConversationStatus;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext

@@ -94,6 +94,13 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeManagerMsg,///管理员系统消息
 };
 
+typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
+    ZMSystemManagerMessageTypeMeBecameManager = 0,
+    ZMSystemManagerMessageTypeOtherBecameManager,
+    ZMSystemManagerMessageTypeMeDropManager,
+    ZMSystemManagerMessageTypeOtherDropManager
+};
+
 @protocol ZMJsonTextMessageData <NSObject>
 
 @property (nonatomic, readonly, nullable) NSString *jsonMessageText;
@@ -147,6 +154,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
 @property (nonatomic, nullable) NSNumber *messageTimer;
 @property (nonatomic, nullable) NSNumber *blockTime;
 @property (nonatomic, nullable) NSString *blockUser;
+@property (nonatomic) ZMSystemManagerMessageType managerType;
 @property (nonatomic, nullable) ServiceMessage *serviceMessage;
 @end
 
