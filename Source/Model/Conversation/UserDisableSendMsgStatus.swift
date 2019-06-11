@@ -79,10 +79,16 @@ extension UserDisableSendMsgStatus {
     static public func getBlockTime(managedObjectContext: NSManagedObjectContext, user: String?, conversation: String?) -> NSNumber? {
         guard let user = user, let convString = conversation, let uuid = UUID.init(uuidString: convString), let conver = ZMConversation.init(remoteID: uuid, createIfNeeded: false, in: managedObjectContext) else {return nil}
         var blockTime: NSNumber?
-        conver.membersSendMsgStatuses.forEach { (status) in
+        for status in conver.membersSendMsgStatuses {
             if status.userid == user {
+                if status.block_time < Int64(Date().timeIntervalSince1970) {
+                    blockTime = NSNumber(value: 0)
+                    status.block_time = 0
+                    managedObjectContext.saveOrRollback()
+                    break
+                }
                 blockTime = NSNumber(value: status.block_time)
-                return
+                break
             }
         }
         return blockTime
