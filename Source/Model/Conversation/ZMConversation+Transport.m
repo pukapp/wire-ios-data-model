@@ -292,7 +292,7 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         }
     }
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
-    self.isPlacedTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
+    [self updateIsPlacedTopWithPayload:dictionary];
 }
 
 - (void)updateWithApps:(NSArray *)apps {
@@ -314,6 +314,13 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
         [topWebApps addObject:[ZMWebApp createOrUpdateWebApp:appDict context:self.managedObjectContext]];
     }
     self.topWebApps = topWebApps;
+}
+
+- (void)updateIsPlacedTopWithPayload:(NSDictionary *)dictionary
+{
+    if (dictionary[ZMConversationInfoPlaceTopKey] != nil && dictionary[ZMConversationInfoPlaceTopKey] != [NSNull null]) {
+        self.isPlacedTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
+    }
 }
 
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary
