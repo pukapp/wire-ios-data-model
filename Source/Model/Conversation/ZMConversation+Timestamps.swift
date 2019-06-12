@@ -237,6 +237,16 @@ extension ZMConversation {
     
     @objc(markMessagesAsReadUntil:)
     public func markMessagesAsRead(until message: ZMConversationMessage) {
+        //根据cpu检测，列表滑动的时候下面lastUnreadMessage的方法执行大约占用9%的cpum，所以此处做一个提前判断
+        //pendingLastReadServerTimestamp默认为nil，第一次调用先给赋值，此后调用全部进行比较，判断当前从conversation的最后一条消息的时间是否大于它，大于它才继续代码流程
+        if let data = pendingLastReadServerTimestamp {
+            if  message.serverTimestampIncludingChildMessages?.compare(data) != .orderedDescending  {
+                return
+            }
+        } else {
+            pendingLastReadServerTimestamp = message.serverTimestampIncludingChildMessages
+        }
+        
         
         // Any unsent unread message is cleared when entering a conversation
         if hasUnreadUnsentMessage {
@@ -271,7 +281,7 @@ extension ZMConversation {
     func savePendingLastRead() {
         guard let timestamp = pendingLastReadServerTimestamp else { return }
         updateLastRead(timestamp, synchronize: false)
-        pendingLastReadServerTimestamp = nil
+        //pendingLastReadServerTimestamp = nil
         lastReadTimestampUpdateCounter = 0
         managedObjectContext?.enqueueDelayedSave()
     }
