@@ -163,6 +163,11 @@ extension ZMSystemMessage {
                                   MessageKey.mediumGenericMessage.rawValue)
     }
     
+    /// 监听文件的下载进度是否改变
+    public var assetProgressChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMAssetClientMessage.progress))
+    }
+    
     /// Whether the file on disk changed
     public var fileAvailabilityChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMAssetClientMessage.hasDownloadedFile))
