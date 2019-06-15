@@ -89,6 +89,9 @@ import Foundation
     
 }
 
+///使用关联属性来对值进行存储，避免每次都进行计算
+private var AssociateIsAudioKey: String = "AssociateIsAudioKey"
+private var AssociateIsVideoKey: String = "AssociateIsVideoKey"
 
 extension ZMAssetClientMessage: ZMFileMessageData {
     
@@ -238,12 +241,36 @@ extension ZMAssetClientMessage: ZMFileMessageData {
         return self.mimeType?.isPassMimeType ?? false
     }
 
+    private var _isVideo: Bool? {
+        get {
+            return objc_getAssociatedObject(self, &AssociateIsVideoKey) as? Bool
+        }
+        set(newValue) {
+            objc_setAssociatedObject(self, &AssociateIsVideoKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
+        }
+    }
+    
     public var isVideo: Bool {
-        return self.mimeType?.isPlayableVideoMimeType() ?? false
+        if _isVideo == nil {
+             _isVideo = self.mimeType?.isPlayableVideoMimeType() ?? false
+        }
+        return _isVideo!
+    }
+    
+    private var _isAudio: Bool? {
+        get {
+            return objc_getAssociatedObject(self, &AssociateIsAudioKey) as? Bool
+        }
+        set(newValue) {
+            objc_setAssociatedObject(self, &AssociateIsAudioKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
+        }
     }
     
     public var isAudio: Bool {
-        return self.mimeType?.isAudioMimeType() ?? false
+        if _isAudio == nil {
+            _isAudio = self.mimeType?.isAudioMimeType() ?? false
+        }
+        return _isAudio!
     }
     
     public var v3_isImage: Bool {
