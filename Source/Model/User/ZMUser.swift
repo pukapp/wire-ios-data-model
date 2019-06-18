@@ -351,7 +351,7 @@ extension ZMUser {
         
     @objc(displayNameInConversation:)
     public func displayName(in conversation: ZMConversation?) -> String {
-        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? ""
+        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? self.handle ?? ""
     }
 }
 

@@ -972,10 +972,14 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     NSMutableSet *usersSet = [NSMutableSet set];
     for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
         ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inContext:moc];
-        [usersSet addObject:user];
+        if (user.handle) {///只有当本地存在这个用户的时候，才加入（当万人群添加好友的时候，如果不在本地数据库，那么就不需要显示）
+            [usersSet addObject:user];
+        }
     }
+    if (usersSet.count == 0) { return nil; }
+    
     // 当添加或者删除成员是，若群变动不可见，也不是群主，且加人信息里不包含自己。该系统消息不需要入库
-    if ((type == ZMSystemMessageTypeParticipantsAdded || type == ZMSystemMessageTypeParticipantsRemoved) && !conversation.isVisibleForMemberChange && !conversation.creator.isSelfUser && ![usersSet containsObject:[ZMUser self]]){
+    if ((type == ZMSystemMessageTypeParticipantsAdded || type == ZMSystemMessageTypeParticipantsRemoved) && !conversation.isVisibleForMemberChange && !conversation.creator.isSelfUser && ![usersSet containsObject:[ZMUser selfUserInContext: moc]]){
         return nil;
     }
     
