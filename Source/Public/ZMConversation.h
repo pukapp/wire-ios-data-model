@@ -167,6 +167,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) NSSet<NSString *> * _Nullable managerAdd;
 @property (nonatomic) NSSet<NSString *> * _Nullable managerDel;
 
+/// 邀请人列表是否可见，默认NO 不可见
+@property (nonatomic) BOOL isVisitorsVisible;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 // 是否公众号
