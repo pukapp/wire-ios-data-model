@@ -62,6 +62,8 @@ import Foundation
 @objc public protocol ZMConversationMessageWindowObserver : NSObjectProtocol {
     func conversationWindowDidChange(_ changeInfo: MessageWindowChangeInfo)
     @objc optional func messagesInsideWindow(_ window: ZMConversationMessageWindow, didChange messageChangeInfos: [MessageChangeInfo])
+    ///新增方法，回传NotificationInContext参数，
+    @objc optional func conversationWindowAndMessagesInsideWindowDidChange(note: NotificationInContext)
 }
 
 extension MessageWindowChangeInfo {
@@ -73,30 +75,14 @@ extension MessageWindowChangeInfo {
         return ManagedObjectObserverToken(name: .MessageWindowDidChange, managedObjectContext: window.conversation.managedObjectContext!, object: window)
         { [weak observer] (note) in
             guard let `observer` = observer, let window = note.object as? ZMConversationMessageWindow else { return }
+            if let changeInfo = note.userInfo[self.MessageWindowChangeUserInfoKey] as? MessageWindowChangeInfo {
+                observer.conversationWindowDidChange(changeInfo)
+                observer.conversationWindowAndMessagesInsideWindowDidChange?(note: note)
+            }
             if let messageChangeInfos = note.userInfo[self.MessageChangeUserInfoKey] as? [MessageChangeInfo] {
                 observer.messagesInsideWindow?(window, didChange: messageChangeInfos)
             }
-            if let changeInfo = note.userInfo[self.MessageWindowChangeUserInfoKey] as? MessageWindowChangeInfo {
-                ///新增是否是文件类型的进度更新的判断
-                if let messageChangeInfos = note.userInfo[self.MessageChangeUserInfoKey] as? [MessageChangeInfo],
-                    self.isAssetMessageProgressChanged(windowChangeInfo: changeInfo, messageChangeInfos: messageChangeInfos){
-                    return
-                }
-                observer.conversationWindowDidChange(changeInfo)
-            }
         } 
-    }
-    
-    ///如果是文件类型的下载进度更新回调，则不需要调用conversationWindowDidChange方法，避免tableView的不停刷新
-    static func isAssetMessageProgressChanged(windowChangeInfo: MessageWindowChangeInfo, messageChangeInfos: [MessageChangeInfo]) -> Bool {
-        if  windowChangeInfo.insertedIndexes.count == 0 &&
-            windowChangeInfo.deletedIndexes.count == 0 &&
-            windowChangeInfo.updatedIndexes.count == 1 &&
-            messageChangeInfos.count == 1 &&
-            messageChangeInfos.first!.assetProgressChanged {
-                return true
-            }
-        return false
     }
     
 }
