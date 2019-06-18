@@ -101,6 +101,7 @@ NSString *const ZMConversationIsDisableSendMsgKey = @"isDisableSendMsg";
 NSString *const ZMConversationManagerAddKey = @"managerAdd";
 NSString *const ZMConversationManagerDelKey = @"managerDel";
 NSString *const ZMConversationIsVisitorsVisibleKey = @"show_invitor_list";
+NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
@@ -224,6 +225,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic managerDel;
 @dynamic isServiceNotice;
 @dynamic isVisitorsVisible;
+@dynamic isMessageVisibleOnlyManagerAndCreator;
 
 @dynamic membersAliasname;
 @dynamic membersSendMsgStatuses;

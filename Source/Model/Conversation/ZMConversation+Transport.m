@@ -294,6 +294,7 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
     [self updateIsPlacedTopWithPayload:dictionary];
     [self updateIsVisitorsVisibleWithPayload:dictionary];
+    [self updateIsMessageVisibleOnlyManagerAndCreatorWithPayload:dictionary];
 }
 
 - (void)updateWithApps:(NSArray *)apps {
@@ -328,6 +329,14 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
 {
     if (dictionary[ZMConversationIsVisitorsVisibleKey] != nil && dictionary[ZMConversationIsVisitorsVisibleKey] != [NSNull null]) {
         self.isVisitorsVisible = [dictionary[ZMConversationIsVisitorsVisibleKey] boolValue];
+    }
+}
+
+- (void)updateIsMessageVisibleOnlyManagerAndCreatorWithPayload:(NSDictionary *)dictionary
+{
+    if (dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] != nil
+        && dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] != [NSNull null]) {
+        self.isMessageVisibleOnlyManagerAndCreator = [dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] boolValue];
     }
 }
 

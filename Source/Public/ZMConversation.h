@@ -170,6 +170,11 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 /// 邀请人列表是否可见，默认NO 不可见
 @property (nonatomic) BOOL isVisitorsVisible;
 
+/// 消息可见性，默认NO
+/// YES: 管理员发消息所有人可见，群成员发消息只有管理和群主可见
+/// NO: 所有人可见
+@property (nonatomic) BOOL isMessageVisibleOnlyManagerAndCreator;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 // 是否公众号

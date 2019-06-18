@@ -61,7 +61,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.lastServiceMessageTimeStamp),
                     #keyPath(ZMConversation.orator),
                     #keyPath(ZMConversation.manager),
-                    #keyPath(ZMConversation.isVisitorsVisible)
+                    #keyPath(ZMConversation.isVisitorsVisible),
+                    #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator)
             ])
     }
 
@@ -81,6 +82,11 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
+    
+    /// 消息可见性状态变更
+    public var isMessageVisibleOnlyManagerAndCreatorStatusChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator))
+    }
     
     /// 邀请人列表是否可见的状态改变
     public var isVisitorsVisibleStatusChanged : Bool {

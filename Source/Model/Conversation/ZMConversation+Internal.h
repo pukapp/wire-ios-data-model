@@ -105,6 +105,7 @@ extern NSString *const ZMConversationIsDisableSendMsgKey;
 extern NSString *const ZMConversationManagerAddKey;
 extern NSString *const ZMConversationManagerDelKey;
 extern NSString *const ZMConversationIsVisitorsVisibleKey;
+extern NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey;
 
 NS_ASSUME_NONNULL_END
 
