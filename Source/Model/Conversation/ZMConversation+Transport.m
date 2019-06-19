@@ -123,6 +123,14 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
         // Backend is sending the miliseconds, we need to convert to seconds.
         self.communityID = [forumIdNumber stringValue];
     }
+    
+    // 邀请人列表是否可见
+    self.isVisitorsVisible = [transportData[ZMConversationInfoIsVisitorsVisibleKey] boolValue];
+    // 消息可见性
+    self.isMessageVisibleOnlyManagerAndCreator = [transportData[ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey] boolValue];
+    // 群公告
+    self.announcement = [transportData optionalStringForKey:ZMConversationInfoAnnouncementKey];
+    
     // 成员是否可以互相添加好友
     self.isAllowMemberAddEachOther = [transportData[ZMConversationInfoIsAllowMemberAddEachOtherKey] boolValue];
     // 成员变动其他群成员是否可见
