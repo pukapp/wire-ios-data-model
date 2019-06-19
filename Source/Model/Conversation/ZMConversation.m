@@ -226,6 +226,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isServiceNotice;
 @dynamic isVisitorsVisible;
 @dynamic isMessageVisibleOnlyManagerAndCreator;
+@dynamic announcement;
 
 @dynamic membersAliasname;
 @dynamic membersSendMsgStatuses;

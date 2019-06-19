@@ -175,6 +175,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 /// NO: 所有人可见
 @property (nonatomic) BOOL isMessageVisibleOnlyManagerAndCreator;
 
+/// 群公告
+@property (nullable, nonatomic, copy) NSString *announcement;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 // 是否公众号
