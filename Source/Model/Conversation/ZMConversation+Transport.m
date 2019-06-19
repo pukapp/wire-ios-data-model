@@ -74,6 +74,9 @@ NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
 NSString *const ZMConversationInfoTopAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
+NSString *const ZMConversationIsVisitorsVisibleKey = @"show_invitor_list";
+NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
+NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 
 @implementation ZMConversation (Transport)
 
