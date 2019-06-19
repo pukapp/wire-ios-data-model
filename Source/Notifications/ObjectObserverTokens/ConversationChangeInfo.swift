@@ -84,6 +84,11 @@ extension ZMConversation : ObjectInSnapshot {
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
     
+    /// 群公告更新
+    public var announcementChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.announcement))
+    }
+    
     /// 消息可见性状态变更
     public var isMessageVisibleOnlyManagerAndCreatorStatusChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator))
