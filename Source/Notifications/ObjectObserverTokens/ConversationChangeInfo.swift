@@ -62,7 +62,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.orator),
                     #keyPath(ZMConversation.manager),
                     #keyPath(ZMConversation.isVisitorsVisible),
-                    #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator)
+                    #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator),
+                    #keyPath(ZMConversation.announcement)
             ])
     }
 

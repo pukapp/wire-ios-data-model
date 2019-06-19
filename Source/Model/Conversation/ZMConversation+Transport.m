@@ -74,8 +74,8 @@ NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
 NSString *const ZMConversationInfoTopAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
-NSString *const ZMConversationIsVisitorsVisibleKey = @"show_invitor_list";
-NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
+NSString *const ZMConversationInfoIsVisitorsVisibleKey = @"show_invitor_list";
+NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
 NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 
 @implementation ZMConversation (Transport)
@@ -296,8 +296,6 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     }
     self.selfRemark = [dictionary optionalStringForKey:ZMConversationInfoOTRSelfRemarkReferenceKey];
     [self updateIsPlacedTopWithPayload:dictionary];
-    [self updateIsVisitorsVisibleWithPayload:dictionary];
-    [self updateIsMessageVisibleOnlyManagerAndCreatorWithPayload:dictionary];
 }
 
 - (void)updateWithApps:(NSArray *)apps {
@@ -325,21 +323,6 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 {
     if (dictionary[ZMConversationInfoPlaceTopKey] != nil && dictionary[ZMConversationInfoPlaceTopKey] != [NSNull null]) {
         self.isPlacedTop = [dictionary[ZMConversationInfoPlaceTopKey] boolValue];
-    }
-}
-
-- (void)updateIsVisitorsVisibleWithPayload:(NSDictionary *)dictionary
-{
-    if (dictionary[ZMConversationIsVisitorsVisibleKey] != nil && dictionary[ZMConversationIsVisitorsVisibleKey] != [NSNull null]) {
-        self.isVisitorsVisible = [dictionary[ZMConversationIsVisitorsVisibleKey] boolValue];
-    }
-}
-
-- (void)updateIsMessageVisibleOnlyManagerAndCreatorWithPayload:(NSDictionary *)dictionary
-{
-    if (dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] != nil
-        && dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] != [NSNull null]) {
-        self.isMessageVisibleOnlyManagerAndCreator = [dictionary[ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey] boolValue];
     }
 }
 
