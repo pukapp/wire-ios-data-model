@@ -79,8 +79,10 @@ public extension ZMConversationMessage {
             let dict = jsonObject as? [String: Any] else {
             return false
         }
-        // 红包领取消息和币币兑付领取消息
-        if dict["msgType"] as? String == "4" || dict["msgType"] as? String == "6" {
+        // 4:红包领取消息
+        // 6:币币兑付领取消息
+        // 11:群邀请确认信息
+        if dict["msgType"] as? String == "4" || dict["msgType"] as? String == "6" || dict["msgType"] as? String == "11" {
             return true
         } else {
             return false

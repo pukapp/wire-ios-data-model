@@ -24,8 +24,8 @@ import Foundation
 public protocol ObjectChangeInfoProtocol : NSObjectProtocol {
     
     init(object: NSObject)
-    func setValue(_ value: Any?, forKey key: String)
-    func value(forKey key: String) -> Any?
+//    func setValue(_ value: Any?, forKey key: String)
+//    func value(forKey key: String) -> Any?
     var changeInfos : [String : NSObject?] {get set}
 
 }

@@ -45,7 +45,7 @@ extension NSManagedObjectContext {
     }
 }
 
-public class ConversationListObserverCenter : NSObject, ZMConversationObserver, ChangeInfoConsumer {
+public class ConversationListObserverCenter : NSObject, ChangeInfoConsumer {
     
     fileprivate var listSnapshots : [String : ConversationListSnapshot] = [:]
     
