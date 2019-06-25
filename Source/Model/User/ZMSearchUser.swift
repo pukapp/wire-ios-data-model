@@ -49,16 +49,14 @@ fileprivate enum AssetType: String {
     case image
 }
 
-/// Either we have assetKeys (Strings) or old style legacy UUIDs.
-public enum SearchUserAssetKeys {
-    case asset(preview: String?, complete: String?)
-    case legacy(small: UUID?, medium: UUID?)
+public struct SearchUserAssetKeys {
     
+    public let preview: String?
+    public let complete: String?
+        
     init?(payload: [String: Any]) {
-        // V3
         if let assetsPayload = payload[ResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
-            var smallKey: String?, completeKey: String?
-            
+            var previewKey: String?, completeKey: String?
             
             for asset in assetsPayload {
                 guard let size = (asset[ResponseKey.assetSize.rawValue] as? String).flatMap(AssetSize.init),
@@ -67,33 +65,14 @@ public enum SearchUserAssetKeys {
                     type == .image else { continue }
                 
                 switch size {
-                case .preview: smallKey = key
+                case .preview: previewKey = key
                 case .complete: completeKey = key
                 }
             }
             
-            if nil != smallKey || nil != completeKey {
-                self = .asset(preview: smallKey, complete: completeKey)
-                return
-            }
-        }
-            // Legacy
-        else if let pictures = payload[ResponseKey.pictures.rawValue] as? [[String : Any]] {
-            var smallId: UUID?, mediumId: UUID?
-            
-            for pictureData in pictures {
-                guard let info = (pictureData[ResponseKey.pictureInfo.rawValue] as? [String : Any]),
-                    let tag = (info[ResponseKey.pictureTag.rawValue] as? String).flatMap(ImageTag.init),
-                    let uuid = (pictureData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
-                
-                switch tag {
-                case .smallProfile: smallId = uuid
-                case .medium: mediumId = uuid
-                }
-            }
-            
-            if smallId != nil || mediumId != nil {
-                self = .legacy(small: smallId, medium: mediumId)
+            if nil != previewKey || nil != completeKey {
+                preview = previewKey
+                complete = completeKey
                 return
             }
         }
@@ -133,7 +112,6 @@ extension NSManagedObjectContext
 
 @objc
 public class ZMSearchUser: NSObject, UserType, UserConnectionType {
-    
     public var providerIdentifier: String?
     public var summary: String?
     public var assetKeys: SearchUserAssetKeys?
@@ -153,10 +131,16 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     fileprivate var internalConnectionRequestMessage: String?
     fileprivate var internalPreviewImageData: Data?
     fileprivate var internalCompleteImageData: Data?
-
     
     public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
         return user?.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: user?.remoteIdentifier.transportString()) ?? user?.name ?? ""
+    }
+
+
+    public var emailAddress: String? {
+        get {
+            return user?.emailAddress
+        }
     }
     
     public var name: String? {
@@ -183,10 +167,19 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         }
     }
     
+    public var availability: Availability {
+        get { return user?.availability ?? .none }
+        set { user?.availability = newValue }
+    }
+    
     public var isSelfUser: Bool {
         guard let user = user else { return false }
         
         return user.isSelfUser
+    }
+    
+    public var teamName: String? {
+        return user?.teamName
     }
     
     public var isTeamMember: Bool {
@@ -195,8 +188,34 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         return user.isTeamMember
     }
     
+    public var teamRole: TeamRole {
+        guard let user = user else { return .none }
+        
+        return user.teamRole
+    }
+    
     public var isServiceUser: Bool {
         return providerIdentifier != nil
+    }
+
+    public var usesCompanyLogin: Bool {
+        return user?.usesCompanyLogin == true
+    }
+    
+    public var readReceiptsEnabled: Bool {
+        return user?.readReceiptsEnabled ?? false
+    }
+    
+    public var activeConversations: Set<ZMConversation> {
+        return user?.activeConversations ?? Set()
+    }
+    
+    public var allClients: [UserClientType] {
+        return user?.allClients ?? []
+    }
+    
+    public var managedByWire: Bool {
+        return user?.managedByWire != false
     }
     
     public var isPendingApprovalByOtherUser: Bool {
@@ -219,6 +238,32 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
             internalIsConnected = newValue
         }
     }
+
+    public var oneToOneConversation: ZMConversation? {
+        return user?.oneToOneConversation
+    }
+
+    public var isBlocked: Bool {
+        return user?.isBlocked == true
+    }
+
+    public var isExpired: Bool {
+        return user?.isExpired == true
+    }
+
+    public var isPendingApprovalBySelfUser: Bool {
+        return user?.isPendingApprovalBySelfUser == true
+    }
+    
+    public var isAccountDeleted: Bool {
+        guard let user = user else { return false }
+        
+        return user.isAccountDeleted
+    }
+    
+    public var isUnderLegalHold: Bool {
+        return user?.isUnderLegalHold == true
+    }
     
     public var accentColorValue: ZMAccentColor {
         get {
@@ -228,6 +273,14 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
                 return internalAccentColorValue
             }
         }
+    }
+
+    public var isWirelessUser: Bool {
+        return user?.isWirelessUser ?? false
+    }
+    
+    public var expiresAfter: TimeInterval {
+        return user?.expiresAfter ?? 0
     }
     
     public var connectionRequestMessage: String? {
@@ -254,6 +307,35 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         } else {
             return internalCompleteImageData
         }
+    }
+    
+    public var needsRichProfileUpdate: Bool {
+        get {
+            return user?.needsRichProfileUpdate ?? false
+        }
+        set {
+            user?.needsRichProfileUpdate = newValue
+        }
+    }
+    
+    public var richProfile: [UserRichProfileField] {
+        return user?.richProfile ?? []
+    }
+    
+    public func canAccessCompanyInformation(of otherUser: UserType) -> Bool {
+        return user?.canAccessCompanyInformation(of: otherUser) ?? false
+    }
+
+    public var canCreateConversation: Bool {
+        return user?.canCreateConversation ?? false
+    }
+
+    public func canAddUser(to conversation: ZMConversation) -> Bool {
+        return user?.canAddUser(to: conversation) == true
+    }
+
+    public func canRemoveUser(from conversation: ZMConversation) -> Bool {
+        return user?.canRemoveUser(from: conversation) == true
     }
     
     public override func isEqual(_ object: Any?) -> Bool {

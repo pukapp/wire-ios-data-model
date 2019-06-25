@@ -45,7 +45,7 @@ public final class DuplicatedEntityRemovalTests: DiskDatabaseTest {
             systemMessage.duration = duration
         }
 
-        conversation.sortedAppendMessage(systemMessage)
+        conversation.append(systemMessage)
         systemMessage.visibleInConversation = conversation
         return systemMessage
     }
@@ -315,9 +315,9 @@ extension DuplicatedEntityRemovalTests {
         let conversation1 = createConversation()
         let conversation2 = createConversation()
         let conversation3 = createConversation()
-        conversation1.internalAddParticipants(Set([user1, user2]))
-        conversation2.internalAddParticipants(Set([user1]))
-        conversation3.internalAddParticipants(Set([user2]))
+        conversation1.internalAddParticipants([user1, user2])
+        conversation2.internalAddParticipants([user1])
+        conversation3.internalAddParticipants([user2])
         self.moc.saveOrRollback()
         
         // sanity check
@@ -341,9 +341,9 @@ extension DuplicatedEntityRemovalTests {
         let conversation1 = createConversation()
         let conversation2 = createConversation()
         let conversation3 = createConversation()
-        conversation1.internalAddParticipants(Set([user1, user2]))
-        conversation2.internalAddParticipants(Set([user1]))
-        conversation3.internalAddParticipants(Set([user2]))
+        conversation1.internalAddParticipants([user1, user2])
+        conversation2.internalAddParticipants([user1])
+        conversation3.internalAddParticipants([user2])
         self.moc.saveOrRollback()
         
         // sanity check
@@ -617,7 +617,7 @@ extension DuplicatedEntityRemovalTests {
         self.moc.saveOrRollback()
         
         // THEN
-        XCTAssertEqual(conversation1.messages.set, Set([message1, message2]))
+        XCTAssertEqual(Set(conversation1.allMessages), Set([message1, message2]))
     }
     
     public func testThatItMergesConversations_hiddenMessages() {
@@ -638,7 +638,7 @@ extension DuplicatedEntityRemovalTests {
         self.moc.saveOrRollback()
         
         // THEN
-        XCTAssertEqual(conversation1.hiddenMessages.set, Set([message1, message2]))
+        XCTAssertEqual(conversation1.hiddenMessages, Set([message1, message2]))
     }
     
     public func testThatItMergesConversations_team_convo1HasIt() {

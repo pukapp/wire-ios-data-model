@@ -68,11 +68,9 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)startTimerForMessageIfNeeded:(ZMMessage*)message fireDate:(NSDate *)fireDate userInfo:(NSDictionary *)userInfo
 {
     if ( ![self isTimerRunningForMessage:message] ) {
-        ZMBackgroundActivity *bgActivity = [BackgroundActivityFactory.sharedInstance backgroundActivityWithName:@"MessageTimer"];
         ZMTimer *timer = [ZMTimer timerWithTarget:self];
         NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:userInfo ?: @{}];
         info[@"message"] = message;
-        info[@"bgActivity"] = bgActivity;
         timer.userInfo = [NSDictionary dictionaryWithDictionary:info];
         [self.objectToTimerMap setObject:timer forKey:message];
         
@@ -109,7 +107,6 @@ ZM_EMPTY_ASSERTING_INIT()
     
 }
 
-
 - (void)stopTimerForMessage:(ZMMessage *)message;
 {
     ZMTimer *timer = [self timerForMessage:message];
@@ -123,8 +120,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 - (void)removeTimerForMessage:(ZMMessage *)message {
-    ZMTimer *timer = [self timerForMessage:message];
-    [self endBackgroundActivityForTimer:timer];
     [self.objectToTimerMap removeObjectForKey:message];
 }
 
@@ -133,18 +128,12 @@ ZM_EMPTY_ASSERTING_INIT()
     return [self.objectToTimerMap objectForKey:message];
 }
 
-- (void)endBackgroundActivityForTimer:(ZMTimer *)timer
-{
-    ZMBackgroundActivity *bgActivity = timer.userInfo[@"bgActivity"];
-    [bgActivity endActivity];
-}
-
 - (void)tearDown;
 {
     for (ZMTimer *timer in self.objectToTimerMap.objectEnumerator) {
         [timer cancel];
-        [self endBackgroundActivityForTimer:timer];
     }
+    [self.objectToTimerMap removeAllObjects];
     
     self.tearDownCalled = YES;
 }

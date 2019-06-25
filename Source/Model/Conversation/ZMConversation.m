@@ -52,7 +52,7 @@ NSString *const ZMConversationHasUnreadUnsentMessageKey = @"hasUnreadUnsentMessa
 NSString *const ZMConversationIsArchivedKey = @"internalIsArchived";
 NSString *const ZMConversationIsSelfAnActiveMemberKey = @"isSelfAnActiveMember";
 NSString *const ZMConversationMutedStatusKey = @"mutedStatus";
-NSString *const ZMConversationMessagesKey = @"messages";
+NSString *const ZMConversationAllMessagesKey = @"allMessages";
 NSString *const ZMConversationHiddenMessagesKey = @"hiddenMessages";
 NSString *const ZMConversationMembersAliasnameKey = @"membersAliasname";
 NSString *const ZMConversationMembersSendMsgStatusesKey = @"membersSendMsgStatuses";
@@ -68,6 +68,9 @@ NSString *const ZMConversationLastReadServerTimeStampKey = @"lastReadServerTimeS
 NSString *const ZMConversationClearedTimeStampKey = @"clearedTimeStamp";
 NSString *const ZMConversationArchivedChangedTimeStampKey = @"archivedChangedTimestamp";
 NSString *const ZMConversationSilencedChangedTimeStampKey = @"silencedChangedTimestamp";
+NSString *const ZMConversationExternalParticipantsStateKey = @"externalParticipantsState";
+NSString *const ZMConversationLegalHoldStatusKey = @"legalHoldStatus";
+NSString *const ZMConversationNeedsToVerifyLegalHoldKey = @"needsToVerifyLegalHold";
 
 NSString *const ZMNotificationConversationKey = @"ZMNotificationConversationKey";
 
@@ -121,6 +124,7 @@ static NSString *const VoiceChannelStateKey = @"voiceChannelState";
 
 static NSString *const LocalMessageDestructionTimeoutKey = @"localMessageDestructionTimeout";
 static NSString *const SyncedMessageDestructionTimeoutKey = @"syncedMessageDestructionTimeout";
+static NSString *const HasReadReceiptsEnabledKey = @"hasReadReceiptsEnabled";
 
 static NSString *const LanguageKey = @"language";
 
@@ -145,8 +149,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @property (nonatomic) NSString *normalizedUserDefinedName;
 @property (nonatomic) ZMConversationType conversationType;
 @property (nonatomic, readonly) ZMConversationType internalConversationType;
-
-@property (nonatomic) NSMutableOrderedSet *unreadTimeStamps;
 
 @property (nonatomic) NSTimeInterval lastReadTimestampSaveDelay;
 @property (nonatomic) int64_t lastReadTimestampUpdateCounter;
@@ -177,7 +179,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @implementation ZMConversation
 
 @dynamic userDefinedName;
-@dynamic messages;
+@dynamic allMessages;
 @dynamic lastModifiedDate;
 @dynamic disableSendLastModifiedDate;
 @dynamic creator;
@@ -239,7 +241,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
 @synthesize lastReadTimestampUpdateCounter;
-@synthesize unreadTimeStamps;
 
 
 
@@ -345,10 +346,10 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
 }
 
-
--(NSOrderedSet *)activeParticipants
+-(NSSet <ZMUser *> *)activeParticipants
 {
-    NSMutableOrderedSet *activeParticipants = [NSMutableOrderedSet orderedSet];
+    
+    NSMutableSet *activeParticipants = [NSMutableSet set];
     
     if (self.internalConversationType != ZMConversationTypeGroup &&
         self.internalConversationType != ZMConversationTypeHugeGroup) {
@@ -359,18 +360,22 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
     else if(self.isSelfAnActiveMember) {
         [activeParticipants addObject:[ZMUser selfUserInContext:self.managedObjectContext]];
-        [activeParticipants unionOrderedSet:self.lastServerSyncedActiveParticipants];
+        [activeParticipants unionSet:[self.lastServerSyncedActiveParticipants set]];
     }
     else
     {
-        [activeParticipants unionOrderedSet:self.lastServerSyncedActiveParticipants];
+        [activeParticipants unionSet:[self.lastServerSyncedActiveParticipants set]];
     }
-   
-    NSArray *sortedParticipants = [self sortedUsers:activeParticipants];
-    return [NSOrderedSet orderedSetWithArray:sortedParticipants];
+    
+    return activeParticipants;
 }
 
-- (NSArray *)sortedUsers:(NSOrderedSet *)users
+-(NSArray <ZMUser *> *)sortedActiveParticipants
+{
+    return [self sortedUsers:[self activeParticipants]];
+}
+
+- (NSArray *)sortedUsers:(NSSet *)users
 {
     NSSortDescriptor *nameDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"normalizedName" ascending:YES];
     NSArray *sortedUser = [users sortedArrayUsingDescriptors:@[nameDescriptor]];
@@ -433,7 +438,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             VoiceChannelKey,
             ZMConversationHasUnreadMissedCallKey,
             ZMConversationHasUnreadUnsentMessageKey,
-            ZMConversationMessagesKey,
+            ZMConversationAllMessagesKey,
             ZMConversationHiddenMessagesKey,
             ZMConversationMembersAliasnameKey,
             ZMConversationMembersSendMsgStatusesKey,
@@ -463,7 +468,10 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             //、 新增
             ZMConversationAutoReplyFromOtherKey,
             ZMConversationAppsKey,
-            @"isServiceNotice"
+            @"isServiceNotice",
+            HasReadReceiptsEnabledKey,
+            ZMConversationLegalHoldStatusKey,
+            ZMConversationNeedsToVerifyLegalHoldKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
@@ -532,7 +540,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests
                                                        topapps:(NSArray *)topapps
-
 {
     VerifyReturnNil(session != nil);
     return [self insertGroupConversationIntoManagedObjectContext:session.managedObjectContext
@@ -701,19 +708,19 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 - (ZMMessage *)lastEditableMessage;
 {
     __block ZMMessage *result;
-    [self.messages enumerateObjectsWithOptions:NSEnumerationReverse
-                                    usingBlock:^(ZMMessage *message, NSUInteger ZM_UNUSED idx, BOOL *stop) {
-                                            if ([message isEditableMessage]) {
-                                                result = message;
-                                                *stop = YES;
-                                            }
-                                    }];
+    [[self lastMessagesWithLimit:50] enumerateObjectsUsingBlock:^(ZMMessage * _Nonnull message, NSUInteger idx, BOOL * _Nonnull stop) {
+        NOT_USED(idx);
+        if ([message isEditableMessage]) {
+            result = message;
+            *stop = YES;
+        }
+    }];
     return result;
 }
 
 + (NSSet *)keyPathsForValuesAffectingFirstUnreadMessage
 {
-    return [NSSet setWithObjects:ZMConversationMessagesKey, ZMConversationLastReadServerTimeStampKey, nil];
+    return [NSSet setWithObjects:ZMConversationAllMessagesKey, ZMConversationLastReadServerTimeStampKey, nil];
 }
 
 - (NSSet<NSString *> *)filterUpdatedLocallyModifiedKeys:(NSSet<NSString *> *)updatedKeys
@@ -736,10 +743,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 - (BOOL)canMarkAsUnread
 {
-    if (self.messages.count == 0) {
-        return NO;
-    }
-    
     if (self.estimatedUnreadCount > 0) {
         return NO;
     }
@@ -753,18 +756,13 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 - (ZMMessage *)lastMessageCanBeMarkedUnread
 {
-    NSUInteger lastMessageIndexCanBeMarkedUnread = [self.messages.reversedOrderedSet indexOfObjectPassingTest:^BOOL(id<ZMConversationMessage> message, NSUInteger idx, BOOL *stop) {
-        NOT_USED(idx);
-        NOT_USED(stop);
-        return message.canBeMarkedUnread;
-    }];
+    for (ZMMessage *message in [self lastMessagesWithLimit:50]) {
+        if (message.canBeMarkedUnread) {
+            return message;
+        }
+    }
     
-    if (lastMessageIndexCanBeMarkedUnread != NSNotFound) {
-        return self.messages[self.messages.count - lastMessageIndexCanBeMarkedUnread - 1];
-    }
-    else {
-        return nil;
-    }
+    return nil;
 }
 
 - (void)markAsUnread
@@ -807,9 +805,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return @"Conversation";
 }
 
-- (NSMutableOrderedSet *)mutableMessages;
+- (NSMutableSet<ZMMessage *> *)mutableMessages;
 {
-    return [self mutableOrderedSetValueForKey:ZMConversationMessagesKey];
+    return [self mutableSetValueForKey:ZMConversationAllMessagesKey];
 }
 
 + (ZMConversationList *)conversationsIncludingArchivedInContext:(NSManagedObjectContext *)moc;
@@ -871,8 +869,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     ZMConversation *existingConversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.managedObjectContext];
     if ((existingConversation != nil) && ![existingConversation isEqual:self]) {
         Require(self.remoteIdentifier == nil);
-        [self.mutableMessages addObjectsFromArray:existingConversation.messages.array];
-        [self sortMessages];
+        [self.mutableMessages unionSet:existingConversation.allMessages];
         // Just to be on the safe side, force update:
         self.needsToBeUpdatedFromBackend = YES;
         // This is a duplicate. Delete the other one
@@ -934,11 +931,14 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     conversation.creator = selfUser;
     conversation.team = team;
 
-    [conversation internalAddParticipants:[NSSet setWithObject:participant]];
+    NSSet<ZMUser *> *participants = [NSSet setWithObject:participant];
+
+    [conversation appendNewConversationSystemMessageAtTimestamp:[NSDate date] users:participants];
+    [conversation internalAddParticipants:@[participant]];
 
     // We need to check if we should add a 'secure' system message in case all participants are trusted
     [conversation increaseSecurityLevelIfNeededAfterTrustingClients:participant.clients];
-    [conversation appendNewConversationSystemMessageIfNeeded];
+    
     return conversation;
 }
 
@@ -1009,6 +1009,24 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
                                                              allowGuests:(BOOL)allowGuests
                                                                  topapps:(NSArray *)topapps
 {
+    return [self insertGroupConversationIntoManagedObjectContext:moc
+                                                withParticipants:participants
+                                                            name:name
+                                                          inTeam:team
+                                                     allowGuests:allowGuests
+                                                    readReceipts:NO
+                                                         topapps:topapps];
+}
+
+
++ (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc
+                                                        withParticipants:(nonnull NSArray <ZMUser *>*)participants
+                                                                    name:(nullable NSString *)name
+                                                                  inTeam:(nullable Team *)team
+                                                             allowGuests:(BOOL)allowGuests
+                                                            readReceipts:(BOOL)readReceipts
+                                                            topapps:(NSArray *)topapps
+{
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
 
     if (nil != team && !selfUser.canCreateConversation) {
@@ -1023,7 +1041,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     conversation.userDefinedName = name;
     if (nil != team) {
         conversation.allowGuests = allowGuests;
+        conversation.hasReadReceiptsEnabled = readReceipts;
     }
+
     if (nil != topapps) {
         conversation.topWebApps = [NSOrderedSet orderedSetWithArray:topapps];
     }
@@ -1032,19 +1052,23 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         Require([participant isKindOfClass:[ZMUser class]]);
         const BOOL isSelf = (participant == selfUser);
         RequireString(!isSelf, "Can't pass self user as a participant of a group conversation");
-        if(!isSelf) {
-            [conversation internalAddParticipants:[NSSet setWithObject:participant]];
-        }
-    }
-    
+        return !isSelf;
+    }];
+
+    // Add the new conversation system message
+    [conversation appendNewConversationSystemMessageAtTimestamp:[NSDate date] users:participantsSet];
+
+    // Add the participants
+    [conversation internalAddParticipants:filteredParticipants];
+
+    // We need to check if we should add a 'secure' system message in case all participants are trusted
     NSMutableSet *allClients = [NSMutableSet set];
     for (ZMUser *user in conversation.activeParticipants) {
         [allClients unionSet:user.clients];
     }
-    
-    // We need to check if we should add a 'secure' system message in case all participants are trusted
+
     [conversation increaseSecurityLevelIfNeededAfterTrustingClients:allClients];
-    [conversation appendNewConversationSystemMessageIfNeeded];
+    
     return conversation;
 }
 
@@ -1128,11 +1152,15 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 - (ZMClientMessage *)appendClientMessageWithGenericMessage:(ZMGenericMessage *)genericMessage expires:(BOOL)expires hidden:(BOOL)hidden
 {
-    VerifyReturnNil(genericMessage != nil);
-
     ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:[NSUUID uuidWithTransportString:genericMessage.messageId]
                                                  managedObjectContext:self.managedObjectContext];
     [message addData:genericMessage.data];
+    
+    return [self appendMessage:message expires:expires hidden:hidden];
+}
+
+- (ZMClientMessage *)appendMessage:(ZMClientMessage *)message expires:(BOOL)expires hidden:(BOOL)hidden
+{
     message.sender = [ZMUser selfUserInContext:self.managedObjectContext];
     
     if (expires) {
@@ -1142,7 +1170,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     if(hidden) {
         message.hiddenInConversation = self;
     } else {
-        [self sortedAppendMessage:message];
+        [self appendMessage:message];
         [self unarchiveIfNeeded];
         [message updateCategoryCache];
         [message prepareToSend];
@@ -1162,7 +1190,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     message.sender = [ZMUser selfUserInContext:self.managedObjectContext];
     
     [message setExpirationDate];
-    [self sortedAppendMessage:message];
+    [self appendMessage:message];
+
     [self unarchiveIfNeeded];
     [self.managedObjectContext.zm_fileAssetCache storeAssetData:message format:ZMImageFormatOriginal encrypted:NO data:imageData];
     [message updateCategoryCache];
@@ -1171,93 +1200,20 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return message;
 }
 
-- (void)appendNewConversationSystemMessageIfNeeded;
-{
-    ZMMessage *firstMessage = self.messages.firstObject;
-    if ([firstMessage isKindOfClass:[ZMSystemMessage class]]) {
-        ZMSystemMessage *systemMessage = (ZMSystemMessage *)firstMessage;
-        if (systemMessage.systemMessageType == ZMSystemMessageTypeNewConversation) {
-            return;
-        }
-    }
-    
-    ZMSystemMessage *systemMessage = [[ZMSystemMessage alloc] initWithNonce:[NSUUID UUID] managedObjectContext:self.managedObjectContext];
-    systemMessage.systemMessageType = ZMSystemMessageTypeNewConversation;
-    systemMessage.sender = [ZMUser selfUserInContext:self.managedObjectContext];
-    systemMessage.sender = self.creator;
-    systemMessage.text = self.userDefinedName;
-    systemMessage.users = self.activeParticipants.set;
-    
-    [systemMessage updateNewConversationSystemMessageIfNeededWithUsers:self.activeParticipants.set
-                                                               context:self.managedObjectContext
-                                                          conversation:self];
-
-    // the new conversation message should be displayed first,
-    // additionally the use of reference date is to ensure proper transition for older clients so the message is the very
-    // first message in conversation
-    systemMessage.serverTimestamp = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
-    
-    [self sortedAppendMessage:systemMessage];
-}
-
-- (NSUInteger)sortedAppendMessage:(ZMMessage *)message;
+- (void)appendMessage:(ZMMessage *)message;
 {
     Require(message != nil);
     [message updateNormalizedText];
-
-    // This is more efficient than adding to mutableMessages and re-sorting all of them.
-    NSUInteger index = self.messages.count;
-    ZMMessage * const currentLastMessage = self.messages.lastObject;
-    Require(currentLastMessage != message);
-    if (currentLastMessage == nil) {
-        [self.mutableMessages addObject:message];
-    } else {
-        if ([currentLastMessage compare:message] == NSOrderedAscending) {
-            [self.mutableMessages addObject:message];
-        } else {
-            NSUInteger idx = [self.messages.array indexOfObject:message inSortedRange:NSMakeRange(0, self.messages.count) options:NSBinarySearchingInsertionIndex | NSBinarySearchingLastEqual usingComparator:^(ZMMessage *msg1, ZMMessage *msg2) {
-                return [msg1 compare:msg2];
-            }];
-            [self.mutableMessages insertObject:message atIndex:idx];
-            index = idx;
-        }
-    }
+    message.visibleInConversation = self;
     
+    [self addAllMessagesObject:message];
     [self updateTimestampsAfterInsertingMessage:message];
-    
-    return index;
 }
 
 - (void)unarchiveIfNeeded
 {
     if (self.isArchived) {
         self.isArchived = NO;
-    }
-}
-
-- (void)deleteOlderMessages
-{
-    if ( self.messages.count == 0 || self.clearedTimeStamp == nil) {
-        return;
-    }
-    
-    // If messages are not sorted beforehand, we might delete messages we were supposed to keep
-    [self sortMessages];
-    
-    NSMutableArray *messagesToDelete = [NSMutableArray array];
-    [self.messages enumerateObjectsUsingBlock:^(ZMSystemMessage *message, NSUInteger __unused idx, BOOL *stop) {
-        NOT_USED(stop);
-        // cleared event can be an invisible event that is not a message
-        // therefore we should stop when we reach a message that is older than the clearedTimestamp
-        if ([message.serverTimestamp compare:self.clearedTimeStamp] == NSOrderedDescending) {
-            *stop = YES;
-            return;
-        }
-        [messagesToDelete addObject:message];
-    }];
-    
-    for (ZMMessage *message in messagesToDelete) {
-        [self.managedObjectContext deleteObject:message];
     }
 }
 
@@ -1355,46 +1311,50 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return result;
 }
 
-- (void)internalAddParticipants:(NSSet<ZMUser *> *)participants
+- (void)internalAddParticipants:(NSArray<ZMUser *> *)participants
 {
     VerifyReturn(participants != nil);
-    
-    NSSet<ZMUser *>* selfUserSet = [NSSet setWithObject:[ZMUser selfUserInContext:self.managedObjectContext]];
-    
-    NSMutableSet<ZMUser *>* otherUsers = [participants mutableCopy];
-    [otherUsers minusSet:selfUserSet];
-    
-    if ([participants intersectsSet:selfUserSet]) {
+    NSSet<ZMUser *> *selfUserSet = [NSSet setWithObject:[ZMUser selfUserInContext:self.managedObjectContext]];
+    NSMutableOrderedSet<ZMUser *> *otherUsers = [NSMutableOrderedSet orderedSetWithArray:participants];
+
+    if ([otherUsers intersectsSet:selfUserSet]) {
+        [otherUsers minusSet:selfUserSet];
+
         self.isSelfAnActiveMember = YES;
         self.needsToBeUpdatedFromBackend = YES;
+        
+        if (self.mutedStatus == MutedMessageOptionValueNone) {
+            self.isArchived = NO;
+        }
     }
     
     if (otherUsers.count > 0) {
         NSSet *existingUsers = [self.lastServerSyncedActiveParticipants.set copy];
-        [self.mutableLastServerSyncedActiveParticipants addObjectsFromArray:otherUsers.allObjects];
+        [self.mutableLastServerSyncedActiveParticipants unionOrderedSet:otherUsers];
         
         [otherUsers minusSet:existingUsers];
         if (otherUsers.count > 0) {
-            [self decreaseSecurityLevelIfNeededAfterDiscoveringClients:[ZMConversation clientsOfUsers:otherUsers] causedByAddedUsers:otherUsers];
+            NSSet<ZMUser *> *otherUsersSet = otherUsers.set;
+            [self decreaseSecurityLevelIfNeededAfterDiscoveringClients:[ZMConversation clientsOfUsers:otherUsersSet] causedByAddedUsers:otherUsersSet];
         }
     }
 }
 
-- (void)internalRemoveParticipants:(NSSet<ZMUser *> *)participants sender:(ZMUser *)sender
+- (void)internalRemoveParticipants:(NSArray<ZMUser *> *)participants sender:(ZMUser *)sender
 {
     VerifyReturn(participants != nil);
     
     NSSet<ZMUser *>* selfUserSet = [NSSet setWithObject:[ZMUser selfUserInContext:self.managedObjectContext]];
-    NSMutableSet<ZMUser *>* otherUsers = [participants mutableCopy];
-    [otherUsers minusSet:selfUserSet];
-    
-    if ([participants intersectsSet:selfUserSet]) {
+    NSMutableOrderedSet<ZMUser *> *otherUsers = [NSMutableOrderedSet orderedSetWithArray:participants];
+
+    if ([otherUsers intersectsSet:selfUserSet]) {
+        [otherUsers minusSet:selfUserSet];
         self.isSelfAnActiveMember = NO;
         self.isArchived = sender.isSelfUser;
     }
     
-    [self.mutableLastServerSyncedActiveParticipants removeObjectsInArray:otherUsers.allObjects];
-    [self increaseSecurityLevelIfNeededAfterRemovingClientForUsers:otherUsers];
+    [self.mutableLastServerSyncedActiveParticipants minusOrderedSet:otherUsers];
+    [self increaseSecurityLevelIfNeededAfterRemovingUsers:otherUsers.set];
 }
 
 @dynamic isSelfAnActiveMember;
@@ -1449,23 +1409,28 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 + (void)refreshObjectsThatAreNotNeededInSyncContext:(NSManagedObjectContext *)managedObjectContext;
 {
-
-    NSMutableArray *messagesToKeep = [NSMutableArray array];
     NSMutableArray *conversationsToKeep = [NSMutableArray array];
     NSMutableSet *usersToKeep = [NSMutableSet set];
+    NSMutableSet *messagesToKeep = [NSMutableSet set];
     
     // make sure that the Set is not mutated while being enumerated
     NSSet *registeredObjects = managedObjectContext.registeredObjects;
     
-    // gather messages to keep
+    // gather objects to keep
     for(NSManagedObject *obj in registeredObjects) {
-        if(!obj.isFault && [obj isKindOfClass:ZMConversation.class]) {
-            ZMConversation *conversation = (ZMConversation *)obj;
-            [messagesToKeep addObjectsFromArray:[conversation messagesNotToRefreshBecauseNeededForSorting].allObjects];
-            
-            if(conversation.shouldNotBeRefreshed) {
-                [conversationsToKeep addObject:conversation];
-                [usersToKeep unionSet:conversation.lastServerSyncedActiveParticipants.set];
+        if (!obj.isFault) {
+            if ([obj isKindOfClass:ZMConversation.class]) {
+                ZMConversation *conversation = (ZMConversation *)obj;
+                
+                if(conversation.shouldNotBeRefreshed) {
+                    [conversationsToKeep addObject:conversation];
+                    [usersToKeep unionSet:conversation.lastServerSyncedActiveParticipants.set];
+                }
+            } else if ([obj isKindOfClass:ZMOTRMessage.class]) {
+                ZMOTRMessage *message = (ZMOTRMessage *)obj;
+                if (![message hasFaultForRelationshipNamed:ZMMessageMissingRecipientsKey] && !message.missingRecipients.isEmpty) {
+                    [messagesToKeep addObject:obj];
+                }
             }
         }
     }
@@ -1481,42 +1446,15 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             
             const BOOL isOfTypeToBeRefreshed = isUser || isMessage || isConversation;
             
-            if((isMessage && [messagesToKeep indexOfObjectIdenticalTo:obj] != NSNotFound) ||
-               (isConversation && [conversationsToKeep indexOfObjectIdenticalTo:obj] != NSNotFound) ||
-               (isUser && [usersToKeep.allObjects indexOfObjectIdenticalTo:obj] != NSNotFound) ||
-               !isOfTypeToBeRefreshed
-            )
-            {
+            if ((isConversation && [conversationsToKeep indexOfObjectIdenticalTo:obj] != NSNotFound) ||
+                (isUser && [usersToKeep.allObjects indexOfObjectIdenticalTo:obj] != NSNotFound) ||
+                (isMessage && [messagesToKeep.allObjects indexOfObjectIdenticalTo:obj] != NSNotFound) ||
+                !isOfTypeToBeRefreshed) {
                 continue;
             }
             [managedObjectContext refreshObject:obj mergeChanges:obj.hasChanges];
         }
     }
-}
-
-
-- (NSSet *)messagesNotToRefreshBecauseNeededForSorting
-{
-    NSMutableSet *messagesToKeep = [NSMutableSet set];
-    
-    const static NSUInteger NumberOfMessagesToKeep = 3;
-    
-    if (![self hasFaultForRelationshipNamed:ZMConversationMessagesKey]) {
-        const NSUInteger length = self.messages.count;
-        
-        if (length == 0) {
-            return [NSSet set];
-        }
-        
-        const NSUInteger startIndex = length > NumberOfMessagesToKeep ? length - NumberOfMessagesToKeep : 0;
-        const NSUInteger endIndex = length - 1;
-        
-        for (NSUInteger index = startIndex; index <= endIndex; index++) {
-            [messagesToKeep addObject:self.messages[index]];
-        }
-    }
-    
-    return messagesToKeep;
 }
 
 - (BOOL)shouldNotBeRefreshed

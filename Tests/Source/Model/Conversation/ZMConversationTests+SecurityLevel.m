@@ -103,14 +103,14 @@
         unconnectedUserClient.user = newUnconnectedUser;
         
         // when adding a new participant
-        [conversation internalAddParticipants:[NSSet setWithObject:newUnconnectedUser]];
+        [conversation internalAddParticipants:@[newUnconnectedUser]];
         
         // then the conversation should degrade
         XCTAssertFalse(conversation.allUsersTrusted);
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
         
         // when
-        [conversation internalRemoveParticipants:[NSSet setWithObjects:newUnconnectedUser, nil] sender:self.selfUser];
+        [conversation internalRemoveParticipants:@[newUnconnectedUser] sender:self.selfUser];
         
         // then
         XCTAssertTrue(conversation.allUsersTrusted);
@@ -153,7 +153,7 @@
     conversation.securityLevel = ZMConversationSecurityLevelSecureWithIgnored;
     
     // when
-    [conversation makeNotSecure];
+    [conversation acknowledgePrivacyWarningWithResendIntent:NO];
     
     // then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
@@ -178,25 +178,25 @@
         
         // when adding a new participant
         ZMUser *user3 = [self createUsersWithClientsOnSyncMOCWithCount:1].lastObject;
-        [conversation internalAddParticipants:[NSSet setWithObjects:user3, nil]];
+        [conversation internalAddParticipants:@[user3]];
         
         // then the conversation should degrade
         XCTAssertFalse(conversation.allUsersTrusted);
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
         
         // Conversation degraded message
-        ZMSystemMessage *conversationDegradedMessage = conversation.messages.lastObject;
+        ZMSystemMessage *conversationDegradedMessage = (ZMSystemMessage *)conversation.lastMessage;
         XCTAssertEqual(conversationDegradedMessage.systemMessageType, ZMSystemMessageTypeNewClient);
         XCTAssertEqualObjects(conversationDegradedMessage.addedUsers, [NSSet setWithObject:user3]);
         XCTAssertEqualObjects(conversationDegradedMessage.users, [NSSet setWithObject:user3]);
         
         // when
-        [conversation internalRemoveParticipants:[NSSet setWithObject:user3] sender:self.selfUser];
+        [conversation internalRemoveParticipants:@[user3] sender:self.selfUser];
         
         // then
         XCTAssertTrue(conversation.allUsersTrusted);
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
-        ZMSystemMessage *message2 = conversation.messages.lastObject;
+        ZMSystemMessage *message2 = (ZMSystemMessage *)conversation.lastMessage;
         XCTAssertEqual(message2.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
     }];
 }
@@ -290,7 +290,7 @@
 
     // then
     ZMSystemMessage *fetchedMessage = [ZMSystemMessage fetchLatestPotentialGapSystemMessageInConversation:conversation];
-    XCTAssertEqual(conversation.messages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     XCTAssertNotNil(fetchedMessage);
     XCTAssertTrue(fetchedMessage.needsUpdatingUsers);
     
@@ -300,7 +300,7 @@
     // then
     XCTAssertFalse(fetchedMessage.needsUpdatingUsers);
     fetchedMessage = [ZMSystemMessage fetchLatestPotentialGapSystemMessageInConversation:conversation];
-    XCTAssertEqual(conversation.messages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     XCTAssertNil(fetchedMessage);
 }
 
@@ -356,8 +356,7 @@
 
         // then
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
-        XCTAssertEqual(conversation.messages.count, 2lu);
-        ZMMessage *message = conversation.messages.lastObject;
+        ZMMessage *message = conversation.lastMessage;
         XCTAssertNotNil(message);
         XCTAssertTrue([message isKindOfClass:[ZMSystemMessage class]]);
         XCTAssertEqual(message.systemMessageData.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
@@ -380,8 +379,7 @@
         
         // then
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
-        XCTAssertEqual(conversation.messages.count, 1lu);
-        ZMSystemMessage *message = conversation.messages.lastObject;
+        ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
         XCTAssertNotEqual(message.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
     }];
     
@@ -478,7 +476,7 @@
     [conversation appendStartedUsingThisDeviceMessage];
     
     // then
-    ZMSystemMessage *message = conversation.messages.lastObject;
+    ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
     XCTAssertNotNil(message.serverTimestamp);
 }
 
@@ -494,7 +492,7 @@
     [conversation appendDecryptionFailedSystemMessageAtTime:[NSDate date] sender:user client:nil errorCode:CBOX_REMOTE_IDENTITY_CHANGED];
     
     // then
-    ZMSystemMessage *lastMessage = conversation.messages.lastObject;
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)conversation.lastMessage;
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeDecryptionFailed_RemoteIdentityChanged);
 }
 
@@ -510,7 +508,7 @@
     [conversation appendDecryptionFailedSystemMessageAtTime:[NSDate date] sender:user client:nil errorCode:CBOX_INVALID_MESSAGE];
     
     // then
-    ZMSystemMessage *lastMessage = conversation.messages.lastObject;
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)conversation.lastMessage;
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
 }
 
@@ -529,7 +527,7 @@
     [conversation appendContinuedUsingThisDeviceMessage];
     
     // then
-    ZMSystemMessage *message = conversation.messages.lastObject;
+    ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
     XCTAssertNotNil(message.serverTimestamp);
     XCTAssertLessThan([previousMessage.serverTimestamp timeIntervalSince1970], [message.serverTimestamp timeIntervalSince1970]);
     XCTAssertEqualWithAccuracy([[NSDate date] timeIntervalSince1970], [message.serverTimestamp timeIntervalSince1970], 1.0);
@@ -598,14 +596,14 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
     ZMUser *otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    [conversation internalAddParticipants:[NSSet setWithObject:otherUser]];
+    [conversation internalAddParticipants:@[otherUser]];
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.user = otherUser;
     ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     [[selfUser selfClient] trustClient:client];
     
     // WHEN
-    [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:otherUser];
+    [conversation internalRemoveParticipants:@[selfUser] sender:otherUser];
     
     // THEN
     XCTAssertFalse(conversation.allUsersTrusted);
@@ -726,7 +724,7 @@
     
     // WHEN
     ZMConversation *uiConversation = (ZMConversation *)[self.uiMOC existingObjectWithID:conversation.objectID error:nil];
-    [uiConversation doNotResendMessagesThatCausedDegradation];
+    [uiConversation acknowledgePrivacyWarningWithResendIntent:NO];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -740,7 +738,7 @@
         XCTAssertFalse(message3.causedSecurityLevelDegradation);
         XCTAssertEqual(message3.deliveryState, ZMDeliveryStateFailedToSend);
         XCTAssertFalse(conversation.allUsersTrusted);
-        XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+        XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
     }];
 }
 
@@ -757,7 +755,7 @@
     
     // WHEN
     ZMConversation *uiConversation = (ZMConversation *)[self.uiMOC existingObjectWithID:conversation.objectID error:nil];
-    [uiConversation resendMessagesThatCausedConversationSecurityDegradation];
+    [uiConversation acknowledgePrivacyWarningWithResendIntent:YES];
     [self.uiMOC saveOrRollback];
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC refreshAllObjects];
@@ -805,7 +803,7 @@
     
     // WHEN
     ZMConversation *uiConversation = (ZMConversation *)[self.uiMOC existingObjectWithID:conversation.objectID error:nil];
-    [uiConversation resendMessagesThatCausedConversationSecurityDegradation];
+    [uiConversation acknowledgePrivacyWarningWithResendIntent:YES];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -927,7 +925,7 @@
     UserClient *verifiedUserClient = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     verifiedUserClient.user = verifiedUser;
     
-    [conversation internalAddParticipants:[NSSet setWithObject:verifiedUser]];
+    [conversation internalAddParticipants:@[verifiedUser]];
     
     [selfClient trustClients:[NSSet setWithObject:verifiedUserClient]];
     [conversation increaseSecurityLevelIfNeededAfterTrustingClients:[NSSet setWithObject:verifiedUserClient]];
@@ -966,20 +964,18 @@
     verifiedUserClient.user = verifiedUser;
     [selfUser.selfClient trustClients:[NSSet setWithObject:verifiedUserClient]];
 
-    [conversation internalAddParticipants:[NSSet setWithObject:verifiedUser]];
+    [conversation internalAddParticipants:@[verifiedUser]];
     
     // THEN
-    XCTAssertEqual(conversation.messages.count, (NSUInteger)1);
-    XCTAssertTrue([conversation.messages.lastObject isKindOfClass:[ZMSystemMessage class]]);
-    XCTAssertEqual(((ZMSystemMessage *)conversation.messages.lastObject).systemMessageType, ZMSystemMessageTypeConversationIsSecure);
+    XCTAssertTrue([conversation.lastMessage isKindOfClass:[ZMSystemMessage class]]);
+    XCTAssertEqual(((ZMSystemMessage *)conversation.lastMessage).systemMessageType, ZMSystemMessageTypeConversationIsSecure);
     
     // WHEN
     [self simulateAdding:[NSSet setWithObject:verifiedUser] to:conversation by:verifiedUser];
     
     // THEN
-    XCTAssertEqual(conversation.messages.count, (NSUInteger)2);
-    XCTAssertTrue([conversation.messages.lastObject isKindOfClass:[ZMSystemMessage class]]);
-    XCTAssertEqual(((ZMSystemMessage *)conversation.messages.lastObject).systemMessageType, ZMSystemMessageTypeParticipantsAdded);
+    XCTAssertTrue([conversation.lastMessage isKindOfClass:[ZMSystemMessage class]]);
+    XCTAssertEqual(((ZMSystemMessage *)conversation.lastMessage).systemMessageType, ZMSystemMessageTypeParticipantsAdded);
 }
 
 - (void)testThatItDoesNotMoveExistingDegradedMessageWhenRemoteParticpantsAdd_OtherParticipants
@@ -990,24 +986,22 @@
     
     // WHEN
     NSSet<ZMUser *> *unverifiedUsers = [self setupUnverifiedUsers:1];
-    [conversation internalAddParticipants:unverifiedUsers];
+    [conversation internalAddParticipants:unverifiedUsers.allObjects];
     
     NSSet<ZMUser *> *otherUnverifiedUsers = [self setupUnverifiedUsers:1];
 
     
     // THEN
-    XCTAssertEqual(conversation.messages.count, (NSUInteger)2);
-    XCTAssertTrue([conversation.messages.lastObject isKindOfClass:[ZMSystemMessage class]]);
-    XCTAssertEqual(((ZMSystemMessage *)conversation.messages.lastObject).systemMessageType, ZMSystemMessageTypeNewClient);
-    XCTAssertTrue([((ZMSystemMessage *)conversation.messages.lastObject).addedUsers isEqualToSet:unverifiedUsers]);
-    
+    XCTAssertEqual(conversation.allMessages.count, (NSUInteger)2);
+    XCTAssertEqual(((ZMSystemMessage *)conversation.lastMessage).systemMessageType, ZMSystemMessageTypeNewClient);
+    XCTAssertTrue([((ZMSystemMessage *)conversation.lastMessage).addedUsers isEqualToSet:unverifiedUsers]);
+        
     // WHEN
     [self simulateAdding:otherUnverifiedUsers to:conversation by:selfUser];
     
     // THEN
-    XCTAssertEqual(conversation.messages.count, (NSUInteger)3);
-    XCTAssertTrue([conversation.messages.lastObject isKindOfClass:[ZMSystemMessage class]]);
-    XCTAssertEqual(((ZMSystemMessage *)conversation.messages.lastObject).systemMessageType, ZMSystemMessageTypeParticipantsAdded);
+    XCTAssertEqual(conversation.allMessages.count, (NSUInteger)3);
+    XCTAssertEqual(((ZMSystemMessage *)conversation.lastMessage).systemMessageType, ZMSystemMessageTypeParticipantsAdded);
 }
 
 - (void)testThatAddingABlockedUserThatAlreadyIsMemberOfTheConversationDoesNotDegradeTheConversation
@@ -1022,7 +1016,7 @@
     [participant block];
     
     // when
-    [conversation internalAddParticipants:[NSSet setWithObject:participant]];
+    [conversation internalAddParticipants:@[participant]];
     
     // then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);

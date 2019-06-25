@@ -30,6 +30,7 @@
 extern NSString * __nonnull const SessionObjectIDKey;
 extern NSString * __nonnull const UserClientsKey;
 extern NSString * __nonnull const AvailabilityKey;
+extern NSString * __nonnull const ReadReceiptsEnabledKey;
 
 @interface ZMUser (Internal)
 
@@ -47,8 +48,8 @@ extern NSString * __nonnull const AvailabilityKey;
 @property (nonnull, nonatomic, readonly) NSString *normalizedRemark;
 @property (nonnull, nonatomic, readonly) NSString *normalizedEmailAddress;
 
-@property (nullable, nonatomic) NSData *imageMediumData;
-@property (nullable, nonatomic) NSData *imageSmallProfileData;
+@property (nullable, nonatomic, readonly) NSData *imageMediumData;
+@property (nullable, nonatomic, readonly) NSData *imageSmallProfileData;
 
 - (void)updateWithTransportData:(nonnull NSDictionary *)transportData authoritative:(BOOL)authoritative;
 
@@ -56,9 +57,12 @@ extern NSString * __nonnull const AvailabilityKey;
 + (nullable instancetype)userWithEmailAddress:(nonnull NSString *)emailAddress inContext:(nonnull NSManagedObjectContext *)context;
 + (nullable instancetype)userWithPhoneNumber:(nonnull NSString *)phoneNumber inContext:(nonnull NSManagedObjectContext *)context;
 
-+ (nonnull NSOrderedSet <ZMUser *> *)usersWithRemoteIDs:(nonnull NSOrderedSet <NSUUID *>*)UUIDs inContext:(nonnull NSManagedObjectContext *)moc;
 /// 根据AiAddress获取ZMUser
 + (nullable instancetype)userWithAiAddress:(nonnull NSString *)aiAddress inContext:(nonnull NSManagedObjectContext *)context;
+
++ (nonnull NSSet <ZMUser *> *)usersWithRemoteIDs:(nonnull NSSet <NSUUID *>*)UUIDs inContext:(nonnull NSManagedObjectContext *)moc;
+
+
 + (ZMAccentColor)accentColorFromPayloadValue:(nullable NSNumber *)payloadValue;
 
 /// @method Updates the user with a name or handle received through a search
@@ -86,6 +90,9 @@ extern NSString * __nonnull const AvailabilityKey;
 @property (nonatomic) ZMAccentColor accentColorValue;
 
 - (void)setHandle:(NSString * __nullable)handle;
+@property (nonatomic) BOOL needsPropertiesUpdate;
+@property (nonatomic) BOOL readReceiptsEnabledChangedRemotely;
+@property (nonatomic) BOOL needsRichProfileUpdate;
 
 @end
 
@@ -93,17 +100,8 @@ extern NSString * __nonnull const AvailabilityKey;
 
 @interface ZMUser (ImageData)
 
-@property (nullable, nonatomic) NSUUID *mediumRemoteIdentifier; ///< The remote identifier of the medium image for the receiver
-@property (nullable, nonatomic) NSUUID *smallProfileRemoteIdentifier; ///< The remote identifier of the small profile image for the receiver
-@property (nullable, nonatomic) NSUUID *localMediumRemoteIdentifier; ///< The remote identifier of the local "medium" image
-@property (nullable, nonatomic) NSUUID *localSmallProfileRemoteIdentifier; ///< The remote identifier of the local "small profile" image
-
-+ (nonnull NSPredicate *)predicateForMediumImageNeedingToBeUpdatedFromBackend;
-+ (nonnull NSPredicate *)predicateForSmallImageNeedingToBeUpdatedFromBackend;
 + (nonnull NSPredicate *)predicateForSelfUser;
 + (nonnull NSPredicate *)predicateForUsersOtherThanSelf;
-+ (nonnull NSPredicate *)predicateForMediumImageDownloadFilter;
-+ (nonnull NSPredicate *)predicateForSmallImageDownloadFilter;
 
 @end
 

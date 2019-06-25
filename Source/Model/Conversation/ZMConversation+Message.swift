@@ -25,7 +25,16 @@ extension ZMConversation {
     
     @discardableResult @objc(appendLocation:nonce:)
     public func append(location: LocationData, nonce: UUID = UUID()) -> ZMConversationMessage? {
-        return appendClientMessage(with: ZMGenericMessage.message(content: location.zmLocation(), nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
+        let locationContent = Location.with() {
+            $0.latitude = location.latitude
+            $0.longitude = location.longitude
+            if let name = location.name {
+                $0.name = name
+            }
+            $0.zoom = location.zoomLevel
+        }
+
+        return appendClientMessage(with: GenericMessage.message(content: locationContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
     }
     
     @discardableResult
@@ -63,10 +72,14 @@ extension ZMConversation {
         guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
         
         let textContent = ZMText.text(with: text, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
-        let clientMessage = ZMGenericMessage.message(content: textContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
-        let message = appendClientMessage(with: clientMessage)!
-        message.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done
-        message.quote = quotedMessage as? ZMMessage
+        let genericMessage = ZMGenericMessage.message(content: textContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
+        let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: managedObjectContext!)
+        clientMessage.add(genericMessage.data())
+        clientMessage.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done
+        clientMessage.needsLinkAttachmentsUpdate = fetchLinkPreview
+        clientMessage.quote = quotedMessage as? ZMMessage
+        
+        append(clientMessage, expires: true, hidden: false)
         
         if let managedObjectContext = managedObjectContext {
             NotificationInContext(name: ZMConversation.clearTypingNotificationName,
@@ -74,7 +87,7 @@ extension ZMConversation {
                                   object: self).post()
         }
         
-        return message
+        return clientMessage
     }
     
     @discardableResult @objc(appendImageAtURL:nonce:)
@@ -109,7 +122,7 @@ extension ZMConversation {
         
         message.sender = ZMUser.selfUser(in: managedObjectContext)
         
-        sortedAppendMessage(message)
+        append(message)
         unarchiveIfNeeded()
         
         managedObjectContext.zm_fileAssetCache.storeAssetData(message, encrypted: false, data: data)

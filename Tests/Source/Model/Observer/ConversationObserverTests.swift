@@ -25,19 +25,19 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
     func checkThatItNotifiesTheObserverOfAChange(_ conversation : ZMConversation,
                                                  modifier: (ZMConversation, ConversationObserver) -> Void,
                                                  expectedChangedField : String?,
-                                                 expectedChangedKeys: [String],
+                                                 expectedChangedKeys: Set<String>,
                                                  file: StaticString = #file,
                                                  line: UInt = #line) {
         
         self.checkThatItNotifiesTheObserverOfAChange(conversation,
                                                      modifier: modifier,
-                                                     expectedChangedFields: expectedChangedField != nil ? [ expectedChangedField!] : [],
+                                                     expectedChangedFields: expectedChangedField != nil ? [expectedChangedField!] : [],
                                                      expectedChangedKeys: expectedChangedKeys,
                                                      file: file,
                                                      line: line)
     }
     
-    var conversationInfoKeys : [String] {
+    var conversationInfoKeys: Set<String> {
         return [
             "messagesChanged",
             "participantsChanged",
@@ -53,14 +53,17 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
             "createdRemotelyChanged",
             "allowGuestsChanged",
             "destructionTimeoutChanged",
-            "languageChanged"
+            "languageChanged",
+            "hasReadReceiptsEnabledChanged",
+            "externalParticipantsStateChanged",
+            "legalHoldStatusChanged"
         ]
     }
     
     func checkThatItNotifiesTheObserverOfAChange(_ conversation : ZMConversation,
                                                  modifier: (ZMConversation, ConversationObserver) -> Void,
-                                                 expectedChangedFields : [String],
-                                                 expectedChangedKeys: [String],
+                                                 expectedChangedFields : Set<String>,
+                                                 expectedChangedKeys: Set<String>,
                                                  file: StaticString = #file,
                                                  line: UInt = #line) {
         
@@ -91,8 +94,8 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
         }
         
         guard let changes = observer.notifications.first else { return }
-        changes.checkForExpectedChangeFields(userInfoKeys: conversationInfoKeys, expectedChangedFields: expectedChangedFields)
-        XCTAssertEqual(changes.changedKeys, Set(expectedChangedKeys), file: file, line: line)
+        changes.checkForExpectedChangeFields(userInfoKeys: conversationInfoKeys, expectedChangedFields: expectedChangedFields, file: file, line: line)
+        XCTAssertTrue(expectedChangedKeys.isSubset(of: changes.changedKeys), file: file, line: line)
         
         self.token = nil
     }
@@ -289,7 +292,7 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
                                                         _ = conversation.append(text: "foo")
             },
                                                      expectedChangedFields: ["messagesChanged", "lastModifiedDateChanged"],
-                                                     expectedChangedKeys: ["messages", "lastModifiedDate"])
+                                                     expectedChangedKeys: ["allMessages", "lastModifiedDate"])
     }
     
     func testThatItNotifiesTheObserverOfAnAddedParticipant()
@@ -628,7 +631,7 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
         guard let changes = observer.notifications.first else { return XCTFail() }
         changes.checkForExpectedChangeFields(userInfoKeys: conversationInfoKeys,
                                      expectedChangedFields: ["conversationListIndicatorChanged", "messagesChanged", "unreadCountChanged"])
-        XCTAssertEqual(changes.changedKeys, Set(["messages", "conversationListIndicator", "estimatedUnreadCount"]))
+        XCTAssertEqual(changes.changedKeys, Set(["allMessages", "conversationListIndicator", "estimatedUnreadCount"]))
     }
     
     func testThatItNotifiesTheObserverOfAChangedClearedTimeStamp()
@@ -671,10 +674,10 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
         self.checkThatItNotifiesTheObserverOfAChange(conversation,
                                                      modifier: { conversation, _ in
                                                         let user = ZMUser.insertNewObject(in: self.uiMOC)
-                                                        conversation.internalAddParticipants(Set(arrayLiteral: user))
+                                                        conversation.internalAddParticipants([user])
         },
                                                      expectedChangedFields: ["securityLevelChanged", "messagesChanged", "nameChanged", "participantsChanged"],
-                                                     expectedChangedKeys: ["displayName", "messages", "lastServerSyncedActiveParticipants", "securityLevel"])
+                                                     expectedChangedKeys: ["displayName", "allMessages", "lastServerSyncedActiveParticipants", "securityLevel"])
     
     }
     
@@ -698,7 +701,7 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
 
         },
                                                      expectedChangedFields: ["securityLevelChanged", "messagesChanged"],
-                                                     expectedChangedKeys: ["securityLevel", "messages"])
+                                                     expectedChangedKeys: ["securityLevel", "allMessages"])
         
     }
     
@@ -760,6 +763,99 @@ class ConversationObserverTests : NotificationDispatcherTestBase {
         
         // then
         XCTAssertEqual(observer.notifications.count, 0)
+    }
+    
+    func testThatItSendsUpdateForReadReceiptsEnabled() {
+        // given
+        let conversation = ZMConversation.insertNewObject(in:self.uiMOC)
+        conversation.conversationType = .group
+        self.uiMOC.saveOrRollback()
+        
+        // when
+        self.checkThatItNotifiesTheObserverOfAChange(conversation,
+                                                     modifier: { conversation, _ in
+                                                        conversation.hasReadReceiptsEnabled = true
+        },
+                                                     expectedChangedFields: ["hasReadReceiptsEnabledChanged"],
+                                                     expectedChangedKeys: ["hasReadReceiptsEnabled"])
+    }
+
+    func testThatItSendsUpdateForUpdatedServiceUser() {
+        // given
+        let conversation = ZMConversation.insertNewObject(in:self.uiMOC)
+        conversation.conversationType = .group
+
+        let user = createUser(in: uiMOC)
+        conversation.internalAddParticipants([user])
+        self.uiMOC.saveOrRollback()
+
+        // when
+        self.checkThatItNotifiesTheObserverOfAChange(conversation,
+                                                     modifier: { conversation, _ in
+                                                        user.serviceIdentifier = UUID().uuidString
+                                                        user.providerIdentifier = UUID().uuidString
+        },
+                                                     expectedChangedFields: ["externalParticipantsStateChanged"],
+                                                     expectedChangedKeys: ["externalParticipantsState"])
+    }
+
+    func testThatItNotifiesOfLegalHoldChanges_Enabled() {
+        let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        conversation.conversationType = .group
+
+        let user = createUser(in: uiMOC)
+        conversation.internalAddParticipants([user])
+
+        let legalHoldClient = UserClient.insertNewObject(in: uiMOC)
+        legalHoldClient.type = .legalHold
+        legalHoldClient.deviceClass = .legalHold
+
+        uiMOC.saveOrRollback()
+
+        let modifier: (ZMConversation, ConversationObserver) -> Void = { conversation, _ in
+            self.performPretendingUiMocIsSyncMoc {
+                legalHoldClient.user = user
+                conversation.decreaseSecurityLevelIfNeededAfterDiscovering(clients: [legalHoldClient], causedBy: [user])
+            }
+        }
+
+        // Discovering a legal hold client should add a system message and change the legal hold value
+        self.checkThatItNotifiesTheObserverOfAChange(conversation,
+                                                     modifier: modifier,
+                                                     expectedChangedFields: [#keyPath(ConversationChangeInfo.legalHoldStatusChanged), #keyPath(ConversationChangeInfo.messagesChanged)],
+                                                     expectedChangedKeys: [#keyPath(ZMConversation.legalHoldStatus), #keyPath(ZMConversation.allMessages)])
+    }
+
+    func testThatItNotifiesOfLegalHoldChanges_Disabled() {
+        let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        conversation.conversationType = .group
+
+        let user = createUser(in: uiMOC)
+
+        let legalHoldClient = UserClient.insertNewObject(in: uiMOC)
+        legalHoldClient.type = .legalHold
+        legalHoldClient.deviceClass = .legalHold
+        legalHoldClient.user = user
+
+        let normalClient = UserClient.insertNewObject(in: uiMOC)
+        normalClient.type = .permanent
+        normalClient.deviceClass = .phone
+        normalClient.user = user
+
+        conversation.internalAddParticipants([user])
+        uiMOC.saveOrRollback()
+
+        let modifier: (ZMConversation, ConversationObserver) -> Void = { conversation, _ in
+            self.performPretendingUiMocIsSyncMoc {
+                legalHoldClient.deleteClientAndEndSession()
+            }
+        }
+
+        // Removing a legal hold client should add a system message and change the legal hold value
+        self.checkThatItNotifiesTheObserverOfAChange(conversation,
+                                                     modifier: modifier,
+                                                     expectedChangedFields: [#keyPath(ConversationChangeInfo.legalHoldStatusChanged), #keyPath(ConversationChangeInfo.messagesChanged)],
+                                                     expectedChangedKeys: [#keyPath(ZMConversation.legalHoldStatus), #keyPath(ZMConversation.allMessages)])
     }
 }
 

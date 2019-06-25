@@ -63,6 +63,9 @@ extern NSString * _Nonnull const ZMMessageSystemMessageClientsKey;
 extern NSString * _Nonnull const ZMMessageDeliveryStateKey;
 extern NSString * _Nonnull const ZMMessageRepliesKey;
 extern NSString * _Nonnull const ZMMessageQuoteKey;
+extern NSString * _Nonnull const ZMMessageConfirmationKey;
+extern NSString * _Nonnull const ZMMessageLinkAttachmentsKey;
+extern NSString * _Nonnull const ZMMessageNeedsLinkAttachmentsUpdateKey;
 
 extern NSString * _Nonnull const ZMMessageJsonTextKey;
 
@@ -81,6 +84,7 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 
 +(instancetype _Nonnull )insertNewObjectInManagedObjectContext:(NSManagedObjectContext *_Nonnull)moc NS_UNAVAILABLE;
 - (instancetype _Nonnull)initWithNonce:(NSUUID * _Nonnull)nonce managedObjectContext:(NSManagedObjectContext * _Nonnull)managedObjectContext;
++ (nonnull NSSet <ZMMessage *> *)messagesWithRemoteIDs:(nonnull NSSet <NSUUID *>*)UUIDs inContext:(nonnull NSManagedObjectContext *)moc;
 
 // Use these for sorting:
 + (NSArray<NSSortDescriptor *> * _Nonnull)defaultSortDescriptors;
@@ -90,6 +94,8 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 - (void)resend;
 - (BOOL)shouldGenerateUnreadCount;
 - (BOOL)shouldGenerateFirstUnread;
+
+@property (nonatomic) BOOL delivered;
 
 /// Removes the message and deletes associated content
 /// @param clearingSender Whether information about the sender should be removed or not
@@ -215,6 +221,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic, readonly) BOOL isExpired;
 @property (nonatomic, readonly) NSDate * _Nullable expirationDate;
 @property (nonatomic, readonly) BOOL isObfuscated;
+@property (nonatomic, readonly) BOOL needsReadConfirmation;
 @property (nonatomic) NSString * _Nullable normalizedText;
 
 @property (nonatomic) NSSet <Reaction *> * _Nonnull reactions;
@@ -226,11 +233,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 /// Sets a flag to mark the message as being delivered to the backend
 - (void)markAsSent;
-
-
-/// Inserts and returns a ZMConfirmation message into the conversation that is sent back to the sender
-- (ZMClientMessage * __nullable)confirmReception;
-
 
 + (instancetype _Nullable)fetchMessageWithNonce:(NSUUID * _Nullable)nonce
                       forConversation:(ZMConversation * _Nonnull)conversation
@@ -274,6 +276,9 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 /// Predicate to select messages that are part of a conversation
 + (NSPredicate * _Nonnull)predicateForMessageInConversation:(ZMConversation * _Nonnull)conversation withNonces:(NSSet <NSUUID *>*  _Nonnull)nonces;
 
+/// Predicate to select messages whose link attachments need to be updated.
++ (NSPredicate * _Nonnull)predicateForMessagesThatNeedToUpdateLinkAttachments;
+
 @end
 
 
@@ -313,6 +318,8 @@ extern NSString *  _Nonnull const ZMMessageServerTimestampKey;
 @property (nonatomic) NSData * _Nullable  previewData;
 @property (nonatomic) CGSize originalSize;
 @property (nonatomic) NSData * _Nullable originalImageData;
+
+- (NSData * _Nullable)imageDataForFormat:(ZMImageFormat)format;
 
 @end
 

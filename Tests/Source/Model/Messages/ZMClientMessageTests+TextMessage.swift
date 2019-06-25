@@ -34,7 +34,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         let nonce = UUID()
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
 
-        let article = Article(
+        let article = ArticleMetadata(
             originalURLString: "www.example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -58,7 +58,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         let nonce = UUID()
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
 
-        let article = Article(
+        let article = ArticleMetadata(
             originalURLString: "example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -80,7 +80,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         let nonce = UUID.create()
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
 
-        let preview = TwitterStatus(
+        let preview = TwitterStatusMetadata(
             originalURLString: "example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -106,7 +106,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
         
 
-        let preview = TwitterStatus(
+        let preview = TwitterStatusMetadata(
             originalURLString: "example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -123,110 +123,10 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         // then
         XCTAssertFalse(willHaveAnImage)
     }
-        
-    func testThatItReturnsImageDataIdentifier_whenArticleHasImage() {
-        // given
-        let nonce = UUID.create()
-        let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
-
-        let article = Article(
-            originalURLString: "example.com/article/original",
-            permanentURLString: "http://www.example.com/article/1",
-            resolvedURLString: "http://www.example.com/article/1",
-            offset: 12
-        )
-
-        article.title = "title"
-        article.summary = "summary"
-        let assetKey = "asset_key"
-
-        let linkPreview = article.protocolBuffer.update(withOtrKey: .randomEncryptionKey(), sha256: .zmRandomSHA256Key()).update(withAssetKey: assetKey, assetToken: nil)
-        clientMessage.add(ZMGenericMessage.message(content: ZMText.text(with: "sample text", linkPreviews: [linkPreview]), nonce: nonce).data())
-        
-        // when
-        let linkPreviewImageCacheKey = clientMessage.textMessageData!.linkPreviewImageCacheKey
-        
-        // then
-        XCTAssertEqual(linkPreviewImageCacheKey, assetKey)
-    }
-    
-    func testThatItDoesntReturnsImageDataIdentifier_whenArticleHasNoImage() {
-        
-        // given
-        let nonce = UUID()
-        let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
-
-        let article = Article(originalURLString: "example.com/article/original",
-                              permanentURLString: "http://www.example.com/article/1",
-                              resolvedURLString: "http://www.example.com/article/1",
-                              offset: 12)
-        
-        article.title = "title"
-        article.summary = "summary"
-        clientMessage.add(ZMGenericMessage.message(content: ZMText.text(with: "sample text", linkPreviews: [article.protocolBuffer]), nonce: nonce).data())
-        
-        // when
-        let linkPreviewImageCacheKey = clientMessage.textMessageData!.linkPreviewImageCacheKey
-        
-        // then
-        XCTAssertNil(linkPreviewImageCacheKey)
-    }
-    
-    func testThatItReturnsImageDataIdentifier_whenTwitterStatusHasImage() {
-        // given
-        let nonce = UUID.create()
-        let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
-
-        let assetKey = "asset_key"
-        let twitterStatus = TwitterStatus(
-            originalURLString: "example.com/tweet",
-            permanentURLString: "http://www.example.com/tweet/1",
-            resolvedURLString: "http://www.example.com/tweet/1",
-            offset: 42
-        )
-        
-        twitterStatus.author = "Author"
-        twitterStatus.message = name
-        
-        let linkPreview = twitterStatus.protocolBuffer.update(withOtrKey: .randomEncryptionKey(), sha256: .zmRandomSHA256Key()).update(withAssetKey: assetKey, assetToken: nil)
-        clientMessage.add(ZMGenericMessage.message(content: ZMText.text(with: "Text", linkPreviews: [linkPreview]), nonce: nonce).data())
-        clientMessage.nonce = nonce
-        
-        // when
-        let linkPreviewImageCacheKey = clientMessage.textMessageData!.linkPreviewImageCacheKey
-        
-        // then
-        XCTAssertEqual(linkPreviewImageCacheKey, assetKey)
-    }
-    
-    func testThatItDoesntReturnsImageDataIdentifier_whenTwitterStatusHasNoImage() {
-        // given
-        let nonce = UUID.create()
-        let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: uiMOC)
-
-        let preview = TwitterStatus(
-            originalURLString: "example.com/tweet",
-            permanentURLString: "http://www.example.com/tweet/1",
-            resolvedURLString: "http://www.example.com/tweet/1",
-            offset: 42
-        )
-        
-        preview.author = "Author"
-        preview.message = name
-        clientMessage.add(ZMGenericMessage.message(content: ZMText.text(with: "Text", linkPreviews: [preview.protocolBuffer]), nonce: nonce).data())
-        
-        // when
-        let linkPreviewImageCacheKey = clientMessage.textMessageData!.linkPreviewImageCacheKey
-        
-        // then
-        XCTAssertNil(linkPreviewImageCacheKey)
-    }
-    
-    
     
     func testThatItSendsANotificationToDownloadTheImageWhenRequestImageDownloadIsCalledAndItHasAAssetID() {
         // given
-        let preview = TwitterStatus(
+        let preview = TwitterStatusMetadata(
             originalURLString: "example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -242,7 +142,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
     
     func testThatItSendsANotificationToDownloadTheImageWhenRequestImageDownloadIsCalledAndItHasAAssetID_Article() {
         // given
-        let preview = Article(
+        let preview = ArticleMetadata(
             originalURLString: "example.com/article/original",
             permanentURLString: "http://www.example.com/article/1",
             resolvedURLString: "http://www.example.com/article/1",
@@ -256,7 +156,7 @@ class ZMClientMessageTests_TextMessage: BaseZMMessageTests {
         assertThatItSendsANotificationToDownloadTheImageWhenRequestImageDownloadIsCalled(preview)
     }
     
-    func assertThatItSendsANotificationToDownloadTheImageWhenRequestImageDownloadIsCalled(_ preview: LinkPreview, line: UInt = #line) {
+    func assertThatItSendsANotificationToDownloadTheImageWhenRequestImageDownloadIsCalled(_ preview: LinkMetadata, line: UInt = #line) {
         
         // given
         let nonce = UUID.create()

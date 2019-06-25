@@ -18,6 +18,7 @@
 
 
 @import Foundation;
+@import WireLinkPreview;
 
 // In this header, you should import all the public headers of your framework using statements like #import <WireDataModel/PublicHeader.h>
 
@@ -69,7 +70,6 @@
 #import <WireDataModel/ZMGenericMessage+PropertyUtils.h>
 #import <WireDataModel/ZMMessageTimer.h>
 #import <WireDataModel/NSPredicate+ZMSearch.h>
-#import <WireDataModel/ZMSyncMergePolicy.h>
 #import <WireDataModel/ZMTestSession.h>
 
 #import <WireDataModel/ZMPropertyNormalizationResult.h>

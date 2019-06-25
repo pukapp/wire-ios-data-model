@@ -139,6 +139,12 @@ extension ZMGenericMessage {
                 messageData = self.encryptedMessageDataWithExternalDataBlob(recipients, context: context)
             }
         }
+        
+        // reset all failed sessions
+        for recipient in recipients {
+            recipient.clients.forEach({ $0.failedToEstablishSession = false })
+        }
+        
         return messageData
     }
 
@@ -181,7 +187,7 @@ extension ZMGenericMessage {
             if let connectedUser = conversation.connectedUser { return Set(arrayLiteral: connectedUser, selfUser) }
 
             func mentionedServices() -> Set<ZMUser> {
-                return services.filtered { service in
+                return services.filter { service in
                     self.textData?.mentions?.contains { $0.userId == service.remoteIdentifier?.transportString() } ?? false
                 }
             }
@@ -218,22 +224,6 @@ extension ZMGenericMessage {
         return (recipientUsers, strategy)
     }
     
-    
-    /// Returns a message with recipients and a strategy to handle missing clients
-    fileprivate func otrMessage(_ selfClient: UserClient,
-                            conversation: ZMConversation,
-                            externalData: Data?,
-                            sessionDirectory: EncryptionSessionsDirectory) -> (message: ZMNewOtrMessage, strategy: MissingClientsStrategy) {
-
-        let (recipientUsers, strategy) = recipientUsersForMessage(in: conversation, selfUser: selfClient.user!)
-        let recipients = self.recipientsWithEncryptedData(selfClient, recipients: recipientUsers, sessionDirectory: sessionDirectory)
-
-        let nativePush = !hasConfirmation() // We do not want to send pushes for delivery receipts
-        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush, recipients: recipients, blob: externalData)
-        
-        return (message: message, strategy: strategy)
-    }
-    
     /// Returns a message with recipients
     fileprivate func otrMessage(_ selfClient: UserClient,
                                 recipients: Set<ZMUser>,
@@ -254,24 +244,25 @@ extension ZMGenericMessage {
         ) -> [ZMUserEntry]
     {
         let userEntries = recipients.compactMap { user -> ZMUserEntry? in
+                guard !user.isAccountDeleted else { return nil }
+            
                 let clientsEntries = user.clients.compactMap { client -> ZMClientEntry? in
+                    
                 if client != selfClient {
                     guard let clientRemoteIdentifier = client.sessionIdentifier else {
                         return nil
                     }
                     
-                    let corruptedClient = client.failedToEstablishSession
-                    client.failedToEstablishSession = false
-                    
                     let hasSessionWithClient = sessionDirectory.hasSession(for: clientRemoteIdentifier)
+                    
                     if !hasSessionWithClient {
-                        // if the session is corrupted, will send a special payload
-                        if corruptedClient {
+                        // if the session is corrupted, we will send a special payload
+                        if client.failedToEstablishSession {
                             let data = ZMFailedToCreateEncryptedMessagePayloadString.data(using: String.Encoding.utf8)!
                             return ZMClientEntry.entry(withClient: client, data: data)
                         }
                         else {
-                            // does not have session, will need to fetch prekey and create client
+                            // if we do not have a session, we need to fetch a prekey and create a new session
                             return nil
                         }
                     }

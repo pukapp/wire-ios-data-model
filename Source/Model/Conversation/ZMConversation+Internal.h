@@ -29,7 +29,6 @@
 @class ZMAssetClientMessage;
 @class ZMConnection;
 @class ZMUser;
-@class ZMConversationMessageWindow;
 @class ZMConversationList;
 @class ZMLastRead;
 @class ZMCleared;
@@ -47,7 +46,7 @@ extern NSString *const ZMConversationHasUnreadUnsentMessageKey;
 extern NSString *const ZMConversationIsArchivedKey;
 extern NSString *const ZMConversationIsSelfAnActiveMemberKey;
 extern NSString *const ZMConversationMutedStatusKey;
-extern NSString *const ZMConversationMessagesKey;
+extern NSString *const ZMConversationAllMessagesKey;
 extern NSString *const ZMConversationHiddenMessagesKey;
 extern NSString *const ZMConversationMembersAliasnameKey;
 extern NSString *const ZMConversationLastServerSyncedActiveParticipantsKey;
@@ -59,6 +58,7 @@ extern NSString *const ZMIsDimmedKey;
 extern NSString *const ZMNormalizedUserDefinedNameKey;
 extern NSString *const ZMConversationListIndicatorKey;
 extern NSString *const ZMConversationConversationTypeKey;
+extern NSString *const ZMConversationExternalParticipantsStateKey;
 
 extern NSString *const ZMConversationLastReadServerTimeStampKey;
 extern NSString *const ZMConversationLastServerTimeStampKey;
@@ -81,6 +81,7 @@ extern NSString *const ZMConversationInternalEstimatedUnreadCountKey;
 extern NSString *const ZMConversationLastUnreadKnockDateKey;
 extern NSString *const ZMConversationLastUnreadMissedCallDateKey;
 extern NSString *const ZMConversationLastReadLocalTimestampKey;
+extern NSString *const ZMConversationLegalHoldStatusKey;
 
 extern NSString *const SecurityLevelKey;
 
@@ -120,6 +121,7 @@ NS_ASSUME_NONNULL_END
 + (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc withParticipants:(nonnull NSArray <ZMUser *>*)participants name:(nullable NSString *)name inTeam:(nullable Team *)team allowGuests:(BOOL)allowGuests;
 + (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc withParticipants:(nonnull NSArray <ZMUser *>*)participants name:(nullable NSString *)name inTeam:(nullable Team *)team allowGuests:(BOOL)allowGuests topapps:(nullable NSArray *)topapps;
 + (nullable instancetype)insertHugeGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc withParticipants:(nonnull NSArray <ZMUser *>*)participants name:(nullable NSString *)name inTeam:(nullable Team *)team allowGuests:(BOOL)allowGuests;
++ (nullable instancetype)insertGroupConversationIntoManagedObjectContext:(nonnull NSManagedObjectContext *)moc withParticipants:(nonnull NSArray <ZMUser *>*)participants name:(nullable NSString *)name inTeam:(nullable Team *)team allowGuests:(BOOL)allowGuests readReceipts:(BOOL)readReceipts;
 + (nullable instancetype)fetchOrCreateTeamConversationInManagedObjectContext:(nonnull NSManagedObjectContext *)moc withParticipant:(nonnull ZMUser *)participant team:(nonnull Team *)team;
 
 + (nonnull ZMConversationList *)conversationsIncludingArchivedInContext:(nonnull NSManagedObjectContext *)moc;
@@ -145,8 +147,8 @@ NS_ASSUME_NONNULL_END
 
 @property (nonatomic, nullable) NSUUID *remoteIdentifier;
 @property (nonatomic, nullable) NSUUID *teamRemoteIdentifier;
-@property (readonly, nonatomic, nonnull) NSMutableOrderedSet *mutableMessages;
-@property (readonly, nonatomic, nonnull) NSOrderedSet *hiddenMessages;
+@property (readonly, nonatomic, nonnull) NSMutableSet<ZMMessage *> *mutableMessages;
+@property (readonly, nonatomic, nonnull) NSSet<ZMMessage *> *hiddenMessages;
 @property (nonatomic, nullable) ZMConnection *connection;
 @property (readonly, nonatomic) enum ZMConnectionStatus relatedConnectionState; // This is a computed property, needed for snapshoting
 @property (nonatomic, nonnull) ZMUser *creator;
@@ -156,22 +158,12 @@ NS_ASSUME_NONNULL_END
 @property (nonatomic) NSTimeInterval lastReadTimestampSaveDelay;
 @property (nonatomic) int64_t lastReadTimestampUpdateCounter;
 
-/// unreadTimeStamps is created on didAwakeFromFetch:
-/// updated when messages are inserted and the lastReadServerTimeStamp changes
-@property (nonatomic, nullable) NSMutableOrderedSet *unreadTimeStamps;
-
-/// sorts the messages in the conversation
-- (void)sortMessages;
-- (void)resortMessagesWithUpdatedMessage:(nonnull ZMMessage *)message;
-- (void)unarchiveIfNeeded;
-
 /**
-    Appends the given message in the conversation at the proper place to keep the conversation sorted.
+    Appends the given message in the conversation.
  
     @param message The message that should be inserted.
-    @returns The index the message was inserted at in the conversation.
 */
-- (NSUInteger)sortedAppendMessage:(nonnull ZMMessage *)message;
+- (void)appendMessage:(nonnull ZMMessage *)message;
 
 - (void)mergeWithExistingConversationWithRemoteID:(nonnull NSUUID *)remoteID;
 
@@ -189,13 +181,13 @@ NS_ASSUME_NONNULL_END
 /// @param genericMessage the generic message that should be appended
 - (nullable ZMClientMessage *)appendClientMessageWithGenericMessage:(nonnull ZMGenericMessage *)genericMessage;
 
+/// Appends a new message to the conversation.
+/// @param client message that should be appended
+- (nonnull ZMClientMessage *)appendMessage:(nonnull ZMClientMessage *)clientMessage expires:(BOOL)expires hidden:(BOOL)hidden;
 
 - (nullable ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(nonnull NSUUID *)nonce imageData:(nonnull NSData *)imageData isOriginal:(BOOL)isOriginal;
 
-
-- (void)appendNewConversationSystemMessageIfNeeded;
-
-- (void)deleteOlderMessages;
+- (void)unarchiveIfNeeded;
 
 @end
 
@@ -216,21 +208,13 @@ NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (ParticipantsInternal)
 
-- (void)internalAddParticipants:(nonnull NSSet<ZMUser *> *)participants;
-- (void)internalRemoveParticipants:(nonnull NSSet<ZMUser *> *)participants sender:(nonnull ZMUser *)sender;
+- (void)internalAddParticipants:(nonnull NSArray<ZMUser *> *)participants;
+- (void)internalRemoveParticipants:(nonnull NSArray<ZMUser *> *)participants sender:(nonnull ZMUser *)sender;
 
 @property (nonatomic) BOOL isSelfAnActiveMember; ///< whether the self user is an active member (as opposed to a past member)
 @property (readonly, nonatomic, nonnull) NSOrderedSet<ZMUser *> *lastServerSyncedActiveParticipants;
 
 @end
-
-
-@interface ZMConversation (ZMConversationMessageWindow)
-
-@property (nonatomic, nullable) ZMConversationMessageWindow *messageWindow;
-
-@end
-
 
 @interface NSUUID (ZMSelfConversation)
 
@@ -242,6 +226,19 @@ NS_ASSUME_NONNULL_END
 @interface ZMConversation (Optimization)
 
 + (void)refreshObjectsThatAreNotNeededInSyncContext:(nonnull NSManagedObjectContext *)managedObjectContext;
+@end
 
+
+@interface ZMConversation (CoreDataGeneratedAccessors)
+
+// CoreData autogenerated methods
+- (void)addHiddenMessagesObject:(nonnull ZMMessage *)value;
+- (void)removeHiddenMessagesObject:(nonnull ZMMessage *)value;
+- (void)addHiddenMessages:(nonnull NSSet<ZMMessage *> *)values;
+- (void)removeHiddenMessages:(nonnull NSSet<ZMMessage *> *)values;
+- (void)addAllMessagesObject:(nonnull ZMMessage *)value;
+- (void)removeAllMessagesObject:(nonnull ZMMessage *)value;
+- (void)addAllMessages:(nonnull NSSet<ZMMessage *> *)values;
+- (void)removeAllMessages:(nonnull NSSet<ZMMessage *> *)values;
 @end
 

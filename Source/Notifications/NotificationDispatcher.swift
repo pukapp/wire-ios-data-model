@@ -99,8 +99,8 @@ typealias ObjectAndChanges = [ZMManagedObject : Changes]
 
 @objc public protocol ChangeInfoConsumer : NSObjectProtocol {
     func objectsDidChange(changes: [ClassIdentifier: [ObjectChangeInfo]])
-    func applicationDidEnterBackground()
-    func applicationWillEnterForeground()
+    func startObserving()
+    func stopObserving()
 }
 
 extension ZMManagedObject {
@@ -114,15 +114,18 @@ extension ZMManagedObject {
     }
 }
 
+/**
+ * Observes changes to observeable entities (messages, users, conversations, ...) by listening to managed object context
+ * save notifications or by us manually telling it about non-core data changes. The `NotificationDispatcher` only observes
+ * objects on the main (UI) mananged object context.
+ */
 @objcMembers public class NotificationDispatcher : NSObject {
 
     fileprivate unowned var managedObjectContext: NSManagedObjectContext
     
     fileprivate var tornDown = false
     private let affectingKeysStore : DependencyKeyStore
-    private var messageWindowObserverCenter : MessageWindowObserverCenter {
-        return managedObjectContext.messageWindowObserverCenter
-    }
+
     fileprivate var conversationListObserverCenter : ConversationListObserverCenter {
         return managedObjectContext.conversationListObserverCenter
     }
@@ -133,7 +136,6 @@ extension ZMManagedObject {
     private var changeInfoConsumers = [UnownedNSObject]()
     private var allChangeInfoConsumers : [ChangeInfoConsumer] {
         var consumers = changeInfoConsumers.compactMap{$0.unbox as? ChangeInfoConsumer}
-        consumers.append(messageWindowObserverCenter)
         consumers.append(searchUserObserverCenter)
         consumers.append(conversationListObserverCenter)
         return consumers
@@ -145,7 +147,30 @@ extension ZMManagedObject {
     private var allChanges : [ZMManagedObject : Changes] = [:]
     private var userChanges : [ZMManagedObject : Set<String>] = [:]
     private var unreadMessages : [Notification.Name : Set<ZMMessage>] = [:]
-    private var forwardChanges : Bool = true
+    private var shouldStartObserving: Bool {
+        return !isDisabled && !isInBackground
+    }
+    
+    private var isObserving : Bool = true {
+        didSet {
+            guard oldValue != isObserving else { return }
+            
+            isObserving ? startObserving() : stopObserving()
+        }
+    }
+    
+    private var isInBackground: Bool = false {
+        didSet {
+            isObserving = shouldStartObserving
+        }
+    }
+    
+    /// If `isDisabled` is true no change notifications will be generated
+    @objc public var isDisabled: Bool = false {
+        didSet {
+            isObserving = shouldStartObserving
+        }
+    }
     
     public init(managedObjectContext: NSManagedObjectContext) {
         assert(managedObjectContext.zm_isUserInterfaceContext, "NotificationDispatcher needs to be initialized with uiMOC")
@@ -196,44 +221,47 @@ extension ZMManagedObject {
     
     /// Call this when the application enters the background to stop sending notifications and clear current changes
     @objc func applicationDidEnterBackground() {
-        self.forwardChanges = false
-        self.unreadMessages = [:]
-        self.allChanges = [:]
-        self.userChanges = [:]
-        self.snapshotCenter.clearAllSnapshots()
-        self.allChangeInfoConsumers.forEach{$0.applicationDidEnterBackground()}
+        self.isInBackground = true
     }
     
     /// Call this when the application will enter the foreground to start sending notifications again
     @objc func applicationWillEnterForeground() {
-        self.forwardChanges = true
-        self.allChangeInfoConsumers.forEach{$0.applicationWillEnterForeground()}
+        self.isInBackground = false
+    }
+        
+    private func stopObserving() {
+        self.unreadMessages = [:]
+        self.allChanges = [:]
+        self.userChanges = [:]
+        self.snapshotCenter.clearAllSnapshots()
+        self.allChangeInfoConsumers.forEach{$0.stopObserving()}
+    }
+    
+    private func startObserving() {
+        self.allChangeInfoConsumers.forEach{$0.startObserving()}
     }
     
     /// This is called when objects in the uiMOC change
     /// Might be called several times in between saves
     @objc func objectsDidChange(_ note: Notification){
-        guard forwardChanges else { return }
+        guard isObserving else { return }
         self.forwardChangesToConversationListObserver(note: note)
         self.process(note: note)
     }
     
     /// This is called when the uiMOC saved
     @objc func contextDidSave(_ note: Notification){
-        guard self.forwardChanges else { return }
+        guard isObserving else { return }
         self.fireAllNotifications()
     }
     
     /// This will be called if a change to an object does not cause a change in Core Data, e.g. downloading the asset and adding it to the cache
     func nonCoreDataChange(_ note: NotificationInContext){
-        guard forwardChanges else { return }
-        guard
-            let changedKeys = note.changedKeys,
-            let object = note.object as? ZMManagedObject
-        else { return }
+        guard isObserving,
+              let changedKeys = note.changedKeys,
+              let object = note.object as? ZMManagedObject else { return }
         
         let change = Changes(changedKeys: Set(changedKeys))
-
         let objectAndChangedKeys = [object: change]
         self.allChanges = self.allChanges.merged(with: objectAndChangedKeys)
         // Fire notifications only if there won't be a save happening anytime soon
@@ -256,7 +284,7 @@ extension ZMManagedObject {
     
     /// Call this from syncStrategy AFTER merging the changes from syncMOC into uiMOC
     public func didMergeChanges(_ changedObjectIDs: Set<NSManagedObjectID>) {
-        guard forwardChanges else { return }
+        guard isObserving else { return }
         let changedObjects : [ZMManagedObject] = changedObjectIDs.compactMap{(try? managedObjectContext.existingObject(with: $0)) as? ZMManagedObject}
         self.extractChanges(from: Set(changedObjects))
         self.fireAllNotifications()
@@ -272,7 +300,7 @@ extension ZMManagedObject {
         
         self.snapshotCenter.createSnapshots(for: insertedObjects)
         
-        let allUpdated = updatedObjects.union(refreshedObjects).union(usersWithChangedImages())
+        let allUpdated = updatedObjects.union(refreshedObjects)
         self.extractChanges(from: allUpdated)
         self.extractChangesCausedByInsertionOrDeletion(of: insertedObjects)
         self.extractChangesCausedByInsertionOrDeletion(of: deletedObjects)
@@ -320,32 +348,6 @@ extension ZMManagedObject {
     func updateExisting(name: Notification.Name, newSet: [ZMMessage]) {
         let existingUnreadUnsent = self.unreadMessages[name]
         self.unreadMessages[name] = existingUnreadUnsent?.union(newSet) ?? Set(newSet)
-    }
-    
-    /// Gets additional user changes from userImageCache
-    func usersWithChangedImages() -> Set<ZMManagedObject> {
-        let largeImageChanges = self.managedObjectContext.zm_userImageCache?.usersWithChangedLargeImage
-        let largeImageUsers = self.extractUsersWithImageChange(objectIDs: largeImageChanges,
-                                                          changedKey: "imageMediumData")
-        let smallImageChanges = self.managedObjectContext.zm_userImageCache?.usersWithChangedSmallImage
-        let smallImageUsers = self.extractUsersWithImageChange(objectIDs: smallImageChanges,
-                                                          changedKey: "imageSmallProfileData")
-        self.managedObjectContext.zm_userImageCache?.usersWithChangedLargeImage = []
-        self.managedObjectContext.zm_userImageCache?.usersWithChangedSmallImage = []
-        return smallImageUsers.union(largeImageUsers)
-    }
-    
-    func extractUsersWithImageChange(objectIDs: [NSManagedObjectID]?, changedKey: String) -> Set<ZMUser> {
-        guard let objectIDs = objectIDs else { return Set() }
-        var users = Set<ZMUser>()
-        objectIDs.forEach { objectID in
-            guard let user = (try? self.managedObjectContext.existingObject(with: objectID)) as? ZMUser else { return }
-            var newValue = userChanges[user] ?? Set()
-            newValue.insert(changedKey)
-            userChanges[user] = newValue
-            users.insert(user)
-        }
-        return users
     }
     
     /// Extracts changes from the updated objects
@@ -441,7 +443,7 @@ extension ZMManagedObject {
     private func fireNewUnreadMessagesNotifications(unreadMessages: [Notification.Name : Set<ZMMessage>]){
         unreadMessages.forEach{ (notificationName, messages) in
             guard messages.count > 0 else { return }
-            guard let changeInfo = ObjectChangeInfo.changeInfoforNewMessageNotification(with: notificationName, changedMessages: messages) else {
+            guard let changeInfo = ObjectChangeInfo.changeInfoForNewMessageNotification(with: notificationName, changedMessages: messages) else {
                 zmLog.warn("Did you forget to add the mapping for that?")
                 return
             }

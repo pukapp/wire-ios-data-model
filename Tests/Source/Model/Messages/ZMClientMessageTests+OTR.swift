@@ -47,7 +47,7 @@ extension ClientMessageTests_OTR {
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
             conversation.conversationType = .group
             conversation.remoteIdentifier = UUID.create()
-            conversation.internalAddParticipants(Set(arrayLiteral: otherUser))
+            conversation.internalAddParticipants([otherUser])
             XCTAssertTrue(self.syncMOC.saveOrRollback())
             
             // when
@@ -71,6 +71,53 @@ extension ClientMessageTests_OTR {
             notSelfClients.forEach{
                 XCTAssertTrue(clientSet.contains($0.clientId))
             }
+        }
+    }
+    
+    func testThatCorruptedClientsReceiveBogusPayload() {
+        self.syncMOC.performGroupedBlockAndWait {
+            
+            //given
+            let message = self.syncConversation.append(text: self.name, fetchLinkPreview: true, nonce: UUID.create()) as! ZMClientMessage
+            self.syncUser3Client1.failedToEstablishSession = true
+            
+            //when
+            guard let dataAndStrategy = message.encryptedMessagePayloadData() else {
+                XCTFail()
+                return
+            }
+            
+            //then
+            guard let createdMessage = ZMNewOtrMessage.builder()!.merge(from: dataAndStrategy.data).build()! as? ZMNewOtrMessage else { return XCTFail() }
+            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId().isEqual($0.user) }) else { return XCTFail() }
+            
+            XCTAssertEqual(userEntry.clients.count, 1)
+            XCTAssertEqual(userEntry.clients.first?.text, ZMFailedToCreateEncryptedMessagePayloadString.data(using: .utf8))
+            XCTAssertFalse(self.syncUser3Client1.failedToEstablishSession)
+        }
+    }
+    
+    func testThatCorruptedClientsReceiveBogusPayloadWhenSentAsExternal() {
+        self.syncMOC.performGroupedBlockAndWait {
+            
+            //given
+            let messageRequiringExternal = self.textMessageRequiringExternalMessage(6)
+            let message = self.syncConversation.append(text: messageRequiringExternal) as! ZMClientMessage
+            self.syncUser3Client1.failedToEstablishSession = true
+            
+            //when
+            guard let dataAndStrategy = message.encryptedMessagePayloadData() else {
+                XCTFail()
+                return
+            }
+            
+            //then
+            guard let createdMessage = ZMNewOtrMessage.builder()!.merge(from: dataAndStrategy.data).build()! as? ZMNewOtrMessage else { return XCTFail() }
+            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId().isEqual($0.user) }) else { return XCTFail() }
+            
+            XCTAssertEqual(userEntry.clients.count, 1)
+            XCTAssertEqual(userEntry.clients.first?.text, ZMFailedToCreateEncryptedMessagePayloadString.data(using: .utf8))
+            XCTAssertFalse(self.syncUser3Client1.failedToEstablishSession)
         }
     }
     
@@ -245,30 +292,6 @@ extension ClientMessageTests_OTR {
             }
         }
     }
-    
-    func testThatItCreatesPayloadForExternalMessage() {
-        
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let message = self.syncConversation.append(text: self.name, fetchLinkPreview: true, nonce: UUID.create()) as! ZMClientMessage
-            
-            //when
-            // when
-            guard let payloadAndStrategy = message.encryptedMessagePayloadData() else {
-                XCTFail()
-                return
-            }
-            
-            // then
-            self.assertMessageMetadata(payloadAndStrategy.data)
-            switch payloadAndStrategy.strategy {
-            case .doNotIgnoreAnyMissingClient:
-                break
-            default:
-                XCTFail()
-            }
-        }
-    }
 }
 
 // MARK: - Delivery
@@ -295,7 +318,7 @@ extension ClientMessageTests_OTR {
             
             textMessage.sender = self.syncUser1
             textMessage.senderClientID = senderID
-            let confirmationMessage = textMessage.confirmReception()
+            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: textMessage.nonce!, type: .DELIVERED), hidden: true)
             
             //when
             guard let payloadAndStrategy = confirmationMessage?.encryptedMessagePayloadData()
@@ -344,7 +367,7 @@ extension ClientMessageTests_OTR {
             
             textMessage.sender = self.syncUser1
             textMessage.senderClientID = senderID
-            let confirmationMessage = textMessage.confirmReception()
+            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: textMessage.nonce!, type: .DELIVERED), hidden: true)
             
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -371,7 +394,7 @@ extension ClientMessageTests_OTR {
             
             self.syncMOC.saveOrRollback()
             
-            let confirmationMessage = clientmessage.confirmReception()
+            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: clientmessage.nonce!, type: .DELIVERED), hidden: true)
 
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -394,7 +417,7 @@ extension ClientMessageTests_OTR {
             
             self.syncMOC.saveOrRollback()
             
-            let confirmationMessage = clientmessage.confirmReception()
+            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: clientmessage.nonce!, type: .DELIVERED), hidden: true)
 
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -461,5 +484,37 @@ extension ClientMessageTests_OTR {
             string = string + string
         }
         return string
+    }
+}
+
+extension DatabaseBaseTest {
+    
+    func createSelfUser(in moc: NSManagedObjectContext) -> (ZMUser, ZMConversation) {
+        let selfUser = ZMUser.selfUser(in: moc)
+        selfUser.remoteIdentifier = UUID()
+
+        let conversation = ZMConversation(remoteID: selfUser.remoteIdentifier,
+                                          createIfNeeded: true,
+                                          in: moc)!
+        moc.saveOrRollback()
+        return (selfUser, conversation)
+    }
+    
+    func createSelfClient(on moc: NSManagedObjectContext) -> UserClient {
+        let selfUser = ZMUser.selfUser(in: moc)
+        
+        let selfClient = UserClient.insertNewObject(in: moc)
+        selfClient.remoteIdentifier = NSString.createAlphanumerical()
+        selfClient.user = selfUser
+        
+        moc.setPersistentStoreMetadata(selfClient.remoteIdentifier, key: ZMPersistedClientIdKey)
+        
+        let payload = ["id": selfClient.remoteIdentifier!,
+                       "type": "permanent",
+                       "time": Date().transportString()] as [String: AnyObject]
+        let _ = UserClient.createOrUpdateSelfUserClient(payload, context:moc)
+        
+        moc.saveOrRollback()
+        return selfClient
     }
 }

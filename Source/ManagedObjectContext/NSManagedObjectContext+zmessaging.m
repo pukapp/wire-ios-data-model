@@ -24,7 +24,6 @@
 #import "NSManagedObjectContext+tests.h"
 #import "ZMManagedObject.h"
 #import "ZMUser+Internal.h"
-#import "ZMSyncMergePolicy.h"
 #import "ZMConversation+Internal.h"
 
 #import <objc/runtime.h>
@@ -47,6 +46,7 @@ static NSString * const TimeOfLastSaveKey = @"ZMTimeOfLastSave";
 static NSString * const FirstEnqueuedSaveKey = @"ZMTimeOfLastSave";
 static NSString * const FailedToEstablishSessionStoreKey = @"FailedToEstablishSessionStoreKey";
 static NSString * const DisplayNameGeneratorKey = @"DisplayNameGeneratorKey";
+static NSString * const DelayedSaveActivityKey = @"DelayedSaveActivityKey";
 
 static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 //
@@ -55,14 +55,32 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 // the persistent store coordinator.
 //
 
-
 @interface NSManagedObjectContext (CleanUp)
 
 - (void)refreshUnneededObjects;
 
 @end
 
+@interface NSManagedObjectContext (Background)
 
+
+@property (nonatomic, strong) BackgroundActivity *delayedSaveActivity;
+
+@end
+
+@implementation NSManagedObjectContext (Background)
+
+- (BackgroundActivity *)delayedSaveActivity
+{
+    return self.userInfo[DelayedSaveActivityKey];
+}
+
+- (void)setDelayedSaveActivity:(BackgroundActivity *)delayedSaveActivity
+{
+    self.userInfo[DelayedSaveActivityKey] = delayedSaveActivity;
+}
+
+@end
 
 @implementation NSManagedObjectContext (zmessaging)
 
@@ -240,7 +258,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     ZMLogDebug(@"%@ <%@: %p>.", NSStringFromSelector(_cmd), self.class, self);
     
     NSDictionary *oldMetadata = [self.persistentStoreCoordinator metadataForPersistentStore:[self firstPersistentStore]];
-    [self makeMetadataPersistent];
+    BOOL hasMetadataChanges = [self makeMetadataPersistent];
     
     if (self.userInfo[IsFailingToSave]) {
         [self rollbackWithOldMetadata:oldMetadata];
@@ -249,7 +267,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     
     // We need to save even if hasChanges is NO as long as the callState changes. An empty save will result in an empty did-save notification.
     // That notification in turn will result in a merge, even if it is empty, and thus merge the call state.
-    if (self.zm_hasChanges || shouldIgnoreChanges) {
+    if (self.zm_hasChanges || shouldIgnoreChanges || hasMetadataChanges) {
         NSError *error;
         ZMLogDebug(@"Saving <%@: %p>.", self.class, self);
         self.timeOfLastSave = [NSDate date];
@@ -334,6 +352,20 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     }
     return NO;
 }
+    
+- (BOOL)startActivity
+{
+    self.delayedSaveActivity = [[BackgroundActivityFactory sharedFactory] startBackgroundActivityWithName:@"Delayed save"];
+    return self.delayedSaveActivity != nil;
+}
+    
+- (void)stopActivity
+{
+    if (self.delayedSaveActivity != nil) {
+        [[BackgroundActivityFactory sharedFactory] endBackgroundActivity:self.delayedSaveActivity];
+        self.delayedSaveActivity = nil;
+    }
+}
 
 - (void)enqueueDelayedSaveWithGroup:(ZMSDispatchGroup *)group;
 {
@@ -344,7 +376,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     if ([self saveIfTooManyChanges] ||
         [self saveIfDelayIsTooLong])
     {
+        [self stopActivity];
         return;
+    }
+    
+    if (self.pendingSaveCounter == 0) {
+        [self startActivity];
     }
     
     // Delay function (not to scale):
@@ -431,9 +468,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     [secondaryGroup notifyOnQueue:dispatch_get_global_queue(0, 0) block:^{
         [self performGroupedBlock:^{
             NSInteger const c2 = --self.pendingSaveCounter;
+            BOOL didSave = NO;
             if (c2 == 0) {
                 ZMLogDebug(@"Calling -saveOrRollback (%d)", myCount);
                 [self saveOrRollback];
+                didSave = YES;
             } else {
                 ZMLogDebug(@"Not calling -saveOrRollback (%d)", myCount);
             }
@@ -441,6 +480,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
                 [group leave];
             }
             [self leaveAllGroups:otherGroups];
+            if (didSave) {
+                [self stopActivity];
+            }
         }];
     }];
 }

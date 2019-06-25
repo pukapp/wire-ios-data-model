@@ -23,13 +23,30 @@ import WireSystem
 extension ZMUser: UserConnectionType { }
 
 extension ZMUser: UserType {
+
     
     public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
         return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: self.remoteIdentifier.transportString()) ?? self.name ?? ""
     }
-    
+
     public func isGuest(in conversation: ZMConversation) -> Bool {
         return _isGuest(in: conversation)
+    }
+
+    public func canAccessCompanyInformation(of user: UserType) -> Bool {
+        guard
+            let otherUser = user as? ZMUser,
+            let otherUserTeamID = otherUser.team?.remoteIdentifier,
+            let selfUserTeamID = self.team?.remoteIdentifier
+        else {
+            return false
+        }
+        
+        return selfUserTeamID == otherUserTeamID
+    }
+    
+    public var teamName: String? {
+        return team?.name
     }
     
     public var previewImageData: Data? {
@@ -38,6 +55,34 @@ extension ZMUser: UserType {
     
     public var completeImageData: Data? {
         return imageMediumData
+    }
+    
+    public var activeConversations: Set<ZMConversation> {
+        if isSelfUser {
+            guard let managedObjectContext = managedObjectContext else { return Set() }
+            
+            let fetchRequest = NSFetchRequest<ZMConversation>(entityName: ZMConversation.entityName())
+            fetchRequest.predicate = ZMConversation.predicateForConversationsWhereSelfUserIsActive()
+            var result = Set(managedObjectContext.fetchOrAssert(request: fetchRequest))
+            result.remove(ZMConversation.selfConversation(in: managedObjectContext))
+            return result
+        } else {
+            return lastServerSyncedActiveConversations.set as? Set<ZMConversation> ?? Set()
+        }
+    }
+
+    // MARK: Legal Hold
+
+    @objc public var isUnderLegalHold: Bool {
+        return clients.any(\.isLegalHoldDevice)
+    }
+
+    @objc class func keyPathsForValuesAffectingIsUnderLegalHold() -> Set<String> {
+        return [UserClientsKey]
+    }
+    
+    public var allClients: [UserClientType] {
+        return Array(clients)
     }
     
 }
@@ -92,15 +137,6 @@ public struct AssetKey {
     public static var allSizes: [ProfileImageSize] {
         return [.preview, .complete]
     }
-    
-    internal var userKeyPath: String {
-        switch self {
-        case .preview:
-            return #keyPath(ZMUser.imageSmallProfileData)
-        case .complete:
-            return #keyPath(ZMUser.imageMediumData)
-        }
-    }
 }
 
 extension ProfileImageSize: CustomDebugStringConvertible {
@@ -125,6 +161,7 @@ public extension Notification.Name {
 }
 
 extension ZMUser {
+<<<<<<< HEAD
 
     /// Retrieves all users (excluding bots), having ZMConnectionStatusAccepted connection statuses.
     @objc static var predicateForConnectedNonBotUsers: NSPredicate {
@@ -177,30 +214,6 @@ extension ZMUser {
         return NSCompoundPredicate(andPredicateWithSubpredicates: orPredicates)
     }
     
-    @objc(predicateForUsersWithConnectionStatusInArray:)
-    public static func predicateForUsers(withConnectionStatuses connectionStatuses: [Int16]) -> NSPredicate {
-        return NSPredicate(format: "(%K IN (%@))", #keyPath(ZMUser.connection.status), connectionStatuses)
-    }
-
-}
-
-fileprivate extension String {
-
-    func normalizedAndTrimmed() -> String {
-        guard let normalized = self.normalizedForSearch() as String? else { return "" }
-        return normalized.trimmingCharacters(in: .whitespaces)
-    }
-
-    func strippingLeadingAtSign() -> String {
-        guard hasPrefix("@") else { return self }
-        var copy = self
-        copy.remove(at: startIndex)
-        return copy
-    }
-
-}
-
-extension ZMUser {
     @objc static let previewProfileAssetIdentifierKey = #keyPath(ZMUser.previewProfileAssetIdentifier)
     @objc static let completeProfileAssetIdentifierKey = #keyPath(ZMUser.completeProfileAssetIdentifier)
     
@@ -224,47 +237,32 @@ extension ZMUser {
     
     @NSManaged var expiresAt: Date?
     
+    /// `accountIsDeleted` is true if this account has been deleted on the backend
+    @NSManaged public internal(set) var isAccountDeleted: Bool
+    
     @NSManaged public var usesCompanyLogin: Bool
     
     @objc(setImageData:size:)
     public func setImage(data: Data?, size: ProfileImageSize) {
-        let key = size.userKeyPath
-        willChangeValue(forKey: key)
-        if isSelfUser {
-            setPrimitiveValue(data, forKey: key)
-        } else {
-            guard let imageData = data else {
-                managedObjectContext?.zm_userImageCache?.removeAllUserImages(self)
-                return
-            }
-            managedObjectContext?.zm_userImageCache?.setUserImage(self, imageData: imageData, size: size)
+        guard let imageData = data else {
+            managedObjectContext?.zm_userImageCache?.removeAllUserImages(self)
+            return
         }
-        didChangeValue(forKey: key)
-        managedObjectContext?.saveOrRollback()
+        managedObjectContext?.zm_userImageCache?.setUserImage(self, imageData: imageData, size: size)
+        
+        if let uiContext = managedObjectContext?.zm_userInterface {
+            let changedKey = size == .preview ? #keyPath(ZMUser.previewImageData) : #keyPath(ZMUser.completeImageData)
+            NotificationDispatcher.notifyNonCoreDataChanges(objectID: objectID, changedKeys: [changedKey], uiContext: uiContext)
+        }
     }
     
     public func imageData(for size: ProfileImageSize, queue: DispatchQueue, completion: @escaping (_ imageData: Data?) -> Void) {
-        if isSelfUser {
-            let imageData = self.imageData(for: size)
-            
-            queue.async {
-                completion(imageData)
-            }
-        } else {
-            managedObjectContext?.zm_userImageCache?.userImage(self, size: size, queue: queue, completion: completion)
-        }
+        managedObjectContext?.zm_userImageCache?.userImage(self, size: size, queue: queue, completion: completion)
     }
     
     @objc(imageDataforSize:)
     public func imageData(for size: ProfileImageSize) -> Data? {
-        if isSelfUser {
-            willAccessValue(forKey: size.userKeyPath)
-            let value = primitiveValue(forKey: size.userKeyPath) as? Data
-            didAccessValue(forKey: size.userKeyPath)
-            return value
-        } else {
-            return managedObjectContext?.zm_userImageCache?.userImage(self, size: size)
-        }
+        return managedObjectContext?.zm_userImageCache?.userImage(self, size: size)
     }
     
     public static var previewImageDownloadFilter: NSPredicate {
@@ -292,17 +290,12 @@ extension ZMUser {
         setLocallyModifiedKeys([ZMUser.previewProfileAssetIdentifierKey, ZMUser.completeProfileAssetIdentifierKey])
     }
     
-    @objc public func updateAssetData(with assets: NSArray?, hasLegacyImages: Bool, authoritative: Bool) {
+    @objc public func updateAssetData(with assets: NSArray?, authoritative: Bool) {
         guard !hasLocalModifications(forKeys: [ZMUser.previewProfileAssetIdentifierKey, ZMUser.completeProfileAssetIdentifierKey]) else { return }
         guard let assets = assets as? [[String : String]], !assets.isEmpty else {
             if authoritative {
                 previewProfileAssetIdentifier = nil
                 completeProfileAssetIdentifier = nil
-                // Deleting image data only if we don't have V2 profile image as well
-                if !hasLegacyImages {
-                    imageSmallProfileData = nil
-                    imageMediumData = nil
-                }
             }
             return
         }
@@ -312,12 +305,10 @@ extension ZMUser {
                 case .preview:
                     if key.stringValue != previewProfileAssetIdentifier {
                         previewProfileAssetIdentifier = key.stringValue
-                        imageSmallProfileData = nil
                     }
                 case .complete:
                     if key.stringValue != completeProfileAssetIdentifier {
                         completeProfileAssetIdentifier = key.stringValue
-                        imageMediumData = nil
                     }
                 }
             }
@@ -327,9 +318,6 @@ extension ZMUser {
     @objc public func requestPreviewProfileImage() {
         guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_userImageCache.hasUserImage(self, size: .preview) else { return }
         
-        localSmallProfileRemoteIdentifier = nil
-        moc.enqueueDelayedSave()
-        
         NotificationInContext(name: .userDidRequestPreviewAsset,
                               context: moc.notificationContext,
                               object: self.objectID).post()
@@ -338,12 +326,34 @@ extension ZMUser {
     @objc public func requestCompleteProfileImage() {
         guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_userImageCache.hasUserImage(self, size: .complete) else { return }
         
-        localMediumRemoteIdentifier = nil
-        moc.enqueueDelayedSave()
-        
         NotificationInContext(name: .userDidRequestCompleteAsset,
                               context: moc.notificationContext,
                               object: self.objectID).post()
+    }
+    
+    /// Mark the user's account as having been deleted. This will also remove the user from any conversations he/she
+    /// is still a participant of.
+    @objc public func markAccountAsDeleted(at timestamp: Date) {
+        isAccountDeleted = true
+        removeFromAllConversations(at: timestamp)
+    }
+    
+    /// Remove user from all group conversations he is a participant of
+    fileprivate func removeFromAllConversations(at timestamp: Date) {
+        let allGroupConversations: [ZMConversation] = lastServerSyncedActiveConversations.compactMap {
+            guard let conversation = $0 as? ZMConversation, conversation.conversationType == .group else { return nil}
+            return conversation
+        }
+        
+        allGroupConversations.forEach { conversation in
+            if isTeamMember && conversation.team == team {
+                conversation.appendTeamMemberRemovedSystemMessage(user: self, at: timestamp)
+            } else {
+                conversation.appendParticipantRemovedSystemMessage(user: self, at: timestamp)
+            }
+            
+            conversation.internalRemoveParticipants([self], sender: self)
+        }
     }
 }
 
@@ -355,8 +365,8 @@ extension ZMUser {
     }
 }
 
-extension NSManagedObject: PrivateStringConvertible {
-    public var privateDescription: String {
+extension NSManagedObject: SafeForLoggingStringConvertible {
+    public var safeForLoggingDescription: String {
         let moc: String = self.managedObjectContext?.description ?? "nil"
         
         return "\(type(of: self)) \(Unmanaged.passUnretained(self).toOpaque()): moc=\(moc) objectID=\(self.objectID)"

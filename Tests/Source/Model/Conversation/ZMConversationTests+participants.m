@@ -39,7 +39,7 @@
     
     // then
     [conversation.activeParticipants containsObject:user];
-    ZMSystemMessage *systemMessage =  conversation.messages.lastObject;
+    ZMSystemMessage *systemMessage = (ZMSystemMessage *)conversation.lastMessage;
     XCTAssertEqual(systemMessage.systemMessageType, ZMSystemMessageTypeParticipantsAdded);
 }
 
@@ -49,14 +49,14 @@
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
-    [conversation internalAddParticipants:[NSSet setWithObject:user]];
+    [conversation internalAddParticipants:@[user]];
     
     // when
     [conversation addParticipantIfMissing:user date:[NSDate date]];
     
     // then
     [conversation.activeParticipants containsObject:user];
-    XCTAssertEqual(conversation.messages.count, 0lu);
+    XCTAssertEqual(conversation.allMessages.count, 0lu);
 }
 
 - (void)testThatItAddsMissingParticipantInOneToOne
@@ -129,12 +129,47 @@
     ZMUser *user2 = [self createUser];
     
     // when
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
-    [conversation internalAddParticipants:[NSSet setWithObject:user2]];
+    [conversation internalAddParticipants:@[user1]];
+    [conversation internalAddParticipants:@[user2]];
     
     // then
     NSOrderedSet *expectedActiveParticipants = [NSOrderedSet orderedSetWithObjects:user1, user2, nil];
     XCTAssertEqualObjects(expectedActiveParticipants, conversation.lastServerSyncedActiveParticipants);
+}
+
+- (void)testThatItDoesNotUnarchiveTheConversationWhenTheSelfUserIsAddedIfMuted
+{
+    // given
+    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    conversation.conversationType = ZMConversationTypeGroup;
+    conversation.isArchived = YES;
+    conversation.mutedStatus = MutedMessageOptionValueAll;
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = [NSUUID createUUID];
+    
+    // when
+    [conversation internalAddParticipants:@[selfUser]];
+    WaitForAllGroupsToBeEmpty(0.5f);
+    
+    // then
+    XCTAssertTrue(conversation.isArchived);
+}
+
+- (void)testThatItUnarchivesTheConversationWhenTheSelfUserIsAdded
+{
+    // given
+    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    conversation.conversationType = ZMConversationTypeGroup;
+    conversation.isArchived = YES;
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    selfUser.remoteIdentifier = [NSUUID createUUID];
+
+    // when
+    [conversation internalAddParticipants:@[selfUser]];
+    WaitForAllGroupsToBeEmpty(0.5f);
+    
+    // then
+    XCTAssertFalse(conversation.isArchived);
 }
 
 - (void)testThatItCanRemoveTheSelfUser
@@ -147,12 +182,12 @@
     selfUser.remoteIdentifier = [NSUUID createUUID];
     
 //    [conversation addParticipant:user1];
-    [conversation internalAddParticipants:[NSSet setWithObjects:selfUser, user1, nil]];
+    [conversation internalAddParticipants:@[selfUser, user1]];
     
     XCTAssertTrue(conversation.isSelfAnActiveMember);
     
     // when
-    [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:user1];
+    [conversation internalRemoveParticipants:@[selfUser] sender:user1];
     WaitForAllGroupsToBeEmpty(0.5f);
     
     // then
@@ -169,10 +204,10 @@
     ZMUser *user3 = [self createUser];
     ZMUser *unknownUser = [self createUser];
     
-    [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, user3, nil]];
+    [conversation internalAddParticipants:@[user1, user2, user3]];
     
     // when
-    [conversation internalRemoveParticipants:[NSSet setWithObject:unknownUser] sender:user1];
+    [conversation internalRemoveParticipants:@[unknownUser] sender:user1];
     
     // then
     NSSet *expectedActiveParticipants = [NSSet setWithObjects:user1, user2, user3, nil];
@@ -297,12 +332,12 @@
     user3.name = @"Susi Super";
     user4.name = @"Super Susann";
     
-    [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, user3, user4, nil]];
+    [conversation internalAddParticipants:@[user1, user2, user3, user4]];
     [self.uiMOC saveOrRollback];
     
-    NSOrderedSet *expectedSet = [NSOrderedSet orderedSetWithArray:@[user2, user1, user4, selfUser, user3]];
+    NSArray *expected = @[user2, user1, user4, selfUser, user3];
     
-    XCTAssertEqualObjects(conversation.activeParticipants, expectedSet);
+    XCTAssertEqualObjects(conversation.sortedActiveParticipants, expected);
 }
 
 @end

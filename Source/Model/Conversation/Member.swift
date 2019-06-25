@@ -21,12 +21,18 @@
 
     @NSManaged public var team: Team?
     @NSManaged public var user: ZMUser?
+    @NSManaged public var createdBy: ZMUser?
+    @NSManaged public var createdAt: Date?
     @NSManaged public var remoteIdentifier_data : Data?
     @NSManaged private var permissionsRawValue: Int64
 
     public var permissions: Permissions {
-        get { return Permissions(rawValue: permissionsRawValue) }
-        set { permissionsRawValue = newValue.rawValue }
+        get {
+            return Permissions(rawValue: permissionsRawValue)            
+        }
+        set {
+            permissionsRawValue = newValue.rawValue            
+        }
     }
 
     public override static func entityName() -> String {
@@ -42,8 +48,13 @@
     }
     
     public var remoteIdentifier: UUID? {
-        get { return remoteIdentifier_data.flatMap { NSUUID(uuidBytes: $0.withUnsafeBytes(UnsafePointer<UInt8>.init)) } as UUID? }
-        set { remoteIdentifier_data = (newValue as NSUUID?)?.data() }
+        get {
+            guard let data = remoteIdentifier_data else { return nil }
+            return UUID(data: data)
+        }
+        set {
+            remoteIdentifier_data = newValue?.uuidData
+        }
     }
 
     @objc(getOrCreateMemberForUser:inTeam:context:)
@@ -71,7 +82,7 @@
 
 
 fileprivate enum ResponseKey: String {
-    case user, permissions
+    case user, permissions, createdBy = "created_by", createdAt = "created_at"
 
     enum Permissions: String {
         case `self`, copy
@@ -86,8 +97,15 @@ extension Member {
         guard let id = (payload[ResponseKey.user.rawValue] as? String).flatMap(UUID.init),
             let user = ZMUser.fetchAndMerge(with: id, createIfNeeded: true, in: context) else { return nil }
 
+        
+        let createdAt = (payload[ResponseKey.createdAt.rawValue] as? String).flatMap(NSDate.init(transport:)) as Date?
+        let createdBy = (payload[ResponseKey.createdBy.rawValue] as? String).flatMap(UUID.init)
         let member = getOrCreateMember(for: user, in: team, context: context)
+        
         member.updatePermissions(with: payload)
+        member.createdAt = createdAt
+        member.createdBy = createdBy.flatMap({ ZMUser.fetchAndMerge(with: $0, createIfNeeded: true, in: context) })
+        
         return member
     }
 

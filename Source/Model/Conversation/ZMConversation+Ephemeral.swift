@@ -85,7 +85,7 @@ public extension MessageDestructionTimeoutValue {
 
 public extension MessageDestructionTimeoutValue {
 
-    public var isKnownTimeout: Bool {
+    var isKnownTimeout: Bool {
         if case .custom = self {
             return false
         }
@@ -162,7 +162,7 @@ extension TimeInterval {
         let now = Date()
         let oneYear = Calendar.current.date(byAdding: .year, value: 1, to: now)
 
-        return (oneYear?.timeIntervalSince(now))!
+        return oneYear!.timeIntervalSince(now)
     }
 }
 
@@ -173,7 +173,7 @@ public extension ZMConversation {
     /// WARNING: setting the synced value: please update the value on the backend and then update the value of this
     /// property.
     /// Computed property from @c localMessageDestructionTimeout and @c syncedMessageDestructionTimeout.
-    public var messageDestructionTimeout: MessageDestructionTimeout? {
+    var messageDestructionTimeout: MessageDestructionTimeout? {
         get {
             if syncedMessageDestructionTimeout != 0 {
                 return .synced(MessageDestructionTimeoutValue(rawValue: syncedMessageDestructionTimeout))
@@ -230,8 +230,8 @@ public extension ZMConversation {
         }
     }
 
-    @discardableResult @objc public func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) -> ZMSystemMessage {
-        let (message, _) = appendSystemMessage(
+    @discardableResult @objc func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) -> ZMSystemMessage {
+        let message = appendSystemMessage(
             type: .messageTimerUpdate,
             sender: user,
             users: [user],
@@ -251,13 +251,13 @@ public extension ZMConversation {
     @NSManaged internal var localMessageDestructionTimeout: TimeInterval
     @NSManaged internal var syncedMessageDestructionTimeout: TimeInterval
     
-    public var hasSyncedDestructionTimeout: Bool {
+    var hasSyncedDestructionTimeout: Bool {
         guard let timeout = messageDestructionTimeout,
             case .synced(_) = timeout else { return false }
         return true
     }
     
-    public var hasLocalDestructionTimeout: Bool {
+    var hasLocalDestructionTimeout: Bool {
         guard let timeout = messageDestructionTimeout,
             case .local = timeout else { return false }
         return true

@@ -52,7 +52,7 @@ class UserClientTests: ZMBaseManagedObjectTest {
 
     func testThatItCanInitializeClient() {
         let client = UserClient.insertNewObject(in: self.uiMOC)
-        XCTAssertEqual(client.type, ZMUserClientTypePermanent, "Client type should be 'permanent'")
+        XCTAssertEqual(client.type, .permanent, "Client type should be 'permanent'")
     }
     
     func testThatItReturnsTrackedKeys() {
@@ -220,7 +220,7 @@ class UserClientTests: ZMBaseManagedObjectTest {
             selfClient.trustClient(otherClient1)
             
             conversation.securityLevel = ZMConversationSecurityLevel.notSecure
-            XCTAssertEqual(conversation.messages.count, 1)
+            XCTAssertEqual(conversation.allMessages.count, 1)
 
             let otherClient2 = UserClient.insertNewObject(in: self.syncMOC)
             otherClient2.remoteIdentifier = UUID.create().transportString()
@@ -235,8 +235,8 @@ class UserClientTests: ZMBaseManagedObjectTest {
             // then
             XCTAssertTrue(otherClient2.isZombieObject)
             XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevel.secure)
-            XCTAssertEqual(conversation.messages.count, 2)
-            if let message = conversation.messages.lastObject as? ZMSystemMessage {
+            XCTAssertEqual(conversation.allMessages.count, 2)
+            if let message = conversation.lastMessage as? ZMSystemMessage {
                 XCTAssertEqual(message.systemMessageType, ZMSystemMessageType.conversationIsSecure)
                 XCTAssertEqual(message.users, Set(arrayLiteral: otherUser))
             } else {
@@ -551,7 +551,7 @@ extension UserClientTests {
 // MARK : fetchFingerprintOrPrekeys
 
 extension UserClientTests {
-    
+        
     func testThatItSetsTheUserWhenInsertingANewSelfUserClient(){
         // given
         _ = createSelfClient()
@@ -822,7 +822,7 @@ extension UserClientTests {
         self.uiMOC.saveOrRollback()
 
         self.syncMOC.performGroupedBlockAndWait {
-            let syncClient = try? self.syncMOC.existingObject(with: client.objectID) as! UserClient
+            let syncClient = try? self.syncMOC.existingObject(with: client.objectID) as? UserClient
 
             // when
             syncClient?.pushToken = token

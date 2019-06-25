@@ -86,6 +86,10 @@ NSString * const ZMSystemMessageAllTeamUsersAddedKey = @"allTeamUsersAdded";
 NSString * const ZMSystemMessageNumberOfGuestsAddedKey = @"numberOfGuestsAdded";
 NSString * const ZMMessageRepliesKey = @"replies";
 NSString * const ZMMessageQuoteKey = @"quote";
+NSString * const ZMMessageExpectReadConfirmationKey = @"expectsReadConfirmation";
+NSString * const ZMMessageLinkAttachmentsKey = @"linkAttachments";
+NSString * const ZMMessageNeedsLinkAttachmentsUpdateKey = @"needsLinkAttachmentsUpdate";
+NSString * const ZMMessageDiscoveredClientsKey = @"discoveredClients";
 
 NSString * const ZMMessageJsonTextKey = @"jsonText";
 
@@ -131,6 +135,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic confirmations;
 @dynamic isObfuscated;
 @dynamic normalizedText;
+@dynamic delivered;
 
 @dynamic isNeedReply;
 @dynamic isNeedUpload;
@@ -250,12 +255,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 - (void)markAsSent
 {
     self.isExpired = NO;
+    [self removeExpirationDate];
 }
 
-- (ZMClientMessage *)confirmReception
-{
-    ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithContent:[ZMConfirmation confirmWithMessageId:self.nonce type:ZMConfirmationTypeDELIVERED] nonce:NSUUID.UUID];
-    return [self.conversation appendClientMessageWithGenericMessage:genericMessage expires:NO hidden:YES];
+- (BOOL)needsReadConfirmation {
+    return NO;
 }
 
 - (void)expire;
@@ -329,6 +333,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         ZMLogError(@"Sender is nil or from a different context than message. \n Sender is zombie %@: %@ \n Message: %@", @(sender.isZombieObject), sender, self);
     }
     
+    [self updateQuoteRelationships];
     [conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
@@ -351,7 +356,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     self.visibleInConversation = nil;
     self.replies = [[NSSet alloc] init];
     [self clearAllReactions];
-
+    [self clearConfirmations];
+    
     if (clearingSender) {
         self.sender = nil;
         self.senderClientID = nil;
@@ -526,10 +532,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     
     [self.conversation updateServerModified:timestamp];
     [self.conversation updateTimestampsAfterUpdatingMessage:self];
-    
-    if (updatedTimestamp) {
-        [self.conversation resortMessagesWithUpdatedMessage:self];
-    }
 }
 
 - (NSString *)shortDebugDescription;
@@ -549,13 +551,21 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             ];
 }
 
-+ (instancetype)fetchMessageWithNonce:(NSUUID *)nonce forConversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc
++ (instancetype)fetchMessageWithNonce:(NSUUID *)nonce
+                      forConversation:(ZMConversation *)conversation
+               inManagedObjectContext:(NSManagedObjectContext *)moc
 {
-    return [self fetchMessageWithNonce:nonce forConversation:conversation inManagedObjectContext:moc prefetchResult:nil];
+    return [self fetchMessageWithNonce:nonce
+                       forConversation:conversation
+                inManagedObjectContext:moc
+                        prefetchResult:nil];
 }
 
 
-+ (instancetype)fetchMessageWithNonce:(NSUUID *)nonce forConversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
++ (instancetype)fetchMessageWithNonce:(NSUUID *)nonce
+                      forConversation:(ZMConversation *)conversation
+               inManagedObjectContext:(NSManagedObjectContext *)moc
+                       prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
     NSSet <ZMMessage *>* prefetchedMessages = prefetchResult.messagesByNonce[nonce];
     
@@ -573,9 +583,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     BOOL checkedAllHiddenMessages = NO;
     BOOL checkedAllVisibleMessage = NO;
 
-    if (![conversation hasFaultForRelationshipNamed:ZMConversationMessagesKey]) {
+    if (![conversation hasFaultForRelationshipNamed:ZMConversationAllMessagesKey]) {
         checkedAllVisibleMessage = YES;
-        for (ZMMessage *message in conversation.messages) {
+        for (ZMMessage *message in conversation.allMessages) {
             if (message.isFault) {
                 checkedAllVisibleMessage = NO;
             } else if ([message.entity isKindOfEntity:entity] && [noncePredicate evaluateWithObject:message]) {
@@ -651,6 +661,20 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return [NSCompoundPredicate andPredicateWithSubpredicates:@[conversationPredicate, noncePredicate]];
 }
 
++ (NSPredicate *)predicateForMessagesThatNeedToUpdateLinkAttachments
+{
+    return [NSPredicate predicateWithFormat:@"(%K == YES)", ZMMessageNeedsLinkAttachmentsUpdateKey];
+}
+
++ (NSSet <ZMMessage *> *)messagesWithRemoteIDs:(NSSet <NSUUID *>*)UUIDs inContext:(NSManagedObjectContext *)moc;
+{
+    return [self fetchObjectsWithRemoteIdentifiers:UUIDs inManagedObjectContext:moc];
+}
+
++(NSString *)remoteIdentifierDataKey {
+    return ZMMessageNonceDataKey;
+}
+
 @end
 
 
@@ -709,6 +733,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                              ZMSystemMessageRelevantForConversationStatusKey,
                              ZMSystemMessageAllTeamUsersAddedKey,
                              ZMSystemMessageNumberOfGuestsAddedKey,
+                             DeliveredKey,
+                             ZMMessageExpectReadConfirmationKey,
+                             ZMMessageLinkAttachmentsKey,
+                             ZMMessageNeedsLinkAttachmentsUpdateKey,
+                             ZMMessageDiscoveredClientsKey
                              ];
         ignoredKeys = [keys setByAddingObjectsFromArray:newKeys];
     });
@@ -747,7 +776,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return self.text;
 }
 
-- (LinkPreview *)linkPreview
+- (LinkMetadata *)linkPreview
 {
     return nil;
 }
@@ -803,11 +832,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     [super removeMessageClearingSender:clearingSender];
 }
 
-- (ZMDeliveryState)deliveryState
-{
-    return ZMDeliveryStateDelivered;
-}
-
 - (void)fetchLinkPreviewImageDataWithQueue:(dispatch_queue_t)queue completionHandler:(void (^)(NSData *))completionHandler
 {
     NOT_USED(queue);
@@ -825,7 +849,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     NOT_USED(mentions);
     NOT_USED(fetchLinkPreview);
 }
-
 
 @end
 
@@ -1018,19 +1041,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.users = usersSet;
     message.text = messageText != nil ? messageText : name;
     
-    [message updateNewConversationSystemMessageIfNeededWithUsers:usersSet
-                                                         context:moc
-                                                    conversation:conversation];
-        
     [conversation updateTimestampsAfterUpdatingMessage:message];
     
     return message;
-}
-
-- (ZMDeliveryState)deliveryState
-{
-    // SystemMessages are either from the BE or inserted on device
-    return ZMDeliveryStateDelivered;
 }
 
 - (NSDictionary<NSString *,NSArray<ZMUser *> *> *)usersReaction
@@ -1075,6 +1088,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             case ZMSystemMessageTypeDecryptionFailed_RemoteIdentityChanged:
             case ZMSystemMessageTypeTeamMemberLeave:
             case ZMSystemMessageTypeMissedCall:
+            case ZMSystemMessageTypeReadReceiptsEnabled:
+            case ZMSystemMessageTypeReadReceiptsDisabled:
+            case ZMSystemMessageTypeReadReceiptsOn:
+            case ZMSystemMessageTypeLegalHoldEnabled:
+            case ZMSystemMessageTypeLegalHoldDisabled:
                 return YES;
             case ZMSystemMessageTypeInvalid:
             case ZMSystemMessageTypeConversationNameChanged:
@@ -1155,6 +1173,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
             return [self.users containsObject:selfUser] && !self.sender.isSelfUser;
         }
+        case ZMSystemMessageTypeNewConversation:
+            return !self.sender.isSelfUser;
         case ZMSystemMessageTypeMissedCall:
         case ZMSystemMessageTypeServiceMessage:
             return YES;
@@ -1197,6 +1217,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return onlyOneUser && isSender;
 }
 
+- (void)updateQuoteRelationships
+{
+    // System messages don't support quotes at the moment
+}
+
 @end
 
 
@@ -1214,14 +1239,22 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     if (isSelfUser && self.managedObjectContext.zm_isSyncContext) {
         self.destructionDate = [NSDate dateWithTimeIntervalSinceNow:self.deletionTimeout];
         ZMMessageDestructionTimer *timer = self.managedObjectContext.zm_messageObfuscationTimer;
-        [timer startObfuscationTimerWithMessage:self timeout:self.deletionTimeout];
-        return YES;
+        if (timer != nil) { 
+            [timer startObfuscationTimerWithMessage:self timeout:self.deletionTimeout];
+            return YES;
+        } else {
+            return NO;
+        }
     }
     else if (!isSelfUser && self.managedObjectContext.zm_isUserInterfaceContext){
         ZMMessageDestructionTimer *timer = self.managedObjectContext.zm_messageDeletionTimer;
-        NSTimeInterval matchedTimeInterval = [timer startDeletionTimerWithMessage:self timeout:self.deletionTimeout];
-        self.destructionDate = [NSDate dateWithTimeIntervalSinceNow:matchedTimeInterval];
-        return YES;
+        if (timer != nil) { 
+            NSTimeInterval matchedTimeInterval = [timer startDeletionTimerWithMessage:self timeout:self.deletionTimeout];
+            self.destructionDate = [NSDate dateWithTimeIntervalSinceNow:matchedTimeInterval];
+            return YES;
+        } else {
+            return NO;
+        }
     }
     return NO;
 }
@@ -1251,6 +1284,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                               ZMMessageDestructionDateKey,          // If it has a destructionDate, the timer did not fire in time
                               ZMMessageSenderKey,                   // As soon as the message is deleted, we would delete the sender
                               ZMMessageIsObfuscatedKey];            // If the message is obfuscated, we don't need to obfuscate it again
+    
+    // We add a sort descriptor to force core data to scan the table using the destructionDate index.
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:ZMMessageDestructionDateKey ascending:NO]];
     return fetchRequest;
 }
 

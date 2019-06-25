@@ -25,38 +25,46 @@ private let log = ZMSLog(tag: "ephemeral")
 
 public extension NSManagedObjectContext {
     
-    @objc public var zm_messageDeletionTimer : ZMMessageDestructionTimer {
-        if !zm_isUserInterfaceContext {
-            preconditionFailure("MessageDeletionTimerKey should be started only on the uiContext")
-        }
-        if let timer = userInfo[MessageDeletionTimerKey] as? ZMMessageDestructionTimer {
-            return timer
-        }
-        let timer = ZMMessageDestructionTimer(managedObjectContext: self)
-        userInfo[MessageDeletionTimerKey] = timer
-        log.debug("creating deletion timer")
-        return timer
+    @objc var zm_messageDeletionTimer : ZMMessageDestructionTimer? {
+        precondition(zm_isUserInterfaceContext, "MessageDeletionTimerKey should be started only on the uiContext")
+        
+        return userInfo[MessageDeletionTimerKey] as? ZMMessageDestructionTimer
     }
     
-    @objc public var zm_messageObfuscationTimer : ZMMessageDestructionTimer {
-        if !zm_isSyncContext {
-            preconditionFailure("MessageObfuscationTimer should be started only on the syncContext")
+    @objc var zm_messageObfuscationTimer : ZMMessageDestructionTimer? {
+        precondition(zm_isSyncContext, "MessageObfuscationTimer should be started only on the syncContext")
+        
+        return userInfo[MessageObfuscationTimerKey] as? ZMMessageDestructionTimer
+    }
+    
+    @objc func zm_createMessageObfuscationTimer() {
+        precondition(zm_isSyncContext, "MessageObfuscationTimer should be started only on the syncContext")
+        
+        guard userInfo[MessageObfuscationTimerKey] == nil else {
+            log.debug("Obfuscation timer already exists, skipping")
+            return 
         }
-        if let timer = userInfo[MessageObfuscationTimerKey] as? ZMMessageDestructionTimer {
-            return timer
-        }
-        let timer = ZMMessageDestructionTimer(managedObjectContext: self)
-        userInfo[MessageObfuscationTimerKey] = timer
+
+        userInfo[MessageObfuscationTimerKey] = ZMMessageDestructionTimer(managedObjectContext: self)
         log.debug("creating obfuscation timer")
-        return timer
+    }
+    
+    @objc func zm_createMessageDeletionTimer() {
+        precondition(zm_isUserInterfaceContext, "MessageDeletionTimer should be started only on the uiContext")
+        
+        guard userInfo[MessageDeletionTimerKey] == nil else {
+            log.debug("Deletion timer already exists, skipping")
+            return 
+        }
+
+        userInfo[MessageDeletionTimerKey] = ZMMessageDestructionTimer(managedObjectContext: self)
+        log.debug("creating deletion timer")
     }
     
     /// Tears down zm_messageObfuscationTimer and zm_messageDeletionTimer
     /// Call inside a performGroupedBlock(AndWait) when calling it from another context
-    @objc public func zm_teardownMessageObfuscationTimer() {
-        if !zm_isSyncContext {
-            preconditionFailure("MessageObfuscationTimer is located on the syncContext")
-        }
+    @objc func zm_teardownMessageObfuscationTimer() {
+        precondition(zm_isSyncContext, "MessageObfuscationTimer is located on the syncContext")
         if let timer = userInfo[MessageObfuscationTimerKey] as? ZMMessageDestructionTimer {
             timer.tearDown()
             userInfo.removeObject(forKey: MessageObfuscationTimerKey)
@@ -66,10 +74,8 @@ public extension NSManagedObjectContext {
     
     /// Tears down zm_messageDeletionTimer
     /// Call inside a performGroupedBlock(AndWait) when calling it from another context
-    @objc public func zm_teardownMessageDeletionTimer() {
-        if !zm_isUserInterfaceContext {
-            preconditionFailure("MessageDeletionTimerKey is located on the uiContext")
-        }
+    @objc func zm_teardownMessageDeletionTimer() {
+        precondition(zm_isUserInterfaceContext, "MessageDeletionTimerKey is located on the uiContext")
         if let timer = userInfo[MessageDeletionTimerKey] as? ZMMessageDestructionTimer {
             timer.tearDown()
             userInfo.removeObject(forKey: MessageDeletionTimerKey)

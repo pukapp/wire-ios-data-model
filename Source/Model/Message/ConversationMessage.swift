@@ -18,6 +18,7 @@
 
 
 import Foundation
+import WireLinkPreview
 
 private var zmLog = ZMSLog(tag: "Message")
 
@@ -27,7 +28,16 @@ public enum ZMDeliveryState : UInt {
     case pending = 1
     case sent = 2
     case delivered = 3
-    case failedToSend = 4
+    case read = 4
+    case failedToSend = 5
+}
+
+@objc
+public protocol ReadReceipt {
+    
+    var user: ZMUser { get }
+    var serverTimestamp: Date? { get }
+    
 }
 
 @objc
@@ -53,6 +63,15 @@ public protocol ZMConversationMessage : NSObjectProtocol {
     /// The textMessageData of the message. If the message has no jsonJext, it will be nil
     var jsonTextMessageData : ZMJsonTextMessageData? { get }
     
+    /// True if the message has been successfully sent to the server
+    var isSent: Bool { get }
+    
+    /// List of recipients who have read the message.
+    var readReceipts: [ReadReceipt] { get }
+
+    /// Whether the message expects read confirmations.
+    var needsReadConfirmation: Bool { get }
+
     
     /// The textMessageData of the message which also contains potential link previews. If the message has no text, it will be nil
     var textMessageData : ZMTextMessageData? { get }
@@ -70,7 +89,7 @@ public protocol ZMConversationMessage : NSObjectProtocol {
     var fileMessageData: ZMFileMessageData? { get }
     
     /// The location message data associated with the message. If the message is not a location message, it will be nil
-    var locationMessageData: ZMLocationMessageData? { get }
+    var locationMessageData: LocationMessageData? { get }
     
     var usersReaction : Dictionary<String, [ZMUser]> { get }
     
@@ -121,11 +140,30 @@ public protocol ZMConversationMessage : NSObjectProtocol {
 
     /// An in-memory identifier for tracking the message during its life cycle.
     var objectIdentifier: String { get }
+
+    /// The links attached to the message.
+    var linkAttachments: [LinkAttachment]? { get set }
+
+    /// Used to trigger link attachments update for this message.
+    var needsLinkAttachmentsUpdate: Bool { get set }
 }
 
-public extension ZMConversationMessage {
-    var messageIsRelevantForConversationStatus: Bool {
-        return (self as? ZMSystemMessage)?.relevantForConversationStatus ?? true
+public extension Equatable where Self : ZMConversationMessage { }
+
+public func ==(lhs: ZMConversationMessage, rhs: ZMConversationMessage) -> Bool {
+    return lhs.isEqual(rhs)
+}
+
+public func ==(lhs: ZMConversationMessage?, rhs: ZMConversationMessage?) -> Bool {
+    switch (lhs, rhs) {
+    case (nil, nil):
+        return true
+    case (_, nil):
+        return false
+    case (nil, _):
+        return false
+    case (_, _):
+        return lhs!.isEqual(rhs!)
     }
 }
 
@@ -144,7 +182,13 @@ extension ZMMessage {
 // MARK:- Conversation Message protocol implementation
 
 extension ZMMessage : ZMConversationMessage {
+    @NSManaged public var linkAttachments: [LinkAttachment]?
+    @NSManaged public var needsLinkAttachmentsUpdate: Bool
     @NSManaged public var replies: Set<ZMMessage>
+    
+    public var readReceipts: [ReadReceipt] {
+        return confirmations.filter({ $0.type == .read }).sorted(by: { a, b in  a.serverTimestamp < b.serverTimestamp })
+    }
 
     public var objectIdentifier: String {
         return nonpersistedObjectIdentifer!
@@ -221,18 +265,16 @@ extension ZMMessage {
         return nil
     }
     
-    @objc public var locationMessageData: ZMLocationMessageData? {
+    @objc public var locationMessageData: LocationMessageData? {
         return nil
     }
     
+    @objc public var isSent: Bool {
+        return true
+    }
+    
     @objc public var deliveryState : ZMDeliveryState {
-        if self.confirmations.count > 0 {
-            return .delivered
-        }
-        if self.isExpired {
-            return .failedToSend
-        }
-        return .pending
+        return .delivered
     }
     
     @objc public var usersReaction : Dictionary<String, [ZMUser]> {
@@ -247,7 +289,7 @@ extension ZMMessage {
     
     
     @objc public var canBeDeleted : Bool {
-        return deliveryState == .delivered || deliveryState == .sent || deliveryState == .failedToSend
+        return deliveryState != .pending
     }
     
     @objc public var hasBeenDeleted: Bool {

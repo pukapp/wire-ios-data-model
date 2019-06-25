@@ -22,7 +22,7 @@ import Foundation
 extension ZMConversation : ObjectInSnapshot {
     
     @objc public static var observableKeys : Set<String> {
-        return Set([#keyPath(ZMConversation.messages),
+        return Set([#keyPath(ZMConversation.allMessages),
                     #keyPath(ZMConversation.lastModifiedDate),
                     #keyPath(ZMConversation.isArchived),
                     #keyPath(ZMConversation.conversationListIndicator),
@@ -64,6 +64,9 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.isVisitorsVisible),
                     #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator),
                     #keyPath(ZMConversation.announcement)
+                    #keyPath(ZMConversation.hasReadReceiptsEnabled),
+                    ZMConversation.externalParticipantsStateKey,
+                    #keyPath(ZMConversation.legalHoldStatus)
             ])
     }
 
@@ -180,7 +183,7 @@ extension ZMConversation : ObjectInSnapshot {
     }
 
     public var messagesChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.messages))
+        return changedKeysContain(keys: #keyPath(ZMConversation.allMessages))
     }
 
     public var participantsChanged : Bool {
@@ -241,6 +244,18 @@ extension ZMConversation : ObjectInSnapshot {
                 changedKeysContain(keys: #keyPath(ZMConversation.syncedMessageDestructionTimeout))
     }
     
+    public var hasReadReceiptsEnabledChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.hasReadReceiptsEnabled))
+    }
+
+    public var externalParticipantsStateChanged: Bool {
+        return changedKeysContain(keys: ZMConversation.externalParticipantsStateKey)
+    }
+
+    public var legalHoldStatusChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.legalHoldStatus))
+    }
+    
     public var conversation : ZMConversation { return self.object as! ZMConversation }
     
     public override var description : String { return self.debugDescription }
@@ -264,7 +279,11 @@ extension ZMConversation : ObjectInSnapshot {
                 "teamChanged \(teamChanged)",
                 "createdRemotelyChanged \(createdRemotelyChanged)",
                 "destructionTimeoutChanged \(destructionTimeoutChanged)",
-                "languageChanged \(languageChanged)"].joined(separator: ", ")
+                "languageChanged \(languageChanged)",
+                "hasReadReceiptsEnabledChanged \(hasReadReceiptsEnabledChanged)",
+                "externalParticipantsStateChanged \(externalParticipantsStateChanged)",
+                "legalHoldStatusChanged: \(legalHoldStatusChanged)"
+            ].joined(separator: ", ")
     }
     
     public required init(object: NSObject) {
@@ -307,21 +326,20 @@ extension ConversationChangeInfo {
 
 /// Conversation degraded
 extension ConversationChangeInfo {
-    
-    /// True if the conversation security level is .secureWithIgnored and we tried to send a message
-    @objc public var didNotSendMessagesBecauseOfConversationSecurityLevel : Bool {
-        return self.securityLevelChanged &&
-            self.conversation.securityLevel == .secureWithIgnored &&
-            !self.conversation.messagesThatCausedSecurityLevelDegradation.isEmpty
+
+    @objc public var causedByConversationPrivacyChange: Bool {
+        if securityLevelChanged {
+            return conversation.securityLevel == .secureWithIgnored && !self.conversation.messagesThatCausedSecurityLevelDegradation.isEmpty
+        } else if legalHoldStatusChanged {
+            return conversation.legalHoldStatus == .pendingApproval && !self.conversation.messagesThatCausedSecurityLevelDegradation.isEmpty
+        }
+
+        return false
     }
     
     /// Users that caused the conversation to degrade
     @objc public var usersThatCausedConversationToDegrade : Set<ZMUser> {
-        guard let activeParticipants = self.conversation.activeParticipants.array as? [ZMUser] else {
-            return []
-        }
-        
-        let untrustedParticipants = activeParticipants.filter { user -> Bool in
+        let untrustedParticipants = self.conversation.activeParticipants.filter { user -> Bool in
             return !user.trusted()
         }
         return Set(untrustedParticipants)

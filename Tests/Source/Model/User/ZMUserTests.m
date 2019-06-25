@@ -44,6 +44,8 @@ static NSString *const ValidPhoneCode = @"123456";
 static NSString *const ShortPhoneCode = @"1";
 static NSString *const LongPhoneCode = @"123456789012345678901234567890";
 static NSString *const ValidEmail = @"foo77@example.com";
+static NSString *const ManagedByWire = @"wire";
+static NSString *const ManagedByScim = @"scim";
 
 
 static NSString *const MediumRemoteIdentifierDataKey = @"mediumRemoteIdentifier_data";
@@ -56,11 +58,6 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 @property (nonatomic) NSArray *validPhoneNumbers;
 @property (nonatomic) NSArray *shortPhoneNumbers;
 @property (nonatomic) NSArray *longPhoneNumbers;
-
-@end
-
-
-@interface ZMUserTestsUseSQLLiteStore : ModelObjectsTests
 
 @end
 
@@ -102,14 +99,15 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 {
     [self checkUserAttributeForKey:@"accentColorValue" value:@(ZMAccentColorVividRed)];
     [self checkUserAttributeForKey:@"emailAddress" value:@"foo@example.com"];
-
     [self checkUserAttributeForKey:@"name" value:@"Foo Bar"];
     [self checkUserAttributeForKey:@"handle" value:@"foo_bar"];
+    [self checkUserAttributeForKey:@"managedBy" value:ManagedByWire];
     [self checkUserAttributeForKey:@"phoneNumber" value:@"+123456789"];
     [self checkUserAttributeForKey:@"remoteIdentifier" value:[NSUUID createUUID]];
-    [self checkUserAttributeForKey:@"mediumRemoteIdentifier" value:[NSUUID createUUID]];
-    [self checkUserAttributeForKey:@"localMediumRemoteIdentifier" value:[NSUUID createUUID]];
-    [self checkUserAttributeForKey:@"localSmallProfileRemoteIdentifier" value:[NSUUID createUUID]];
+    [self checkUserAttributeForKey:@"richProfile" value:@[
+                                                                [[UserRichProfileField alloc] initWithType:@"Title" value:@"Software Engineer"],
+                                                                [[UserRichProfileField alloc] initWithType:@"Department" value:@"iOS Team"]
+                                                               ]];
 }
 
 - (NSMutableDictionary *)samplePayloadForUserID:(NSUUID *)userID
@@ -121,7 +119,8 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
               @"email" : @"mannie@example.com",
               @"phone" : @"000-000-45789",
               @"accent_id" : @3,
-              @"picture" : @[]
+              @"picture" : @[],
+              @"managed_by" : ManagedByWire
               } mutableCopy];
 }
 
@@ -357,8 +356,27 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(user.emailAddress, payload[@"email"]);
     XCTAssertEqualObjects(user.phoneNumber, payload[@"phone"]);
     XCTAssertEqualObjects(user.handle, payload[@"handle"]);
+    XCTAssertEqual([self managedByString:user], payload[@"managed_by"]);
     XCTAssertNil(user.expiresAt);
     XCTAssertEqual(user.accentColorValue, ZMAccentColorBrightYellow);
+}
+
+- (void)testThatItUpdatesAccountDeletionStatusOnAnExistingUser
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.remoteIdentifier = uuid;
+    XCTAssertFalse(user.isAccountDeleted);
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"deleted"] = @YES;
+    
+    // when
+    [user updateWithTransportData:payload authoritative:NO];
+    
+    // then
+    XCTAssertTrue(user.isAccountDeleted);
 }
 
 - (void)testThatItUpdatesExpirationAnExistingUser
@@ -396,6 +414,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(user.emailAddress, payload[@"email"]);
     XCTAssertEqualObjects(user.phoneNumber, payload[@"phone"]);
     XCTAssertEqualObjects(user.handle, payload[@"handle"]);
+    XCTAssertEqualObjects([self managedByString:user], payload[@"managed_by"]);
 }
 
 
@@ -417,6 +436,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(user.emailAddress, payload[@"email"]);
     XCTAssertEqualObjects(user.phoneNumber, payload[@"phone"]);
     XCTAssertEqualObjects(user.handle, payload[@"handle"]);
+    XCTAssertEqualObjects([self managedByString:user], payload[@"managed_by"]);
 }
 
 
@@ -456,123 +476,14 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertLessThanOrEqual(user.accentColorValue, ZMAccentColorMax);
 }
 
-- (void)testThatItUpdatesAUsersMediumImageData
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    NSUUID *mediumImageRemoteID = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-
-    NSDictionary *previewImage = @{
-        @"content_length" : @3460,
-        @"data" : @"image-data-asodijaslkdna987u3sdfjklknmqweosdiuflkqwneljoijldkjalsdjoaisudlkasndlkasjdoiau",
-        @"content_type" : @"image/webp",
-        @"id" : @"f287d599-7c89-5322-8a81-e7a7144584f2",
-        @"info" : @{
-            @"height" : @148,
-            @"tag" : @"preview",
-            @"original_width" : @600,
-            @"width" : @114,
-            @"correlation_id" : @"e6810025c-1bef-ee0f-8605e1ca-9511317",
-            @"original_height" : @774,
-            @"nonce" : @"89163ee37-dba5-0bfa-d7cc2b3c-dfe9abc",
-            @"public" : @true
-        }
-    };
-
-    NSDictionary *mediumImage = @{
-                                  @"content_length" : @51128,
-                                  @"data" : @"",
-                                  @"content_type" : @"image/webp",
-                                  @"id" : mediumImageRemoteID.transportString,
-                                  @"info" : @{
-                                          @"height" : @774,
-                                          @"tag" : @"medium",
-                                          @"original_width" : @600,
-                                          @"width" : @600,
-                                          @"correlation_id" : @"e6810025c-1bef-ee0f-8605e1ca-9511317",
-                                          @"original_height" : @774,
-                                          @"nonce" : @"8202b5ee6-04a3-8bb8-c83ce7a7-7fa8d79",
-                                          @"public" : @true
-                                          }
-                                  };
-    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
-    payload[@"picture"] = @[mediumImage, previewImage];
-
-    // when
-    [user updateWithTransportData:payload authoritative:NO];
-
-    // then
-    XCTAssertNil(user.imageMediumData); // Medium image will get downloaded by ZMUserImageTranscoder
-    XCTAssertEqualObjects(user.mediumRemoteIdentifier, mediumImageRemoteID);
-    XCTAssertNil(user.localMediumRemoteIdentifier, @"Must not be set");
-    XCTAssertNil(user.localSmallProfileRemoteIdentifier, @"Must not be set");
-}
-
-
-- (void)testThatItUpdatesAUsersSmallProfileImageData
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    NSUUID *smallProfileImageRemoteID = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    
-    NSDictionary *smallProfileImage = @{
-                                   @"content_length" : @3460,
-                                   @"data" : @"image-data-asodijaslkdna987u3sdfjklknmqweosdiuflkqwneljoijldkjalsdjoaisudlkasndlkasjdoiau",
-                                   @"content_type" : @"image/webp",
-                                   @"id" : smallProfileImageRemoteID.transportString,
-                                   @"info" : @{
-                                           @"height" : @148,
-                                           @"tag" : @"smallProfile",
-                                           @"original_width" : @600,
-                                           @"width" : @114,
-                                           @"correlation_id" : @"e6810025c-1bef-ee0f-8605e1ca-9511317",
-                                           @"original_height" : @774,
-                                           @"nonce" : @"89163ee37-dba5-0bfa-d7cc2b3c-dfe9abc",
-                                           @"public" : @true
-                                           }
-                                   };
-    
-    NSDictionary *mediumImage = @{
-                                  @"content_length" : @51128,
-                                  @"data" : @"",
-                                  @"content_type" : @"image/webp",
-                                  @"id" : @"f287d599-7c89-5322-8a81-e7a7144584f2",
-                                  @"info" : @{
-                                          @"height" : @774,
-                                          @"tag" : @"medium",
-                                          @"original_width" : @600,
-                                          @"width" : @600,
-                                          @"correlation_id" : @"e6810025c-1bef-ee0f-8605e1ca-9511317",
-                                          @"original_height" : @774,
-                                          @"nonce" : @"8202b5ee6-04a3-8bb8-c83ce7a7-7fa8d79",
-                                          @"public" : @true
-                                          }
-                                  };
-    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
-    payload[@"picture"] = @[mediumImage, smallProfileImage];
-    
-    // when
-    [user updateWithTransportData:payload authoritative:NO];
-    
-    // then
-    XCTAssertNil(user.imageSmallProfileData); // Small profile image will get downloaded by ZMUserImageTranscoder
-    XCTAssertEqualObjects(user.smallProfileRemoteIdentifier, smallProfileImageRemoteID);
-    XCTAssertNil(user.localSmallProfileRemoteIdentifier, @"Must not be set");
-    XCTAssertNil(user.localMediumRemoteIdentifier, @"Must not be set");
-}
-
-- (void)testThatItDoesPersistMediumImageDataForNotSelfUserToCache
+- (void)testThatItDoesPersistCompleteImageDataToCache
 {
     // given
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     user.remoteIdentifier = [NSUUID createUUID];
-    user.mediumRemoteIdentifier = [NSUUID createUUID];
+    user.completeProfileAssetIdentifier = @"123";
     NSData *imageData = [self verySmallJPEGData];
-    user.imageMediumData = imageData;
+    [user setImageData:imageData size:ProfileImageSizeComplete];
     XCTAssertEqualObjects(user.imageMediumData, imageData);
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -586,14 +497,14 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(imageData, extractedData);
 }
 
-- (void)testThatItDoesPersistSmallImageDataForNotSelfUserToCache
+- (void)testThatItDoesPersistPreviewImageDataToCache
 {
     // given
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     user.remoteIdentifier = [NSUUID createUUID];
-    user.smallProfileRemoteIdentifier = [NSUUID createUUID];
+    user.previewProfileAssetIdentifier = @"123";
     NSData *imageData = [self verySmallJPEGData];
-    user.imageSmallProfileData = imageData;
+    [user setImageData:imageData size:ProfileImageSizePreview];
     XCTAssertEqualObjects(user.imageSmallProfileData, imageData);
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -607,69 +518,16 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(imageData, extractedData);
 }
 
-- (void)testThatItDoesNotStoreMediumImageDataInCacheForSelfUser
-{
-    // given
-    ZMUser *user = [ZMUser selfUserInContext:self.uiMOC];
-    user.remoteIdentifier = [NSUUID createUUID];
-    user.mediumRemoteIdentifier = [NSUUID createUUID];
-    NSData *imageData = [self verySmallJPEGData];
-    user.imageMediumData = imageData;
-    XCTAssertEqualObjects(user.imageMediumData, imageData);
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC saveOrRollback];
-    }];
-    
-    //when
-    NSData* extractedData = [self.uiMOC.zm_userImageCache userImage:user size:ProfileImageSizeComplete];
-    
-    //then
-    XCTAssertNil(extractedData);
-}
-
-- (void)testProfileImageCanBeFetchedAsynchrounouslyForSelfUser
-{
-    // given
-    NSData *imageData = [self verySmallJPEGData];
-    ZMUser *user = [ZMUser selfUserInContext:self.uiMOC];
-    user.remoteIdentifier = [NSUUID createUUID];
-    user.mediumRemoteIdentifier = [NSUUID createUUID];
-    user.imageMediumData = imageData;
-    user.smallProfileRemoteIdentifier = [NSUUID createUUID];
-    user.imageSmallProfileData = imageData;
-
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC saveOrRollback];
-    }];
-    
-    // expect
-    XCTestExpectation *previewDataArrived = [self expectationWithDescription:@"preview image data arrived"];
-    XCTestExpectation *completeDataArrived = [self expectationWithDescription:@"complete image data arrived"];
-    
-    // when
-    [user imageDataFor:ProfileImageSizePreview queue:dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0) completion:^(NSData *imageDataResult) {
-        XCTAssertEqual(imageDataResult, imageData);
-        [previewDataArrived fulfill];
-    }];
-    
-    [user imageDataFor:ProfileImageSizeComplete queue:dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0) completion:^(NSData *imageDataResult) {
-        XCTAssertEqual(imageDataResult, imageData);
-        [completeDataArrived fulfill];
-    }];
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-}
-
-- (void)testProfileImageCanBeFetchedAsynchrounouslyForOtherUsers
+- (void)testProfileImageCanBeFetchedAsynchrounously
 {
     // given
     NSData *imageData = [self verySmallJPEGData];
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     user.remoteIdentifier = [NSUUID createUUID];
-    user.mediumRemoteIdentifier = [NSUUID createUUID];
-    user.imageMediumData = imageData;
-    user.smallProfileRemoteIdentifier = [NSUUID createUUID];
-    user.imageSmallProfileData = imageData;
+    user.completeProfileAssetIdentifier = @"123";
+    user.previewProfileAssetIdentifier = @"321";
+    [user setImageData:imageData size:ProfileImageSizeComplete];
+    [user setImageData:imageData size:ProfileImageSizePreview];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.syncMOC saveOrRollback];
@@ -681,40 +539,15 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     
     // when
     [user imageDataFor:ProfileImageSizePreview queue:dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0) completion:^(NSData *imageDataResult) {
-        XCTAssertEqual(imageDataResult, imageData);
+        XCTAssert([imageDataResult isEqualToData:imageData]);
         [previewDataArrived fulfill];
     }];
     
     [user imageDataFor:ProfileImageSizeComplete queue:dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0) completion:^(NSData *imageDataResult) {
-        XCTAssertEqual(imageDataResult, imageData);
+        XCTAssert([imageDataResult isEqualToData:imageData]);
         [completeDataArrived fulfill];
     }];
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-}
-
-- (void)testThatItHandlesRemovingPictures
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    user.smallProfileRemoteIdentifier = [NSUUID createUUID];
-    user.mediumRemoteIdentifier = [NSUUID createUUID];
-    user.imageSmallProfileData = [self dataForResource:@"tiny" extension:@"jpg"];
-    user.imageMediumData = [self dataForResource:@"tiny" extension:@"jpg"];
-    
-    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
-    payload[@"picture"] = @[];
-    
-    // when
-    [user updateWithTransportData:payload authoritative:NO];
-    
-    // then
-    XCTAssertNil(user.imageSmallProfileData);
-    XCTAssertEqualObjects(user.imageSmallProfileIdentifier, @"");
-    XCTAssertNil(user.imageMediumData);
-    XCTAssertNil(user.mediumRemoteIdentifier);
-    XCTAssertNil(user.smallProfileRemoteIdentifier);
 }
 
 - (void)testThatItHandlesEmptyOptionalData
@@ -806,6 +639,57 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
     // then
     XCTAssertNil(user.emailAddress);
+}
+
+- (void)testThatItSetsManagedByAsWire
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    [payload setObject:ManagedByWire forKey:@"managed_by"];
+    
+    // when
+    [user updateWithTransportData:payload authoritative:NO];
+    
+    // then
+    XCTAssertEqual([self managedByString:user], ManagedByWire);
+}
+
+- (void)testThatNilManagedByIsConsideredAsManagedByWire
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    [payload removeObjectForKey:@"managed_by"];
+    
+    // when
+    [user updateWithTransportData:payload authoritative:NO];
+    
+    // then
+    XCTAssertTrue(user.managedByWire);
+}
+
+- (void)testThatItSetsManagedByAsScim
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    [payload setObject:ManagedByScim forKey:@"managed_by"];
+    
+    // when
+    [user updateWithTransportData:payload authoritative:NO];
+    
+    // then
+    XCTAssertEqual([self managedByString:user], ManagedByScim);
 }
 
 - (void)testThatItSetsPhoneToNilIfItIsNull
@@ -1199,13 +1083,10 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
                                             @"emailAddress",
                                             @"previewProfileAssetIdentifier",
                                             @"completeProfileAssetIdentifier",
-                                            @"imageMediumData",
-                                            @"imageSmallProfileData",
-                                            @"smallProfileRemoteIdentifier_data",
-                                            @"mediumRemoteIdentifier_data",
                                             @"name",
                                             @"phoneNumber",
-                                            @"availability"]];
+                                            @"availability",
+                                            @"readReceiptsEnabled"]];
     
     // when
     ZMUser *user = [ZMUser selfUserInContext:self.uiMOC];
@@ -1262,6 +1143,11 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
         // THEN
         XCTAssertTrue(user.needsToBeUpdatedFromBackend);
     }];
+}
+
+
+-(NSString *)managedByString:(ZMUser *)user {
+    return user.managedByWire ? ManagedByWire : ManagedByScim;
 }
 
 @end
@@ -1393,6 +1279,17 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertFalse(user.isPendingApprovalByOtherUser);
     XCTAssertFalse(user.isPendingApprovalBySelfUser);
     XCTAssertTrue(user.canBeConnected);
+}
+
+- (void)testThatOneToOneConversationReturnSelfConversationForTheSelfUser
+{
+    // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
+    ZMConversation *selfConversation = [ZMConversation selfConversationInContext:self.uiMOC];
+    
+    // then
+    XCTAssertNotNil(selfUser.oneToOneConversation);
+    XCTAssertEqual(selfConversation, selfUser.oneToOneConversation);
 }
 
 - (void)testThatItReturnsTheOneToOneConversationToAnUser
@@ -2449,52 +2346,6 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     
     // then
     XCTAssertEqualObjects(user.name, originalName);
-}
-
-@end
-
-
-
-
-@implementation ZMUserTestsUseSQLLiteStore
-
-- (BOOL)shouldUseInMemoryStore;
-{
-    return NO;
-}
-
-- (void)testThatItFetchesUsersWithOutLocalSmallProfileIdentifier
-{
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.smallProfileRemoteIdentifier = NSUUID.createUUID;
-    [self.uiMOC saveOrRollback];
-
-    // when
-    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"User"];
-    fetchRequest.predicate = [ZMUser predicateForSmallImageNeedingToBeUpdatedFromBackend];
-    NSArray *result = [self.uiMOC executeFetchRequestOrAssert:fetchRequest];
-    
-    // then
-    XCTAssert(result.count > 0);
-    XCTAssertEqualObjects(result.lastObject, user);
-    
-}
-
-- (void)testThatItFetchesUsersWithOutMediumSmallProfileIdentifier
-{
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.mediumRemoteIdentifier = NSUUID.createUUID;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"User"];
-    fetchRequest.predicate = [ZMUser predicateForMediumImageNeedingToBeUpdatedFromBackend];
-    NSArray *result = [self.uiMOC executeFetchRequestOrAssert:fetchRequest];
-    
-    // then
-    XCTAssert(result.count > 0);
-    XCTAssertEqualObjects(result.lastObject, user);
-    
 }
 
 @end

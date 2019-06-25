@@ -222,7 +222,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         insertAssetMessages(count: 10)
         
         // when
-        conversation.messages.forEach{_ = ($0 as? ZMMessage)?.cachedCategory}
+        conversation.allMessages.forEach{_ = $0.cachedCategory}
         uiMOC.saveOrRollback()
         
         sut = AssetCollectionBatched(conversation: conversation, matchingCategories: [defaultMatchPair], delegate: delegate)
@@ -236,7 +236,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
     func testThatItGetsPreCategorizedMessagesInTheCorrectOrder() {
         // given
         let messages = insertAssetMessages(count: 10)
-        conversation.messages.forEach{_ = ($0 as? ZMMessage)?.cachedCategory}
+        conversation.allMessages.forEach{_ = $0.cachedCategory}
         uiMOC.saveOrRollback()
 
         // when
@@ -253,13 +253,11 @@ class AssetColletionBatchedTests : ModelObjectsTests {
     func testThatItExcludesDefinedCategories_PreCategorized(){
         // given
         let data = self.data(forResource: "animated", extension: "gif")!
-        let message = conversation.append(imageFromData: data) as! ZMAssetClientMessage
-        let testProperties = ZMIImageProperties(size: CGSize(width: 33, height: 55), length: UInt(10), mimeType: "image/gif")
-        message.imageAssetStorage.setImageData(data, for: .medium, properties: testProperties)
+        _ = conversation.append(imageFromData: data) as! ZMAssetClientMessage
         uiMOC.saveOrRollback()
         
         // when
-        conversation.messages.forEach{_ = ($0 as? ZMMessage)?.cachedCategory}
+        conversation.allMessages.forEach{_ = $0.cachedCategory}
         uiMOC.saveOrRollback()
         
         let excludingGif = CategoryMatch(including: .image, excluding: .GIF)
@@ -277,9 +275,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
     func testThatItExcludesDefinedCategories_NotPreCategorized(){
         // given
         let data = self.data(forResource: "animated", extension: "gif")!
-        let message = conversation.append(imageFromData: data) as! ZMAssetClientMessage
-        let testProperties = ZMIImageProperties(size: CGSize(width: 33, height: 55), length: UInt(10), mimeType: "image/gif")
-        message.imageAssetStorage.setImageData(data, for: .medium, properties: testProperties)
+        _ = conversation.append(imageFromData: data) as! ZMAssetClientMessage
         uiMOC.saveOrRollback()
         
         // when
@@ -323,9 +319,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         // given
         insertAssetMessages(count: 1)
         let data = self.data(forResource: "animated", extension: "gif")!
-        let message = conversation.append(imageFromData: data) as! ZMAssetClientMessage
-        let testProperties = ZMIImageProperties(size: CGSize(width: 33, height: 55), length: UInt(10), mimeType: "image/gif")
-        message.imageAssetStorage.setImageData(data, for: .medium, properties: testProperties)
+        _ = conversation.append(imageFromData: data) as! ZMAssetClientMessage
         uiMOC.saveOrRollback()
         
         // when
@@ -371,7 +365,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         // given
         let includedMessage = self.conversation.append(file: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
         let excludedMessage = self.conversation.append(file: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
-        excludedMessage.transferState = .failedUpload
+        excludedMessage.transferState = .uploadingFailed
         excludedMessage.setPrimitiveValue(NSNumber(value: 0), forKey: ZMMessageCachedCategoryKey)
         includedMessage.setPrimitiveValue(NSNumber(value: 0), forKey: ZMMessageCachedCategoryKey)
         uiMOC.saveOrRollback()
@@ -392,7 +386,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         // given
         let includedMessage = self.conversation.append(file: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
         let excludedMessage = self.conversation.append(file: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
-        excludedMessage.transferState = .failedUpload
+        excludedMessage.transferState = .uploadingFailed
         excludedMessage.updateCategoryCache()
         uiMOC.saveOrRollback()
         

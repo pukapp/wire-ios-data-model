@@ -60,10 +60,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
 @end
 
-@interface ZMClientMessage (ZMLocationMessageData) <ZMLocationMessageData>
-
-@end
-
 @implementation ZMClientMessage
 
 @dynamic updatedTimestamp;
@@ -194,7 +190,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
 + (NSSet *)keyPathsForValuesAffectingGenericMessage
 {
-    return [NSSet setWithObject:ClientMessageDataSetKey];
+    return [NSSet setWithObjects:ClientMessageDataSetKey, [ClientMessageDataSetKey stringByAppendingString:@".data"], nil];
 }
 
 - (void)updateWithGenericMessage:(ZMGenericMessage *)message updateEvent:(ZMUpdateEvent *)updateEvent initialUpdate:(BOOL)initialUpdate
@@ -279,14 +275,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     return nil;
 }
 
-- (id<ZMLocationMessageData>)locationMessageData
-{
-    if (self.genericMessage.locationData != nil) {
-        return self;
-    }
-    return nil;
-}
-
 - (void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(__unused NSSet *)updatedKeys
 {
     // we don't want to update the conversation if the message is a confirmation message
@@ -359,34 +347,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 @implementation ZMClientMessage (ZMKnockMessage)
 
 @end
-
-#pragma mark - ZMLocationMessageData
-
-@implementation ZMClientMessage (ZMLocationMessageData)
-
-- (float)latitude
-{
-    return self.genericMessage.locationData.latitude;
-}
-
-- (float)longitude
-{
-    return self.genericMessage.locationData.longitude;
-}
-
-- (NSString *)name
-{
-    return self.genericMessage.locationData.name.stringByRemovingExtremeCombiningCharacters;
-}
-
-- (int32_t)zoomLevel
-{
-    return self.genericMessage.locationData.zoom ?: 0;
-}
-
-@end
-
-
 
 @implementation ZMClientMessage (Ephemeral)
 

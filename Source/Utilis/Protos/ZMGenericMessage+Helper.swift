@@ -20,11 +20,29 @@
 @objc
 public protocol MessageContentType: NSObjectProtocol {
     func setContent(on builder: ZMGenericMessageBuilder)
+    func expectsReadConfirmation() -> Bool
+    func hasLegalHoldStatus() -> Bool
+    var legalHoldStatus: ZMLegalHoldStatus { get }
+    func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType?
+    func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType?
 }
 
 @objc
 public protocol EphemeralMessageContentType: MessageContentType {
     func setEphemeralContent(on builder: ZMEphemeralBuilder)
+}
+
+extension MessageContentType {
+
+    /// An optional hint that indicates the state of legal hold on the sender's side.
+    var legalHoldStatusHint: ZMLegalHoldStatus? {
+        guard hasLegalHoldStatus() else {
+            return nil
+        }
+
+        return legalHoldStatus
+    }
+
 }
 
 @objc public extension ZMGenericMessage {
@@ -48,8 +66,8 @@ public protocol EphemeralMessageContentType: MessageContentType {
 public extension ZMGenericMessage {
     
     @objc
-    public static func message(withBase64String base64String: String) -> ZMGenericMessage? {
-        guard let data = Data(base64Encoded: base64String, options: .ignoreUnknownCharacters) else { return nil }
+    static func message(withBase64String base64String: String) -> ZMGenericMessage? {
+        guard let data = Data(base64Encoded: base64String) else { return nil }
         
         let builder = ZMGenericMessageBuilder()
         builder.merge(from: data)
@@ -58,7 +76,7 @@ public extension ZMGenericMessage {
     }
     
     @objc
-    public static func message(content: MessageContentType, nonce: UUID = UUID()) -> ZMGenericMessage {
+    static func message(content: MessageContentType, nonce: UUID = UUID()) -> ZMGenericMessage {
         let builder = ZMGenericMessageBuilder()
         
         builder.setMessageId(nonce.transportString())
@@ -68,11 +86,11 @@ public extension ZMGenericMessage {
     }
     
     @objc(messageWithContent:nonce:timeout:)
-    public static func _message(content: EphemeralMessageContentType, nonce: UUID = UUID(), expiresAfter timeout: TimeInterval) -> ZMGenericMessage {
+    static func _message(content: EphemeralMessageContentType, nonce: UUID = UUID(), expiresAfter timeout: TimeInterval) -> ZMGenericMessage {
         return message(content: content, nonce: nonce, expiresAfter: timeout)
     }
     
-    public static func message(content: EphemeralMessageContentType, nonce: UUID = UUID(), expiresAfter timeout: TimeInterval?) -> ZMGenericMessage {
+    static func message(content: EphemeralMessageContentType, nonce: UUID = UUID(), expiresAfter timeout: TimeInterval?) -> ZMGenericMessage {
         let builder = ZMGenericMessageBuilder()
     
         let messageContent: MessageContentType
@@ -89,7 +107,7 @@ public extension ZMGenericMessage {
     }
     
     @objc
-    public static func clientAction(_ action: ZMClientAction, nonce: UUID = UUID()) -> ZMGenericMessage {
+    static func clientAction(_ action: ZMClientAction, nonce: UUID = UUID()) -> ZMGenericMessage {
         let builder = ZMGenericMessageBuilder()
         
         builder.setMessageId(nonce.transportString())
@@ -100,7 +118,7 @@ public extension ZMGenericMessage {
     
     // MARK: Updating assets with asset ID and token
     
-    @objc public func updatedUploaded(withAssetId assetId: String, token: String?) -> ZMGenericMessage? {
+    @objc func updatedUploaded(withAssetId assetId: String, token: String?) -> ZMGenericMessage? {
         guard let asset = assetData, let remote = asset.uploaded, asset.hasUploaded() else { return nil }
         let newRemote = remote.updated(withId: assetId, token: token)
         let builder = toBuilder()!
@@ -120,8 +138,48 @@ public extension ZMGenericMessage {
 
         return builder.buildAndValidate()
     }
+        
+    func updatedAsset(withUploadedOTRKey otrKey: Data, sha256: Data) -> ZMGenericMessage? {
+        return updatedAsset(withAsset: ZMAsset.asset(withUploadedOTRKey: otrKey, sha256: sha256))
+    }
+    
+    func updatedAsset(withAsset asset: ZMAsset) -> ZMGenericMessage? {
+        let builder = toBuilder()!
+        
+        if hasEphemeral() {
+            let ephemeralBuilder = ephemeral.toBuilder()!
+            asset.setEphemeralContent(on: ephemeralBuilder)
+            builder.setEphemeral(ephemeralBuilder)
+        } else {
+            asset.setContent(on: builder)
+        }
+        
+        return builder.buildAndValidate()
+    }
+    
+    func updatedAssetOriginal(withImageProperties imageProperties: ZMIImageProperties) -> ZMGenericMessage? {
+        return updatedAsset(withAsset: ZMAsset.asset(originalWithImageSize: imageProperties.size, mimeType: imageProperties.mimeType, size: UInt64(imageProperties.length)))
+    }
+    
+    func updatedAssetPreview(withImageProperties imageProperties: ZMIImageProperties) -> ZMGenericMessage? {
+        let imageMetadata = ZMAssetImageMetaData.imageMetaData(withWidth: Int32(imageProperties.size.width), height: Int32(imageProperties.size.height))
+        let preview = ZMAssetPreview.preview(withSize: UInt64(imageProperties.length), mimeType: imageProperties.mimeType ?? "", remoteData: nil, imageMetadata: imageMetadata)
+        let asset = ZMAsset.asset(withOriginal: nil, preview: preview)
+        
+        return updatedAsset(withAsset: asset)
+    }
+    
+    func updatedAssetPreview(withUploadedOTRKey otrKey: Data, sha256: Data) -> ZMGenericMessage? {
+        guard let asset = assetData else { return nil }
+        
+        let previewBuilder = asset.preview.toBuilder()!
+        let remotedata = ZMAssetRemoteData.remoteData(withOTRKey: otrKey, sha256: sha256)
+        previewBuilder.setRemote(remotedata)
+        
+        return updatedAsset(withAsset: ZMAsset.asset(withOriginal: nil, preview: previewBuilder.build()!))
+    }
 
-    @objc public func updatedPreview(withAssetId assetId: String, token: String?) -> ZMGenericMessage? {
+    @objc func updatedPreview(withAssetId assetId: String, token: String?) -> ZMGenericMessage? {
         guard let asset = assetData, let preview = asset.preview, let remote = preview.remote, preview.hasRemote() else { return nil }
         let newRemote = remote.updated(withId: assetId, token: token)
         let previewBuilder = preview.toBuilder()
@@ -144,6 +202,30 @@ public extension ZMGenericMessage {
         return builder.buildAndValidate()
     }
     
+    @objc func setExpectsReadConfirmation(_ value: Bool) -> ZMGenericMessage? {
+        guard let builder = toBuilder() else { return nil }
+        
+        if hasEphemeral(), let content = ephemeral?.updateExpectsReadConfirmation(value) {
+            content.setContent(on: builder)
+        } else if let content = content?.updateExpectsReadConfirmation(value) {
+            content.setContent(on: builder)
+        }
+        
+        return builder.buildAndValidate()
+    }
+
+    @objc func setLegalHoldStatus(_ status: ZMLegalHoldStatus) -> ZMGenericMessage? {
+        guard let builder = toBuilder() else { return nil }
+
+        if hasEphemeral(), let content = ephemeral?.updateLegalHoldStatus(status) {
+            content.setContent(on: builder)
+        } else if let content = content?.updateLegalHoldStatus(status) {
+            content.setContent(on: builder)
+        }
+
+        return builder.buildAndValidate()
+    }
+
 }
 
 @objc
@@ -154,7 +236,7 @@ extension ZMKnock: EphemeralMessageContentType {
         builder.setHotKnock(false)
         return builder.build()
     }
-    
+
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setKnock(self)
     }
@@ -163,25 +245,23 @@ extension ZMKnock: EphemeralMessageContentType {
         builder.setKnock(self)
     }
     
-}
-
-@objc
-extension ZMTextJson: MessageContentType{
-    public static func text(with message: String) -> ZMTextJson {
-        let builder = ZMTextJsonBuilder()
-        builder.setContent(message)
-        return builder.build()
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setExpectsReadConfirmation(value)
+        return builder?.build()
     }
-    
-    public func setContent(on builder: ZMGenericMessageBuilder) {
-        builder.setTextJson(self)
-    }
-}
 
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setLegalHoldStatus(value)
+        return builder?.build()
+    }
+
+}
 
 @objc
 extension ZMText: EphemeralMessageContentType {
-        
+
     public static func text(with message: String, mentions: [Mention] = [], linkPreviews: [ZMLinkPreview] = [], replyingTo quotedMessage: ZMOTRMessage? = nil) -> ZMText {
         let builder = ZMTextBuilder()
                 
@@ -207,10 +287,25 @@ extension ZMText: EphemeralMessageContentType {
         builder.setText(self)
     }
     
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setExpectsReadConfirmation(value)
+        return builder?.build()
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setLegalHoldStatus(value)
+        return builder?.build()
+    }
+    
     public func applyEdit(from text: ZMText) -> ZMText {
         guard let builder = text.toBuilder() else { return self }
         
-        // we keep always keep the quote from the original message
+        // Transfer read receipt expectation
+        builder.setExpectsReadConfirmation(expectsReadConfirmation())
+        
+        // We always keep the quote from the original message
         if hasQuote() {
             builder.setQuote(self.quote)
         } else {
@@ -266,8 +361,6 @@ extension ZMGenericMessage {
             return ephemeral.content
         } else if hasText() {
             return text
-        } else if hasTextJson() {
-            return textJson
         } else if hasAsset() {
             return asset
         } else if hasImage() {
@@ -352,18 +445,11 @@ extension ZMGenericMessage {
         }
         return nil
     }
-    
-    @objc public var jsonTextData : ZMTextJson? {
-        if hasTextJson() {
-            return textJson
-        }
-        return nil
-    }
 
 }
 
 extension ZMEphemeral: MessageContentType {
-    
+
     public static func ephemeral(content: EphemeralMessageContentType, expiresAfter timeout: TimeInterval) -> ZMEphemeral {
         let builder = ZMEphemeralBuilder()
         
@@ -377,6 +463,10 @@ extension ZMEphemeral: MessageContentType {
         builder.setEphemeral(self)
     }
     
+    public var ephemeralContent: EphemeralMessageContentType? {
+        return content as? EphemeralMessageContentType
+    }
+
     public var content: MessageContentType? {
         if hasText() {
             return text
@@ -391,6 +481,30 @@ extension ZMEphemeral: MessageContentType {
         }
         
         return nil
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return content?.hasLegalHoldStatus() == true
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return content?.legalHoldStatus ?? .DISABLED
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return content?.expectsReadConfirmation() ?? false
+    }
+
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        let builder = toBuilder()!
+        (content?.updateExpectsReadConfirmation(value) as? EphemeralMessageContentType)?.setEphemeralContent(on: builder)
+        return builder.build()
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        let builder = toBuilder()!
+        (content?.updateLegalHoldStatus(value) as? EphemeralMessageContentType)?.setEphemeralContent(on: builder)
+        return builder.build()
     }
     
 }
@@ -418,6 +532,19 @@ extension ZMLocation: EphemeralMessageContentType {
     public func setEphemeralContent(on builder: ZMEphemeralBuilder) {
         builder.setLocation(self)
     }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setExpectsReadConfirmation(value)
+        return builder?.build()
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setLegalHoldStatus(value)
+        return builder?.build()
+    }
+
 }
 
 extension ZMExternal: MessageContentType {
@@ -437,11 +564,31 @@ extension ZMExternal: MessageContentType {
         builder.setExternal(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 public extension ZMClientEntry {
     
-    @objc public static func entry(withClient client: UserClient, data: Data) -> ZMClientEntry {
+    @objc static func entry(withClient client: UserClient, data: Data) -> ZMClientEntry {
         let builder = ZMClientEntry.builder()!
         builder.setClient(client.clientId)
         builder.setText(data)
@@ -452,7 +599,7 @@ public extension ZMClientEntry {
 
 public extension ZMUserEntry {
     
-    @objc public static func entry(withUser user: ZMUser, clientEntries: [ZMClientEntry]) -> ZMUserEntry {
+    @objc static func entry(withUser user: ZMUser, clientEntries: [ZMClientEntry]) -> ZMUserEntry {
         let builder = ZMUserEntry.builder()!
         builder.setUser(user.userId())
         builder.setClientsArray(clientEntries)
@@ -463,7 +610,7 @@ public extension ZMUserEntry {
 
 public extension ZMNewOtrMessage {
     
-    @objc public static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil) -> ZMNewOtrMessage {
+    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil) -> ZMNewOtrMessage {
         let builder = ZMNewOtrMessage.builder()!
         builder.setNativePush(nativePush)
         builder.setSender(sender.clientId)
@@ -476,23 +623,10 @@ public extension ZMNewOtrMessage {
     
 }
 
-public extension ZMOtrAssetMeta {
-    
-    @objc public static func otrAssetMeta(withSender sender: UserClient, nativePush: Bool, inline: Bool, recipients: [ZMUserEntry]) -> ZMOtrAssetMeta {
-        let builder = ZMOtrAssetMeta.builder()!
-        builder.setNativePush(nativePush)
-        builder.setIsInline(inline)
-        builder.setSender(sender.clientId)
-        builder.setRecipientsArray(recipients)
-        return builder.build()
-    }
-    
-}
-
 @objc
 extension ZMAsset: EphemeralMessageContentType {
     
-    public static func asset(originalWithImageSize imageSize: CGSize, mimeType: String, size: UInt64) -> ZMAsset {
+    static func asset(originalWithImageSize imageSize: CGSize, mimeType: String, size: UInt64) -> ZMAsset {
         let imageMetadata = ZMAssetImageMetaData.imageMetaData(withWidth: Int32(imageSize.width), height: Int32(imageSize.height))
         let original = ZMAssetOriginal.original(withSize: size, mimeType: mimeType, name: nil, imageMetaData: imageMetadata)
         return ZMAsset.asset(withOriginal: original, preview: nil)
@@ -504,6 +638,18 @@ extension ZMAsset: EphemeralMessageContentType {
     
     public func setEphemeralContent(on builder: ZMEphemeralBuilder) {
         builder.setAsset(self)
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setExpectsReadConfirmation(value)
+        return builder?.build()
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        let builder = toBuilder()
+        builder?.setLegalHoldStatus(value)
+        return builder?.build()
     }
     
 }
@@ -518,12 +664,32 @@ extension ZMImageAsset: EphemeralMessageContentType {
         builder.setImage(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 
 public extension ZMArticle {
 
-    @objc public static func article(withPermanentURL permanentURL: String, title: String?, summary: String?, imageAsset: ZMAsset?) -> ZMArticle {
+    @objc static func article(withPermanentURL permanentURL: String, title: String?, summary: String?, imageAsset: ZMAsset?) -> ZMArticle {
         let articleBuilder = ZMArticle.builder()!
         articleBuilder.setPermanentUrl(permanentURL)
         if let title = title {
@@ -542,11 +708,11 @@ public extension ZMArticle {
 
 public extension ZMLinkPreview {
     
-    @objc public static func linkPreview(withOriginalURL originalURL: String, permanentURL: String, offset: Int32, title: String?, summary: String?, imageAsset: ZMAsset?) -> ZMLinkPreview {
+    @objc static func linkPreview(withOriginalURL originalURL: String, permanentURL: String, offset: Int32, title: String?, summary: String?, imageAsset: ZMAsset?) -> ZMLinkPreview {
         return linkPreview(withOriginalURL: originalURL, permanentURL: permanentURL, offset: offset, title: title, summary: summary, imageAsset: imageAsset, tweet: nil)
     }
     
-    @objc public static func linkPreview(withOriginalURL originalURL: String, permanentURL: String, offset: Int32, title: String?, summary: String?, imageAsset: ZMAsset?, tweet: ZMTweet?) -> ZMLinkPreview {
+    @objc static func linkPreview(withOriginalURL originalURL: String, permanentURL: String, offset: Int32, title: String?, summary: String?, imageAsset: ZMAsset?, tweet: ZMTweet?) -> ZMLinkPreview {
         let article = ZMArticle.article(withPermanentURL: permanentURL, title: title, summary: summary, imageAsset: imageAsset)
         return linkPreview(withOriginalURL: originalURL, permanentURL: permanentURL, offset: offset, title: title, summary: summary, imageAsset: imageAsset, article: article, tweet: tweet)
     }
@@ -645,7 +811,7 @@ public extension ZMLinkPreview {
 
 
 public extension ZMTweet {
-    @objc public static func tweet(withAuthor author: String?, username: String?) -> ZMTweet {
+    @objc static func tweet(withAuthor author: String?, username: String?) -> ZMTweet {
         let builder = ZMTweet.builder()!
         if let author = author {
             builder.setAuthor(author)
@@ -681,6 +847,26 @@ extension ZMAvailability: MessageContentType {
         builder.setAvailability(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 @objc
@@ -696,6 +882,26 @@ extension ZMMessageDelete: MessageContentType {
     
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setDeleted(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
     }
     
 }
@@ -715,6 +921,27 @@ extension ZMMessageHide: MessageContentType {
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setHidden(self)
     }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 @objc
@@ -731,6 +958,26 @@ extension ZMMessageEdit: MessageContentType {
     
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setEdited(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
     }
     
 }
@@ -751,6 +998,26 @@ extension ZMReaction: MessageContentType {
         builder.setReaction(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+       return nil
+    }
+
 }
 
 @objc
@@ -784,6 +1051,26 @@ extension ZMConfirmation: MessageContentType {
         builder.setConfirmation(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 @objc
@@ -810,12 +1097,52 @@ extension ZMLastRead: MessageContentType {
         builder.setLastRead(self)
     }
     
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
 }
 
 extension ZMCleared: MessageContentType {
     
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setCleared(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
     }
     
 }
@@ -832,6 +1159,26 @@ extension ZMCalling: MessageContentType {
     
     public func setContent(on builder: ZMGenericMessageBuilder) {
         builder.setCalling(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
     }
     
 }

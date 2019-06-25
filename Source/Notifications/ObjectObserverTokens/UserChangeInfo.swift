@@ -34,6 +34,8 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.accentColorValue),
             #keyPath(ZMUser.imageMediumData),
             #keyPath(ZMUser.imageSmallProfileData),
+            #keyPath(ZMUser.previewProfileAssetIdentifier),
+            #keyPath(ZMUser.completeProfileAssetIdentifier),
             #keyPath(ZMUser.emailAddress),
             #keyPath(ZMUser.phoneNumber),
             #keyPath(ZMUser.canBeConnected),
@@ -49,6 +51,13 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.darwinState),
             #keyPath(ZMUser.walletOpened),
             #keyPath(ZMUser.payValidTime)
+            #keyPath(ZMUser.readReceiptsEnabled),
+            #keyPath(ZMUser.readReceiptsEnabledChangedRemotely),
+            ZMUserKeys.RichProfile,
+            #keyPath(ZMUser.isServiceUser),
+            #keyPath(ZMUser.serviceIdentifier),
+            #keyPath(ZMUser.providerIdentifier),
+            ZMUserKeys.legalHoldRequest
         ]
     }
 
@@ -103,11 +112,11 @@ extension ZMUser : ObjectInSnapshot {
     }
 
     open var imageMediumDataChanged : Bool {
-        return changedKeysContain(keys: #keyPath(UserType.completeImageData)) || changedKeysContain(keys: #keyPath(ZMUser.imageMediumData))
+        return changedKeysContain(keys: #keyPath(UserType.completeImageData), #keyPath(ZMUser.completeProfileAssetIdentifier))
     }
 
     open var imageSmallProfileDataChanged : Bool {
-        return changedKeysContain(keys: #keyPath(UserType.previewImageData)) || changedKeysContain(keys: #keyPath(ZMUser.imageSmallProfileData))
+        return changedKeysContain(keys: #keyPath(UserType.previewImageData), #keyPath(ZMUser.previewProfileAssetIdentifier))
     }
 
     open var profileInformationChanged : Bool {
@@ -153,6 +162,22 @@ extension ZMUser : ObjectInSnapshot {
         return changedKeysContain(keys: #keyPath(ZMUser.payValidTime))
     }
 
+    public var readReceiptsEnabledChanged : Bool {
+        return changedKeys.contains(#keyPath(ZMUser.readReceiptsEnabled))
+    }
+    
+    public var readReceiptsEnabledChangedRemotelyChanged : Bool {
+        return changedKeys.contains(#keyPath(ZMUser.readReceiptsEnabledChangedRemotely))
+    }
+    
+    public var richProfileChanged : Bool {
+        return changedKeys.contains(ZMUserKeys.RichProfile)
+    }
+
+    public var legalHoldStatusChanged: Bool {
+        return !changedKeys.intersection(ZMUser.keysAffectingLegalHoldStatus()).isEmpty
+    }
+    
     public let user: UserType
     open var userClientChangeInfos : [UserClientChangeInfo] {
         return changeInfos[UserChangeInfo.UserClientChangeInfoKey] as? [UserClientChangeInfo] ?? []
@@ -219,8 +244,3 @@ extension UserChangeInfo {
         return nil
     }
 }
-
-
-
-
-

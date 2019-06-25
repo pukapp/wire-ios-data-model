@@ -33,7 +33,6 @@ NSString * const DeliveredKey = @"delivered";
 
 @implementation ZMOTRMessage
 
-@dynamic delivered;
 @dynamic dataSet;
 @dynamic missingRecipients;
 
@@ -79,12 +78,20 @@ NSString * const DeliveredKey = @"delivered";
     else if (self.delivered == NO) {
         return ZMDeliveryStatePending;
     }
-    else if (self.confirmations.count == 0){
-        return ZMDeliveryStateSent;
+    else if (self.readReceipts.count > 0) {
+        return ZMDeliveryStateRead;
     }
-    else {
+    else if (self.confirmations.count > 0){
         return ZMDeliveryStateDelivered;
     }
+    else {
+        return ZMDeliveryStateSent;
+    }
+}
+
+- (BOOL)isSent
+{
+    return self.delivered;
 }
 
 + (NSSet *)keyPathsForValuesAffectingDeliveryState;
@@ -116,14 +123,20 @@ NSString * const DeliveredKey = @"delivered";
     [super resend];
 }
 
+- (ZMGenericMessage *)genericMessage
+{
+    NSAssert(FALSE, @"Subclasses should override this method: [%@ %@]", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
+    return nil;
+}
+
 - (void)updateWithGenericMessage:(__unused ZMGenericMessage *)message updateEvent:(__unused ZMUpdateEvent *)updateEvent initialUpdate:(__unused BOOL)initialUpdate
 {
     NSAssert(FALSE, @"Subclasses should override this method: [%@ %@]", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
 }
-
-+ (MessageUpdateResult *)messageUpdateResultFromUpdateEvent:(ZMUpdateEvent *)updateEvent
-                                     inManagedObjectContext:(NSManagedObjectContext *)moc
-                                             prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
+    
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
+                              inManagedObjectContext:(NSManagedObjectContext *)moc
+                                      prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
     ZMGenericMessage *message;
     @try {
@@ -150,6 +163,8 @@ NSString * const DeliveredKey = @"delivered";
         }
     }
 
+    ZMLogWithLevelAndTag(ZMLogLevelDebug, @"event-processing", @"processing:\n%@", [message debugDescription]);
+    
     ZMConversation *conversation = [self.class conversationForUpdateEvent:updateEvent inContext:moc prefetchResult:prefetchResult];
     VerifyReturnNil(conversation != nil);
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
@@ -157,6 +172,9 @@ NSString * const DeliveredKey = @"delivered";
     if (conversation.conversationType == ZMConversationTypeSelf && ![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier]) {
         return nil; // don't process messages in the self conversation not sent from the self user
     }
+
+    // Update the legal hold state in the conversation
+    [conversation updateSecurityLevelIfNeededAfterReceiving:message timestamp:updateEvent.timeStamp ?: [NSDate date]];
 
     if (!message.knownMessage) {
         [UnknownMessageAnalyticsTracker tagUnknownMessageWithAnalytics:moc.analytics];
@@ -167,8 +185,8 @@ NSString * const DeliveredKey = @"delivered";
     if (message == nil) {
         ZMUser *sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:NO inContext:moc];
         VerifyReturnNil(sender);
-        ZMSystemMessage *systemMessage = [conversation appendInvalidSystemMessageAt:updateEvent.timeStamp sender:sender];
-        return [[MessageUpdateResult alloc] initWithMessage:systemMessage needsConfirmation:NO wasInserted:YES];
+        [conversation appendInvalidSystemMessageAt:updateEvent.timeStamp sender:sender];
+        return nil;
     }
     
     // Verify sender is part of conversation
@@ -192,14 +210,13 @@ NSString * const DeliveredKey = @"delivered";
         
         [ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
     } else if (message.hasConfirmation) {
-        ZMUser *sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc];
-        NOT_USED([ZMMessageConfirmation createOrUpdateMessageConfirmation:message conversation:conversation sender:sender]);
+        [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent];
     } else if (message.hasEdited) {
         NSUUID *editedMessageId = [NSUUID uuidWithTransportString:message.edited.replacingMessageId];
         ZMClientMessage *editedMessage = [ZMClientMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
         if ([editedMessage processMessageEdit:message.edited from:updateEvent]) {
             [editedMessage updateCategoryCache];
-            return [[MessageUpdateResult alloc] initWithMessage:editedMessage needsConfirmation:editedMessage.needsToBeConfirmed wasInserted:YES];
+            return editedMessage;
         }
     } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasCalling || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
@@ -225,6 +242,8 @@ NSString * const DeliveredKey = @"delivered";
         
         BOOL isNewMessage = NO;
         if (clientMessage == nil) {
+            isNewMessage = YES;
+            
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
@@ -259,15 +278,25 @@ NSString * const DeliveredKey = @"delivered";
         }
         
         [clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
-        [clientMessage updateQuoteRelationships];
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
-        [conversation resortMessagesWithUpdatedMessage:clientMessage];
         
-        return [[MessageUpdateResult alloc] initWithMessage:clientMessage needsConfirmation:clientMessage.needsToBeConfirmed wasInserted:isNewMessage];
+        return clientMessage;
+    }
+
+    return nil;
+}
+
+-(void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(NSSet *)updatedKeys {
+
+    NSDate *timestamp = [payload dateForKey:@"time"];
+    if (timestamp == nil) {
+        ZMLogWarn(@"No time in message post response from backend.");
+    } else if( ! [timestamp isEqualToDate:self.serverTimestamp]) {
+        self.expectsReadConfirmation = self.conversation.hasReadReceiptsEnabled;
     }
     
-    return nil;
+    [super updateWithPostPayload:payload updatedKeys:updatedKeys];
 }
 
 @end

@@ -20,8 +20,10 @@
 public extension ZMConversation {
 
     @discardableResult
-    @objc public func appendMissedCallMessage(fromUser user: ZMUser, at timestamp: Date, relevantForStatus: Bool = true) -> ZMSystemMessage {
-        let (message, index) = appendSystemMessage(
+    @objc func appendMissedCallMessage(fromUser user: ZMUser, at timestamp: Date, relevantForStatus: Bool = true) -> ZMSystemMessage {
+        let associatedMessage = associatedSystemMessage(of: .missedCall, sender: user)
+        
+        let message = appendSystemMessage(
             type: .missedCall,
             sender: user,
             users: [user],
@@ -29,22 +31,22 @@ public extension ZMConversation {
             timestamp: timestamp,
             relevantForStatus: relevantForStatus
         )
-
+        
         if isArchived && mutedMessageTypes == .none {
             isArchived = false
         }
-
-        if let previous = associatedMessage(before: message, at: index) {
-            previous.addChild(message)
-        }
+        
+        associatedMessage?.addChild(message)
 
         managedObjectContext?.enqueueDelayedSave()
         return message
     }
 
     @discardableResult
-    @objc public func appendPerformedCallMessage(with duration: TimeInterval, caller: ZMUser) -> ZMSystemMessage {
-        let (message, index) = appendSystemMessage(
+    @objc func appendPerformedCallMessage(with duration: TimeInterval, caller: ZMUser) -> ZMSystemMessage {
+        let associatedMessage = associatedSystemMessage(of: .performedCall, sender: caller)
+        
+        let message = appendSystemMessage(
             type: .performedCall,
             sender: caller,
             users: [caller],
@@ -56,21 +58,20 @@ public extension ZMConversation {
         if isArchived && mutedMessageTypes == .none {
             isArchived = false
         }
-
-        if let previous = associatedMessage(before: message, at: index) {
-            previous.addChild(message)
-        }
+        
+        associatedMessage?.addChild(message)
 
         managedObjectContext?.enqueueDelayedSave()
         return message
     }
 
-    @objc public func associatedMessage(before message: ZMSystemMessage, at index: UInt) -> ZMSystemMessage? {
-        guard index >= 1 else { return nil }
-        guard let previous = messages[Int(index - 1)] as? ZMSystemMessage else { return nil }
-        guard previous.systemMessageType == message.systemMessageType else { return nil }
-        guard previous.users == message.users, previous.sender == message.sender else { return nil }
-        return previous
+    private func associatedSystemMessage(of type: ZMSystemMessageType, sender: ZMUser) -> ZMSystemMessage? {
+        guard let lastMessage = lastMessage as? ZMSystemMessage,
+              lastMessage.systemMessageType == type,
+              lastMessage.sender == sender
+        else { return nil }
+        
+        return lastMessage
     }
 
 }
@@ -82,6 +83,8 @@ public extension ZMSystemMessage {
         mutableSetValue(forKey: #keyPath(ZMSystemMessage.childMessages)).add(message)
         message.visibleInConversation = nil
         message.hiddenInConversation = conversation
+        
+        managedObjectContext?.processPendingChanges()
     }
 
 }

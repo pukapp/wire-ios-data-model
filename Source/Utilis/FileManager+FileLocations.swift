@@ -25,45 +25,32 @@ public extension FileManager {
     
     /// Returns the URL for the sharedContainerDirectory of the app
     @objc(sharedContainerDirectoryForAppGroupIdentifier:)
-    public static func sharedContainerDirectory(for appGroupIdentifier: String) -> URL {
+    static func sharedContainerDirectory(for appGroupIdentifier: String) -> URL {
         let fm = FileManager.default
-        var sharedContainerURL = fm.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        let sharedContainerURL = fm.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
         
-        if (nil == sharedContainerURL) {
-            // Seems like the shared container is not available. This could happen for series of reasons:
-            // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
-            // 2. App is running on simulator and there is no correct provisioning profile on the system
-            // 3. Bug with signing
-            //
-            // The app should allow not having a shared container in cases 1 and 2; in case 3 the app should crash
-            
-            let deploymentEnvironment = ZMDeploymentEnvironment().environmentType()
-            if (TARGET_OS_SIMULATOR == 0 && (deploymentEnvironment == .appStore || deploymentEnvironment == .internal)) {
-                require(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: \(appGroupIdentifier)")
-            }
-            else {
-                sharedContainerURL = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-                zmLog.error("ERROR: self.databaseDirectoryURL == nil and deploymentEnvironment = \(deploymentEnvironment)")
-                zmLog.error("================================WARNING================================")
-                zmLog.error("Wire is going to use APPLICATION SUPPORT directory to host the database")
-                zmLog.error("================================WARNING================================")
-            }
-        }
+        // Seems like the shared container is not available. This could happen for series of reasons:
+        // 1. The app is compiled with with incorrect provisioning profile (for example with 3rd parties)
+        // 2. App is running on simulator and there is no correct provisioning profile on the system
+        // 3. Bug with signing
+        //
+        // The app should not allow to run in all those cases.
         
-        require(nil != sharedContainerURL)
+        require(nil != sharedContainerURL, "Unable to create shared container url using app group identifier: \(appGroupIdentifier)")
+    
         return sharedContainerURL!
     }
     
-    @objc public static let cachesFolderPrefix : String = "wire-account"
+    @objc static let cachesFolderPrefix : String = "wire-account"
 
     /// Returns the URL for caches appending the accountIdentifier if specified
-    @objc public func cachesURL(forAppGroupIdentifier appGroupIdentifier: String, accountIdentifier: UUID?) -> URL? {
+    @objc func cachesURL(forAppGroupIdentifier appGroupIdentifier: String, accountIdentifier: UUID?) -> URL? {
         guard let sharedContainerURL = containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else { return nil }
         return cachesURLForAccount(with: accountIdentifier, in: sharedContainerURL)
     }
     
     /// Returns the URL for caches appending the accountIdentifier if specified
-    @objc public func cachesURLForAccount(with accountIdentifier: UUID?, in sharedContainerURL: URL) -> URL {
+    @objc func cachesURLForAccount(with accountIdentifier: UUID?, in sharedContainerURL: URL) -> URL {
         let url = sharedContainerURL.appendingPathComponent("Library", isDirectory: true)
                                     .appendingPathComponent("Caches", isDirectory: true)
         if let accountIdentifier = accountIdentifier {

@@ -32,7 +32,7 @@
 @class ZMConversationList;
 @class ZMFileMetadata;
 @class ZMLocationData;
-@class LinkPreview;
+@class LinkMetadata;
 @class Team;
 @class UserAliasname;
 @class ZMWebApp;
@@ -40,7 +40,7 @@
 
 @protocol ZMConversationMessage;
 
-typedef NS_ENUM(int16_t, ZMConversationType) {
+typedef NS_CLOSED_ENUM(int16_t, ZMConversationType) {
     ZMConversationTypeInvalid = 0,
 
     ZMConversationTypeSelf,
@@ -98,6 +98,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //群禁言
 @property (readonly, nonatomic, nonnull) NSSet<UserDisableSendMsgStatus *> *membersSendMsgStatuses;
 @property (nonatomic) ServiceMessage * _Nullable lastServiceMessage;
+@property (readonly, nonatomic, nonnull) NSSet<ZMMessage *> *allMessages;
+@property (readonly, nonatomic, nonnull) NSSet<ZMUser *> *activeParticipants;
+@property (readonly, nonatomic, nonnull) NSArray<ZMUser *> *sortedActiveParticipants;
 @property (readonly, nonatomic, nonnull) ZMUser *creator;
 @property (nonatomic, readonly) BOOL isPendingConnectionConversation;
 @property (nonatomic, readonly) NSUInteger estimatedUnreadCount;
@@ -204,12 +207,17 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests;
 
+<<<<<<< HEAD
 /// 创建群新增群应用
+=======
+/// Insert a new group conversation with name into the user session
+>>>>>>> 1c01c5fad4d5f96dcec8a12a920edfd6d309d1f8
 + (nonnull instancetype)insertGroupConversationIntoUserSession:(nonnull id<ZMManagedObjectContextProvider> )session
                                               withParticipants:(nonnull NSArray<ZMUser *> *)participants
                                                           name:(nullable NSString*)name
                                                         inTeam:(nullable Team *)team
                                                    allowGuests:(BOOL)allowGuests
+<<<<<<< HEAD
                                                        topapps:(nullable NSArray *)topapps;
 
 /// 创建万人群
@@ -222,6 +230,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 /// 删除群
 - (void)deleteConversation;
+=======
+                                                  readReceipts:(BOOL)readReceipts;
+>>>>>>> 1c01c5fad4d5f96dcec8a12a920edfd6d309d1f8
 
 /// If that conversation exists, it is returned, @c nil otherwise.
 + (nullable instancetype)existingOneOnOneConversationWithUser:(nonnull ZMUser *)otherUser inUserSession:(nonnull id<ZMManagedObjectContextProvider> )session;

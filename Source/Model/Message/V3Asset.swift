@@ -29,8 +29,9 @@ private let zmLog = ZMSLog(tag: "AssetV3")
 /// It only includes methods in which these two versions differentiate.
 @objc public protocol AssetProxyType {
 
-    var hasDownloadedImage: Bool { get }
     var hasDownloadedFile: Bool { get }
+    var hasDownloadedPreview: Bool { get }
+
     var imageMessageData: ZMImageMessageData? { get }
     var fileURL: URL? { get }
 
@@ -41,14 +42,11 @@ private let zmLog = ZMSLog(tag: "AssetV3")
     func imageData(for: ZMImageFormat, encrypted: Bool) -> Data?
 
     func requestFileDownload()
-    func requestImageDownload()
+    func requestPreviewDownload()
     
     @objc(fetchImageDataWithQueue:completionHandler:)
     func fetchImageData(with queue: DispatchQueue!, completionHandler: ((Data?) -> Void)!)
-
-    // Image preprocessing
-    var requiredImageFormats: NSOrderedSet { get }
-    func processAddedImage(format: ZMImageFormat, properties: ZMIImageProperties, keys: ZMImageAssetEncryptionKeys)
+    
 }
 
 
@@ -66,11 +64,10 @@ private let zmLog = ZMSLog(tag: "AssetV3")
     }
         
     public var isDownloaded: Bool {
-        return hasDownloadedImage
+        return hasDownloadedFile
     }
     
     fileprivate let assetClientMessage: ZMAssetClientMessage
-    private let assetStorage: ImageAssetStorage
     fileprivate let moc: NSManagedObjectContext
 
     fileprivate var isImage: Bool {
@@ -80,7 +77,6 @@ private let zmLog = ZMSLog(tag: "AssetV3")
     public init?(with message: ZMAssetClientMessage) {
         guard message.version == 3 else { return nil }
         assetClientMessage = message
-        assetStorage = message.imageAssetStorage
         moc = message.managedObjectContext!
     }
 
@@ -108,12 +104,13 @@ private let zmLog = ZMSLog(tag: "AssetV3")
     }
 
     public var previewData: Data? {
-        guard nil != assetClientMessage.fileMessageData, !isImage, hasDownloadedImage else { return nil }
+        guard nil != assetClientMessage.fileMessageData, !isImage, hasDownloadedPreview else { return nil }
         return imageData(for: .medium, encrypted: false) ?? imageData(for: .original, encrypted: false)
     }
 
     public var isAnimatedGIF: Bool {
-        return assetClientMessage.genericAssetMessage?.assetData?.original.mimeType.isGIF ?? false
+        return assetClientMessage.genericAssetMessage?.assetData?.original.mimeType
+            .flatMap(UTType.init(mimeType:))?.isGIF == true
     }
 
     public var imageType: String? {
@@ -124,8 +121,8 @@ private let zmLog = ZMSLog(tag: "AssetV3")
     public var originalSize: CGSize {
         guard nil != assetClientMessage.fileMessageData, isImage else { return .zero }
         guard let asset = assetClientMessage.genericAssetMessage?.assetData else { return .zero }
-        guard asset.original.hasRasterImage, asset.original.image.width > 0 else { return assetClientMessage.preprocessedSize }
         let size = CGSize(width: Int(asset.original.image.width), height: Int(asset.original.image.height))
+        
         if size != .zero {
             return size
         }
@@ -137,14 +134,21 @@ private let zmLog = ZMSLog(tag: "AssetV3")
 
 extension V3Asset: AssetProxyType {
 
-    public var hasDownloadedImage: Bool {
+    public var hasDownloadedPreview: Bool {
+        guard !isImage else { return false }
+        
         return moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, format: .medium, encrypted: false) ||
                moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, format: .original, encrypted: false)
     }
 
     public var hasDownloadedFile: Bool {
-        guard !isImage else { return false }
-        return moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, encrypted: false)
+        if isImage {
+            return moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, format: .medium, encrypted: false) ||
+                   moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, format: .original, encrypted: false)
+        } else {
+            return moc.zm_fileAssetCache.hasDataOnDisk(assetClientMessage, encrypted: false)
+        }
+        
     }
 
     public var fileURL: URL? {
@@ -157,22 +161,14 @@ extension V3Asset: AssetProxyType {
     }
 
     public func requestFileDownload() {
-        guard assetClientMessage.fileMessageData != nil else { return }
-        if (isImage && !hasDownloadedImage) || (!isImage && !hasDownloadedFile) {
-            guard assetClientMessage.transferState != .unavailable else { return }
-            assetClientMessage.transferState = .downloading
-        }
+        guard !assetClientMessage.objectID.isTemporaryID else { return }
+        NotificationInContext(name: ZMAssetClientMessage.assetDownloadNotificationName,
+                              context: self.moc.notificationContext,
+                              object: assetClientMessage.objectID).post()
     }
 
-    public func requestImageDownload() {
-        // Do not try to download the images being uploaded now.
-        guard !assetClientMessage.transferState.isOne(of: [.uploading]) else {
-            return
-        }
-        
-        if isImage {
-            requestFileDownload()
-        } else if assetClientMessage.genericAssetMessage?.assetData?.hasPreview() == true {
+    public func requestPreviewDownload() {
+        if assetClientMessage.genericAssetMessage?.assetData?.hasPreview() == true {
             guard !assetClientMessage.objectID.isTemporaryID else { return }
             NotificationInContext(name: ZMAssetClientMessage.imageDownloadNotificationName,
                                   context: self.moc.notificationContext,

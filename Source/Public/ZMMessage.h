@@ -23,7 +23,7 @@
 @class ZMUser;
 @class ZMConversation;
 @class UserClient;
-@class LinkPreview;
+@class LinkMetadata;
 @class Mention;
 @class ZMMessage;
 
@@ -44,7 +44,7 @@
 @property (nonatomic, readonly, nullable) NSString *imageDataIdentifier; /// This can be used as a cache key for @c -imageData
 
 @property (nonatomic, readonly) BOOL isAnimatedGIF; // If it is GIF and has more than 1 frame
-@property (nonatomic, readonly) BOOL isDownloaded; // If it is GIF and has more than 1 frame
+@property (nonatomic, readonly) BOOL isDownloaded; // If the image has been downloaded and cached locally
 @property (nonatomic, readonly, nullable) NSString *imageType; // UTI e.g. kUTTypeGIF
 @property (nonatomic, readonly) CGSize originalSize;
 // 图片消息可作为回复内容(测试)
@@ -59,7 +59,7 @@
 /// Request the download of the image if not already present.
 /// The download will be executed asynchronously. The caller can be notified by observing the message window.
 /// This method can safely be called multiple times, even if the content is already available locally
-- (void)requestImageDownload;
+- (void)requestFileDownload;
 
 @end
 
@@ -99,6 +99,11 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
     ZMSystemManagerMessageTypeOtherBecameManager,
     ZMSystemManagerMessageTypeMeDropManager,
     ZMSystemManagerMessageTypeOtherDropManager
+    ZMSystemMessageTypeReadReceiptsEnabled,
+    ZMSystemMessageTypeReadReceiptsDisabled,
+    ZMSystemMessageTypeReadReceiptsOn,
+    ZMSystemMessageTypeLegalHoldEnabled,
+    ZMSystemMessageTypeLegalHoldDisabled
 };
 
 @protocol ZMJsonTextMessageData <NSObject>
@@ -110,14 +115,14 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
 @protocol ZMTextMessageData <NSObject>
 
 @property (nonatomic, readonly, nullable) NSString *messageText;
-@property (nonatomic, readonly, nullable) LinkPreview *linkPreview;
+@property (nonatomic, readonly, nullable) LinkMetadata *linkPreview;
 @property (nonatomic, readonly, nonnull) NSArray<Mention *> *mentions;
 @property (nonatomic, readonly, nullable) ZMMessage *quote;
 
 /// Returns true if the link preview will have an image
 @property (nonatomic, readonly) BOOL linkPreviewHasImage;
 
-/// Unique identifier for imageData. Returns nil there's not imageData associated with the message.
+/// Unique identifier for link preview image.
 @property (nonatomic, readonly, nullable) NSString *linkPreviewImageCacheKey;
 
 /// Detect if user replies to a message sent from himself
@@ -179,36 +184,3 @@ typedef NS_ENUM(int16_t, ZMLinkPreviewState) {
     /// Link preview assets have been uploaded
     ZMLinkPreviewStateUploaded
 };
-
-typedef NS_ENUM(int16_t, ZMFileTransferState) {
-    /// Initial file state when sender is initiating the transfer to BE.
-    ZMFileTransferStateUploading,
-    /// File is uploaded to the backend. Sender and receiver are able to open the file.
-    ZMFileTransferStateUploaded,
-    /// File is being downloaded from the backend to the client.
-    ZMFileTransferStateDownloading,
-    /// File is downloaded to the client, it is possible to open it.
-    ZMFileTransferStateDownloaded,
-    /// File was failed to upload to backend.
-    ZMFileTransferStateFailedUpload,
-    /// File upload was cancelled by the sender.
-    ZMFileTransferStateCancelledUpload,
-    /// File is on backend, but it was failed to download to the client.
-    ZMFileTransferStateFailedDownload,
-    /// File is not available on the backend anymore.
-    ZMFileTransferStateUnavailable
-};
-
-
-#pragma mark - ZMLocationMessageData
-
-@protocol ZMLocationMessageData <NSObject>
-
-@property (nonatomic, readonly) float longitude;
-@property (nonatomic, readonly) float latitude;
-
-@property (nonatomic, readonly, nullable) NSString *name; // nil if not specified
-@property (nonatomic, readonly) int32_t zoomLevel; // 0 if not specified
-
-@end
-

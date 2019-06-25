@@ -19,13 +19,10 @@
 
 import Foundation
 
+private var log = ZMSLog(tag: "event-processing")
+
 extension ZMOTRMessage {
     
-    @objc
-    func updateQuoteRelationships() {
-        assertionFailure("Subclasses should override this method")
-    }
-        
     func establishRelationshipsForInsertedQuote(_ quote: ZMQuote) {
         
         guard let managedObjectContext = managedObjectContext,
@@ -35,6 +32,8 @@ extension ZMOTRMessage {
         
         if quotedMessage.hashOfContent == quote.quotedMessageSha256 {
             quotedMessage.replies.insert(self)
+        } else {
+            log.warn("Rejecting quote since local hash \(quotedMessage.hashOfContent?.zmHexEncodedString() ?? "N/A") doesn't match \(quote.quotedMessageSha256.zmHexEncodedString())")
         }
     }
     

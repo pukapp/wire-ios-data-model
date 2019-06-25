@@ -325,7 +325,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     NSString *key = [self remoteIdentifierDataKey];
     NSData *data = uuid.data;
     for (NSManagedObject *mo in moc.registeredObjects) {
-        if ((mo.entity == entity) && [data isEqual:[mo valueForKey:key]]) {
+        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
             return (id) mo;
         }
     }
@@ -337,7 +337,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     return fetchResult.firstObject;
 }
 
-+ (NSOrderedSet *)fetchObjectsWithRemoteIdentifiers:(NSOrderedSet <NSUUID *> *)uuids inManagedObjectContext:(NSManagedObjectContext *)moc;
++ (NSSet *)fetchObjectsWithRemoteIdentifiers:(NSSet <NSUUID *> *)uuids inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
     // Executing a fetch request is quite expensive, because it will _always_ (1) round trip through
     // (1) the persistent store coordinator and the SQLite engine, and (2) touch the file system.
@@ -347,7 +347,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
     Require(entity != nil);
     
-    NSMutableOrderedSet *objects = [[NSMutableOrderedSet alloc] init];
+    NSMutableSet *objects = [[NSMutableSet alloc] init];
     
     NSString *key = [self remoteIdentifierDataKey];
     NSMutableSet <NSData *> *uuidDataArray = [[uuids mapWithBlock:^NSData *(NSUUID *uuid) {

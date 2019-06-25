@@ -107,7 +107,6 @@
     ZMMessage *message = [[ZMMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:conversation.managedObjectContext];
     message.serverTimestamp = [conversation.lastServerTimeStamp dateByAddingTimeInterval:5];
     message.visibleInConversation = conversation;
-    [conversation resortMessagesWithUpdatedMessage:message];
     conversation.lastServerTimeStamp = message.serverTimestamp;
     return message.serverTimestamp;
 }
@@ -157,8 +156,7 @@
         ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
         message.serverTimestamp = messageDate;
         conversation.lastReadServerTimeStamp = [messageDate dateByAddingTimeInterval:-1000];
-        [conversation sortedAppendMessage:message];
-        [conversation resortMessagesWithUpdatedMessage:message];
+        [conversation appendMessage:message];
     }
     [self.syncMOC saveOrRollback];
     return conversation;
@@ -189,7 +187,33 @@
     
     // then
     XCTAssertEqualObjects(conversation.creator, selfUser);
-    XCTAssertEqual(conversation.messages.count, 1u); // new conversation system message
+}
+
+- (void)testThatItSetsReceiptModeWhenCreatingAGroupConversationInATeam
+{
+    // given
+    ZMUser *otherUser1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *otherUser2 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    
+    // when
+    ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.uiMOC withParticipants:@[otherUser1, otherUser2] name:@"abc" inTeam:team allowGuests:NO readReceipts:YES];
+    
+    // then
+    XCTAssertTrue(conversation.hasReadReceiptsEnabled);
+}
+
+- (void)testThatItReceiptModeIsIgnoredWhenCreatingAGroupConversationWithoutATeam
+{
+    // given
+    ZMUser *otherUser1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *otherUser2 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    
+    // when
+    ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.uiMOC withParticipants:@[otherUser1, otherUser2] name:@"abc" inTeam:nil allowGuests:NO readReceipts:YES];
+    
+    // then
+    XCTAssertFalse(conversation.hasReadReceiptsEnabled);
 }
 
 - (void)testThatItHasLocallyModifiedDataFields
@@ -466,104 +490,6 @@
     XCTAssertTrue([predicate evaluateWithObject:conversation]);
 }
 
-- (void)testThatItSortsTheConversationBasedOnServerTimestamp
-{
-    // given
-    const NSUInteger numberOfMessages = 50;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = [NSUUID createUUID];
-        
-        ZMUser *creator = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.creator = creator;
-        
-        for(NSUInteger i = 0; i < numberOfMessages; ++i) {
-            NSString *text = [NSString stringWithFormat:@"Conversation test message %lu", (unsigned long)i];
-            ZMTextMessage *message = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
-            message.text = text;
-            message.visibleInConversation = conversation;
-            message.sender = creator;
-            uint64_t poorRandom2 = (13 + i * 98953) % 93179;
-            message.serverTimestamp = [NSDate dateWithTimeIntervalSinceReferenceDate:poorRandom2*100];
-        }
-        
-        // when
-        [conversation sortMessages];
-        
-        // then
-        NSDate *lastFoundDate;
-        for(ZMMessage *message in conversation.messages)
-        {
-            if(lastFoundDate != nil) {
-                XCTAssertEqual([lastFoundDate compare:message.serverTimestamp], NSOrderedAscending);
-            }
-            lastFoundDate = message.serverTimestamp;
-        }
-        XCTAssertNotNil(lastFoundDate);
-    }];
-}
-
-- (void)testThatItFetchesMessagesAndSetsTheUnreadCountAfterSortingMessages
-{
-    // given
-    const NSUInteger numberOfMessages = 10;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = [NSUUID createUUID];
-
-        ZMUser *creator = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.creator = creator;
-        
-        for(NSUInteger i = 0; i < numberOfMessages; ++i) {
-            NSString *text = [NSString stringWithFormat:@"Conversation test message %lu", (unsigned long)i];
-            ZMTextMessage *message = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
-            message.text = text;
-            message.visibleInConversation = conversation;
-            message.sender = creator;
-            uint64_t poorRandom2 = (13 + i * 98953) % 93179;
-            message.serverTimestamp = [NSDate dateWithTimeIntervalSinceReferenceDate:poorRandom2*100];
-        }
-        
-        XCTAssertEqual(conversation.estimatedUnreadCount, 0u);
-        
-        // when
-        [conversation sortMessages];
-        
-        // then
-        XCTAssertEqual(conversation.estimatedUnreadCount, 10u);
-    }];
-}
-
-- (void)testThatItDoesNotTouchTheMessagesRelationWhenItIsAlreadySorted;
-{
-    // If we dirty the relationship (on the sync context), changes in the UI context might
-    // get rolled back.
-    // We were seeing that messages would get lost when the user quickly inserts a lot
-    // of messages.
-    
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMMessage *mA = (id)[conversation appendMessageWithText:@"A"];
-    mA.serverTimestamp = [NSDate dateWithTimeIntervalSinceNow:10000];
-    ZMMessage *mB = (id)[conversation appendMessageWithText:@"B"];
-    mB.serverTimestamp = [NSDate dateWithTimeIntervalSinceNow:20000];
-    [self performIgnoringZMLogError:^{
-        [conversation sortMessages];
-    }];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    XCTAssertEqual(conversation.changedValues.count, 0u);
-    
-    // when
-    [self performIgnoringZMLogError:^{
-        [conversation sortMessages];
-    }];
-    
-    // then
-    XCTAssertEqual(conversation.changedValues.count, 0u);
-}
-
 - (void)testThatItRemovesAndAppendsTheMessageWhenResortingWithUpdatedMessage
 {
     // given
@@ -575,16 +501,16 @@
     ZMMessage *message3 = (id)[conversation appendMessageWithText:@"hallo"];
     message3.serverTimestamp = [NSDate dateWithTimeIntervalSinceNow:-30];
 
-    NSOrderedSet *messages = [NSOrderedSet orderedSetWithArray:@[message1, message2, message3]];
-    XCTAssertEqualObjects(messages, conversation.messages);
+    NSOrderedSet *messages = [NSOrderedSet orderedSetWithArray:@[message3, message2, message1]];
+    XCTAssertEqualObjects(messages, [NSOrderedSet orderedSetWithArray:[conversation lastMessagesWithLimit:10]]);
     
     // when
     message1.serverTimestamp = [NSDate date];
-    [conversation resortMessagesWithUpdatedMessage:message1];
+    [self.uiMOC processPendingChanges];
     
     // then
-    NSOrderedSet *expectedMessages = [NSOrderedSet orderedSetWithArray:@[message2, message3, message1]];
-    XCTAssertEqualObjects(expectedMessages, conversation.messages);
+    NSOrderedSet *expectedMessages = [NSOrderedSet orderedSetWithArray:@[message1, message3, message2]];
+    XCTAssertEqualObjects(expectedMessages, [NSOrderedSet orderedSetWithArray:[conversation lastMessagesWithLimit:10]]);
 }
 
 - (void)testThatItUsesServerTimestampWhenResortingWithUpdatedMessage
@@ -601,16 +527,16 @@
     message2.serverTimestamp = date3;
     ZMMessage *message3 = (id)[conversation appendMessageWithText:@"hallo 3"];
     
-    NSOrderedSet *messages = [NSOrderedSet orderedSetWithArray:@[message1, message2, message3]];
-    XCTAssertEqualObjects(messages, conversation.messages);
+    NSOrderedSet *messages = [NSOrderedSet orderedSetWithArray:@[message3, message2, message1]];
+    XCTAssertEqualObjects(messages, [NSOrderedSet orderedSetWithArray:[conversation lastMessagesWithLimit:10]]);
     
     // when
     message3.serverTimestamp = date2;
-    [conversation resortMessagesWithUpdatedMessage:message3];
-    
+    [self.uiMOC processPendingChanges];
+
     // then
-    NSOrderedSet *expectedMessages = [NSOrderedSet orderedSetWithArray:@[message1, message3, message2]];
-    XCTAssertEqualObjects(expectedMessages, conversation.messages);
+    NSOrderedSet *expectedMessages = [NSOrderedSet orderedSetWithArray:@[message2, message3, message1]];
+    XCTAssertEqualObjects(expectedMessages, [NSOrderedSet orderedSetWithArray:[conversation lastMessagesWithLimit:10]]);
 }
 
 - (void)testThatLastModifiedDateOfTheConversationGetsUpdatedWhenAMessageIsInserted
@@ -639,7 +565,7 @@
     id<ZMConversationMessage> message = (id)[conversation appendMessageWithText:longText];
 
     XCTAssertEqualObjects(message.textMessageData.messageText, longText);
-    XCTAssertEqual(conversation.messages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 }
 
 - (void)testThatItRejectsWhitespaceOnlyText
@@ -654,7 +580,7 @@
     }];
     
     // then    
-    XCTAssertEqual(conversation.messages.count, 0u);
+    XCTAssertEqual(conversation.allMessages.count, 0u);
 }
 
 
@@ -668,7 +594,7 @@
     [conversation appendMessageWithText:someString];
     
     // then
-    XCTAssertEqual(conversation.messages.count, 1u);
+    XCTAssertEqual(conversation.allMessages.count, 1u);
 }
 
 
@@ -824,7 +750,7 @@
     
     // then
     XCTAssertEqualObjects(conversation.lastModifiedDate, firstMessage.serverTimestamp);
-    XCTAssertEqual(conversation.messages.count, 2lu);
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
 }
 
 - (void)testThatItUpdatesLastModifiedDateWithMessageServerTimestamp_ClientMessage
@@ -906,18 +832,40 @@
     XCTAssertEqualObjects(firstMessage.serverTimestamp, serverDate);
 }
 
-- (void)testThatAppendingNewConversationSystemMessageTwiceDoesNotCreateTwoSystemMessage;
+- (void)testThatItUpdatesExpectsReadConfirmationWithMessageServerTimestamp_PlaintextMessage
 {
-    //given
+    // given
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    [conversation appendNewConversationSystemMessageIfNeeded];
-    XCTAssertEqual(conversation.messages.count, 1u);
+    conversation.hasReadReceiptsEnabled = YES;
+    ZMOTRMessage *firstMessage = (id)[conversation appendMessageWithText:@"Test Message"];
     
-    //when
-    [conversation appendNewConversationSystemMessageIfNeeded];
+    // then
+    XCTAssertEqualObjects(conversation.lastModifiedDate, firstMessage.serverTimestamp);
     
-    //then
-    XCTAssertEqual(conversation.messages.count, 1u);
+    NSDate *serverDate = [firstMessage.serverTimestamp dateByAddingTimeInterval:0.2];
+    // when
+    [firstMessage updateWithPostPayload:@{@"time": serverDate, @"data": @{@"nonce": firstMessage.nonce}, @"type": @"conversation.message-add"} updatedKeys:[NSSet set]];
+    
+    // then
+    XCTAssertTrue(firstMessage.expectsReadConfirmation);
+}
+
+- (void)testThatItDoesNotUpdatesExpectsReadConfirmationWithMessageServerTimestampIfNotNeeded_PlaintextMessage
+{
+    // given
+    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    conversation.hasReadReceiptsEnabled = NO;
+    ZMOTRMessage *firstMessage = (id)[conversation appendMessageWithText:@"Test Message"];
+    
+    // then
+    XCTAssertEqualObjects(conversation.lastModifiedDate, firstMessage.serverTimestamp);
+    
+    NSDate *serverDate = [firstMessage.serverTimestamp dateByAddingTimeInterval:-0.2];
+    // when
+    [firstMessage updateWithPostPayload:@{@"time": serverDate, @"data": @{@"nonce": firstMessage.nonce}, @"type": @"conversation.message-add"} updatedKeys:[NSSet set]];
+    
+    // then
+    XCTAssertFalse(firstMessage.expectsReadConfirmation);
 }
 
 @end // general
@@ -932,7 +880,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
     conversation.teamRemoteIdentifier = [NSUUID createUUID];
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
@@ -947,7 +895,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
     conversation.teamRemoteIdentifier = [NSUUID createUUID];
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeGroup);
@@ -961,7 +909,7 @@
     conversation.conversationType = ZMConversationTypeGroup;
     conversation.userDefinedName = @"Some conversation";
     conversation.teamRemoteIdentifier = [NSUUID createUUID];
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeGroup);
@@ -975,7 +923,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
     conversation.teamRemoteIdentifier = [NSUUID createUUID];
-    [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, nil]];
+    [conversation internalAddParticipants:@[user1, user2]];
     
     // then
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeGroup);
@@ -987,7 +935,7 @@
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeGroup);
@@ -1000,7 +948,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
     conversation.teamRemoteIdentifier = [NSUUID createUUID];
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertEqual(conversation.connectedUser, user1);
@@ -1012,7 +960,7 @@
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
-    [conversation internalAddParticipants:[NSSet setWithObject:user1]];
+    [conversation internalAddParticipants:@[user1]];
     
     // then
     XCTAssertNil(conversation.connectedUser);
@@ -1594,20 +1542,25 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.lastReadTimestampSaveDelay = 0.1;
     ZMMessage *message = [self insertDownloadedMessageIntoConversation:conversation];
+    ZMMessage *messageToBeMarkedAsRead;
     for (int i = 0; i < 10; ++i) {
         message = [self insertDownloadedMessageAfterMessageIntoConversation:conversation];
+        
+        if (i == 4) {
+            messageToBeMarkedAsRead = message;
+        }
     }
     
     // when
-    [conversation markMessagesAsReadUntil:conversation.messages[4]];
+    [conversation markMessagesAsReadUntil:messageToBeMarkedAsRead];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, ((ZMMessage *) conversation.messages[4]).serverTimestamp);
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, messageToBeMarkedAsRead.serverTimestamp);
 }
 
-- (void)testThatItSetsTheLastReadServerTimeStampToTheLastReadMessageInTheVisibleRangeEvenIfSystemMessage;
+- (void)testThatItSetsTheLastReadServerTimestampToTheLastReadMessageInTheVisibleRangeEvenIfSystemMessage;
 {
     // given
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
@@ -1621,12 +1574,12 @@
     conversation.lastServerTimeStamp = message.serverTimestamp;
     
     // when
-    [conversation markMessagesAsReadUntil:conversation.messages[11]];
+    [conversation markMessagesAsReadUntil:message];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, ((ZMMessage *) conversation.messages[11]).serverTimestamp);
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, message.serverTimestamp);
 }
 
 
@@ -1636,16 +1589,21 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.lastReadTimestampSaveDelay = 2.0;
     ZMMessage *message = [self insertDownloadedMessageIntoConversation:conversation];
+    ZMMessage *messageToBeMarkedAsRead;
     for (int i = 0; i < 10; ++i) {
         message = [self insertDownloadedMessageAfterMessageIntoConversation:conversation];
+        
+        if (i == 4) {
+            messageToBeMarkedAsRead = message;
+        }
     }
     
     // when
-    [conversation markMessagesAsReadUntil:conversation.messages[4]];
+    [conversation markMessagesAsReadUntil:messageToBeMarkedAsRead];
     [conversation savePendingLastRead];
     
     // then
-    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, ((ZMMessage *) conversation.messages[4]).serverTimestamp);
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, messageToBeMarkedAsRead.serverTimestamp);
 }
 
 - (void)testThatItDoesNotUpdateTheLastReadMessageToAnOlderMessage;
@@ -1655,15 +1613,20 @@
     conversation.lastReadTimestampSaveDelay = 0.1;
     
     ZMMessage *message = [self insertDownloadedMessageIntoConversation:conversation];
+    ZMMessage *messageToBeMarkedAsRead;
     for (int i = 0; i < 10; ++i) {
         message = [self insertDownloadedMessageAfterMessageIntoConversation:conversation];
+        
+        if (i == 4) {
+            messageToBeMarkedAsRead = message;
+        }
     }
     
-    NSDate *originalLastReadTimeStamp = ((ZMMessage *)conversation.messages[9]).serverTimestamp;
+    NSDate *originalLastReadTimeStamp = message.serverTimestamp;
     conversation.lastReadServerTimeStamp = originalLastReadTimeStamp;
     
     // when
-    [conversation markMessagesAsReadUntil:conversation.messages[4]];
+    [conversation markMessagesAsReadUntil:messageToBeMarkedAsRead];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -1682,7 +1645,7 @@
     }
 
     // when
-    [conversation markMessagesAsReadUntil:conversation.messages.lastObject];
+    [conversation markMessagesAsReadUntil:conversation.lastMessage];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -1855,7 +1818,7 @@
     __block ZMClientMessage *newMessage;
     
     [self performPretendingUiMocIsSyncMoc:^{
-        newMessage = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:updateEvent inManagedObjectContext:self.uiMOC prefetchResult:nil].message;
+        newMessage = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:self.uiMOC prefetchResult:nil];
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1954,6 +1917,26 @@
     XCTAssertEqualObjects(conversation.lastEditableMessage, message);
 }
 
+- (void)testThatItReturnsMessageIfLastMessageIsTextRead
+{
+    // given
+    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    
+    // when
+    ZMMessage *message = (id)[conversation appendMessageWithText:@"Test Message"];
+    message.sender = self.selfUser;
+    [message markAsSent];
+
+    ZMMessageConfirmation *confirmation = [[ZMMessageConfirmation alloc] initWithContext:self.uiMOC];
+    confirmation.type = MessageConfirmationTypeRead;
+    
+    [[message mutableSetValueForKey:@"confirmations"] addObject:confirmation];
+    
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateRead);
+    
+    // then
+    XCTAssertEqualObjects(conversation.lastEditableMessage, message);
+}
 @end
 
 @implementation ZMConversationTests (Participants)
@@ -1968,7 +1951,7 @@
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     
-    [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, nil]];
+    [conversation internalAddParticipants:@[user1, user2]];
     
     XCTAssertTrue(conversation.isSelfAnActiveMember);
     XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
@@ -1979,7 +1962,7 @@
     
     // when
 
-    [conversation internalRemoveParticipants:[NSSet setWithObject:user2] sender:user1];
+    [conversation internalRemoveParticipants:@[user2] sender:user1];
     
     // then
     XCTAssertTrue(conversation.isSelfAnActiveMember);
@@ -1998,7 +1981,7 @@
     ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     
-    [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, nil]];
+    [conversation internalAddParticipants:@[user1, user2]];
     
     XCTAssertTrue(conversation.isSelfAnActiveMember);
     XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
@@ -2146,7 +2129,7 @@
     ZMConversationList *clearedList = [ZMConversationList clearedConversationsInUserSession:self.mockUserSessionWithUIMOC];
     
     // when
-    [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:user0];
+    [conversation internalRemoveParticipants:@[selfUser] sender:user0];
     
     // then
     XCTAssertTrue([activeList predicateMatchesConversation:conversation]);
@@ -2155,29 +2138,29 @@
 }
 
 
-- (void)testThatClearingMessageHistoryDeletesAllMessages
+- (void)testThatClearingMessageHistorySetsLastReadServerTimeStampToLastServerTimeStamp
 {
     // given
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        
-        ZMMessage *message1 = (id)[conversation appendMessageWithText:@"B"];
-        [message1 expire];
-        
-        [conversation appendMessageWithText:@"A"];
-        
-        ZMMessage *message3 = (id)[conversation appendMessageWithText:@"B"];
-        [message3 expire];
-        conversation.lastServerTimeStamp = message3.serverTimestamp;
-        
-        // when
-        conversation.clearedTimeStamp = conversation.lastServerTimeStamp;
-        
-        // then
-        for (ZMMessage *message in conversation.messages) {
-            XCTAssertTrue(message.isDeleted);
-        }
-    }];
+    NSDate *clearedTimeStamp = [NSDate date];
+    
+    ZMUser *otherUser = [self createUser];
+    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+    conversation.lastServerTimeStamp = clearedTimeStamp;
+
+    ZMClientMessage *message1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
+    message1.serverTimestamp = clearedTimeStamp;
+    message1.sender = otherUser;
+    message1.visibleInConversation = conversation;
+    
+    XCTAssertNil(conversation.lastReadServerTimeStamp);
+    
+    // when
+    [conversation clearMessageHistory];
+    [self.uiMOC saveOrRollback];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, clearedTimeStamp);
 }
 
 - (void)testThatSettingClearedTimeStampDueToRemoteChangeDoesNotDeleteUnsentMessages
@@ -2233,31 +2216,6 @@
     }];
 }
 
-- (void)testThatClearingMessageHistorySetsLastReadServerTimeStampToLastServerTimeStamp
-{
-    // given
-    NSDate *clearedTimeStamp = [NSDate date];
-    
-    ZMUser *otherUser = [self createUser];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.lastServerTimeStamp = clearedTimeStamp;
-
-    ZMClientMessage *message1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
-    message1.serverTimestamp = clearedTimeStamp;
-    message1.sender = otherUser;
-    message1.visibleInConversation = conversation;
-    
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
-    
-    // when
-    [conversation clearMessageHistory];
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, clearedTimeStamp);
-}
-
 - (void)testThatClearingMessageHistorySetsClearedTimeStampToLastServerTimeStamp
 {
     // given
@@ -2296,15 +2254,12 @@
     message2.serverTimestamp = [NSDate date];
     
     // when
-    [conversation internalRemoveParticipants:[NSSet setWithObject:user1] sender:self.selfUser];
+    [conversation internalRemoveParticipants:@[user1] sender:self.selfUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertFalse(conversation.isArchived);
     XCTAssertNil(conversation.clearedTimeStamp);
-
-    ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:2];
-    XCTAssertEqual(window.messages.count, 2u);
 }
 
 
@@ -2340,7 +2295,7 @@
     XCTAssertFalse(conversation.isArchived);
     
     // when
-    [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+    [conversation internalRemoveParticipants:@[selfUser] sender:selfUser];
     WaitForAllGroupsToBeEmpty(0.5f);
     
     // then
@@ -2451,7 +2406,7 @@
         
         // when
         id<ZMConversationMessage> knock = [conversation appendKnock];
-        id<ZMConversationMessage> msg = [conversation.messages lastObject];
+        id<ZMConversationMessage> msg = conversation.lastMessage;
         
         // then
         XCTAssertEqual(knock, msg);
@@ -2467,7 +2422,7 @@
 
 @end
 
-@implementation ZMConversationTests (UnreadCountIncludingSilenced)
+@implementation ZMConversationTests (UnreadCount)
 
 - (void)testThatItDoesNotCountExcludedConversationWithUnreadMessagesAsUnread
 {
@@ -2501,11 +2456,6 @@
     }];
 }
 
-@end
-
-
-@implementation ZMConversationTests (ObjectIds)
-
 - (void)testThatItCountsConversationsWithUnreadMessagesAsUnread_IfItHasUnread
 {
     // given
@@ -2521,7 +2471,6 @@
         XCTAssertEqual([ZMConversation unreadConversationCountInContext:self.syncMOC], 1lu);
     }];
 }
-
 
 - (void)testThatItDoesNotCountConversationsWithUnreadMessagesAsUnread_IfItHasNoUnread
 {
@@ -3290,7 +3239,7 @@
     groupConversationWithSelf.remoteIdentifier = [NSUUID createUUID];
     
     ZMConversation *groupConversationWithNoOtherParticipants = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.uiMOC withParticipants:@[otherUser, secondUser]];
-    [groupConversationWithNoOtherParticipants internalRemoveParticipants:[NSSet setWithObjects:otherUser, secondUser, nil] sender:self.selfUser];
+    [groupConversationWithNoOtherParticipants internalRemoveParticipants:@[otherUser, secondUser] sender:self.selfUser];
     groupConversationWithNoOtherParticipants.isSelfAnActiveMember = YES;
     
     ZMConversation *archived = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
@@ -3354,7 +3303,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3390,7 +3339,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // then
@@ -3435,7 +3384,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // then
@@ -3487,7 +3436,7 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // re-create message with same nonce to access the cache
@@ -3511,7 +3460,7 @@
         conversation.remoteIdentifier = [NSUUID createUUID];
         
         [conversation appendText:@"Le fromage c'est delicieux" mentions:@[] replyingToMessage:nil fetchLinkPreview:YES nonce:[NSUUID createUUID]];
-        NSUInteger previusMessagesCount = conversation.messages.count;
+        NSUInteger previusMessagesCount = conversation.allMessages.count;
         
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMMessageHide hideWithConversationId:conversation.remoteIdentifier messageId:NSUUID.createUUID] nonce:NSUUID.createUUID];
         NSData *contentData = message.data;
@@ -3526,11 +3475,11 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // then
-        XCTAssertEqual(previusMessagesCount, conversation.messages.count);
+        XCTAssertEqual(previusMessagesCount, conversation.allMessages.count);
     }];
 }
 
@@ -3546,8 +3495,9 @@
         
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = [NSUUID createUUID];
+
         [conversation appendText:@"Le fromage c'est delicieux" mentions:@[] replyingToMessage:nil fetchLinkPreview:YES nonce:messageID];
-        NSUInteger previusMessagesCount = conversation.messages.count;
+        NSUInteger previusMessagesCount = conversation.allMessages.count;
         
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMMessageHide hideWithConversationId:conversation.remoteIdentifier messageId:messageID] nonce:NSUUID.createUUID];
         NSData *contentData = message.data;
@@ -3562,11 +3512,11 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // then
-        XCTAssertEqual(previusMessagesCount, conversation.messages.count);
+        XCTAssertEqual(previusMessagesCount, conversation.allMessages.count);
     }];
 }
 
@@ -3582,8 +3532,9 @@
         
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = [NSUUID createUUID];
+
         [conversation appendText:@"Le fromage c'est delicieux" mentions:@[] replyingToMessage:nil fetchLinkPreview:YES nonce:messageID];
-        NSUInteger previusMessagesCount = conversation.messages.count;
+        NSUInteger previusMessagesCount = conversation.allMessages.count;
         
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMMessageHide hideWithConversationId:conversation.remoteIdentifier messageId:messageID] nonce:NSUUID.createUUID];
         NSData *contentData = message.data;
@@ -3598,11 +3549,11 @@
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:(id)payload uuid:nil];
         
         // when
-        [ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
+        [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.syncMOC prefetchResult:nil];
         [self.syncMOC saveOrRollback];
         
         // then
-        XCTAssertEqual(previusMessagesCount, conversation.messages.count);
+        XCTAssertEqual(previusMessagesCount, conversation.allMessages.count);
     }];
 }
 

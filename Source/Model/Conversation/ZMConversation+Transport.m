@@ -39,6 +39,7 @@ static NSString *const ConversationInfoTeamIdKey = @"team";
 static NSString *const ConversationInfoAccessModeKey = @"access";
 static NSString *const ConversationInfoAccessRoleKey = @"access_role";
 static NSString *const ConversationInfoMessageTimer = @"message_timer";
+static NSString *const ConversationInfoReceiptMode = @"receipt_mode";
 
 static NSString *const ConversationInfoAppsKey = @"apps";
 
@@ -170,7 +171,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     NSDictionary *members = [transportData dictionaryForKey:ConversationInfoMembersKey];
     if(members != nil) {
         [self updateMembersWithPayload:members];
-        [self updatePotentialGapSystemMessagesIfNeededWithUsers:self.activeParticipants.set];
+        [self updatePotentialGapSystemMessagesIfNeededWithUsers:self.activeParticipants];
     }
     else {
         ZMLogError(@"Invalid members in conversation JSON: %@", transportData);
@@ -180,7 +181,6 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (nil != teamId) {
         [self updateTeamWithIdentifier:teamId];
     }
-    
     NSArray *apps = [transportData optionalArrayForKey:ConversationInfoAppsKey];
     if (nil != apps) {
         [self updateWithApps:apps];
@@ -216,6 +216,18 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     ? membersCountNumber.integerValue
     : (NSInteger)self.activeParticipants.count;
     
+    NSNumber *receiptMode = [transportData optionalNumberForKey:ConversationInfoReceiptMode];
+    if (nil != receiptMode) {
+        BOOL enabled = receiptMode.intValue > 0;
+        BOOL receiptModeChanged = !self.hasReadReceiptsEnabled && enabled;
+        self.hasReadReceiptsEnabled = enabled;
+        
+        // We only want insert a system message if this is an existing conversation (non empty)
+        if (receiptModeChanged && self.lastMessage != nil) {
+            [self appendMessageReceiptModeIsOnMessageWithTimestamp:[NSDate date]];
+        }
+    }
+    
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];
     self.accessRoleString = [transportData optionalStringForKey:ConversationInfoAccessRoleKey];
     
@@ -235,20 +247,32 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
     NSMutableOrderedSet<ZMUser *> *users = [NSMutableOrderedSet orderedSet];
     NSMutableOrderedSet<ZMUser *> *lastSyncedUsers = [NSMutableOrderedSet orderedSet];
+    NSSet<ZMUser *> *lastSyncedUsers = [NSSet set];
+    
     if (self.mutableLastServerSyncedActiveParticipants != nil) {
-        lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants;
+        lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants.set;
     }
     
-    for (NSDictionary *userDict in [usersInfos asDictionaries]) {
+    NSSet<NSUUID *> *participantUUIDs = [NSSet setWithArray:[usersInfos.asDictionaries mapWithBlock:^id(NSDictionary *userDict) {
+        return [userDict uuidForKey:ConversationInfoIDKey];
+    }]];
+    
+    NSMutableSet<ZMUser *> *participants = [[ZMUser usersWithRemoteIDs:participantUUIDs inContext:self.managedObjectContext] mutableCopy];
+    
+    if (participants.count != participantUUIDs.count) {
         
-        NSUUID *userId = [userDict uuidForKey:ConversationInfoIDKey];
-        if (userId == nil) {
-            continue;
+        // All users didn't exist so we need create the missing users
+        
+        NSSet<NSUUID *> *fetchedUUIDs = [NSSet setWithArray:[participants.allObjects mapWithBlock:^id(ZMUser *user) { return user.remoteIdentifier; }]];
+        NSMutableSet<NSUUID *> *missingUUIDs = [participantUUIDs mutableCopy];
+        [missingUUIDs minusSet:fetchedUUIDs];
+                
+        for (NSUUID *userId in missingUUIDs) {
+            [participants addObject:[ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext]];
         }
-        
-        [users addObject:[ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext]];
     }
     
+
     // 获取对方对自己设置的智能推送状态
     if (usersInfos.count == 1){
         NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
@@ -259,11 +283,18 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     [addedUsers minusOrderedSet:lastSyncedUsers];
     NSMutableOrderedSet<ZMUser *> *removedUsers = [lastSyncedUsers mutableCopy];
     [removedUsers minusOrderedSet:users];
+
     
-    ZMLogDebug(@"updateMembersWithPayload (%@) added = %lu removed = %lu", self.remoteIdentifier.transportString, (unsigned long)addedUsers.count, (unsigned long)removedUsers.count);
+    NSMutableSet<ZMUser *> *addedParticipants = [participants mutableCopy];
+    [addedParticipants minusSet:lastSyncedUsers];
+    NSMutableSet<ZMUser *> *removedParticipants = [lastSyncedUsers mutableCopy];
+    [removedParticipants minusSet:participants];
+
     
-    [self internalAddParticipants:addedUsers.set];
-    [self internalRemoveParticipants:removedUsers.set sender:[ZMUser selfUserInContext:self.managedObjectContext]];
+    ZMLogDebug(@"updateMembersWithPayload (%@) added = %lu removed = %lu", self.remoteIdentifier.transportString, (unsigned long)addedParticipants.count, (unsigned long)removedParticipants.count);
+    
+    [self internalAddParticipants:addedParticipants.allObjects];
+    [self internalRemoveParticipants:removedParticipants.allObjects sender:[ZMUser selfUserInContext:self.managedObjectContext]];
 }
 
 - (void)updateTeamWithIdentifier:(NSUUID *)teamId

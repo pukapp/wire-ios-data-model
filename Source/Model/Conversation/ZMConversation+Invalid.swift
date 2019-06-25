@@ -21,12 +21,12 @@ import Foundation
 extension ZMConversation {
 
     /// Appends a "message invalid" system message
-    @objc public func appendInvalidSystemMessage(at date: Date, sender: ZMUser) -> ZMSystemMessage {
-        return self.appendSystemMessage(type: .invalid,
+    @objc @discardableResult
+    public func appendInvalidSystemMessage(at date: Date, sender: ZMUser) -> ZMSystemMessage {
+        return appendSystemMessage(type: .invalid,
                                  sender: sender,
                                  users: nil,
                                  clients: nil,
-                                 timestamp: date).message
-
+                                 timestamp: date)
     }
 }

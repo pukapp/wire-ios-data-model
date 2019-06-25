@@ -43,14 +43,20 @@ import WireLinkPreview
         }
     }
     
-    public var linkPreview: LinkPreview? {
-        
+    public var linkPreview: LinkMetadata? {
         guard let linkPreview = self.firstZMLinkPreview else { return nil }
         if linkPreview.hasTweet() {
-            return TwitterStatus(protocolBuffer: linkPreview)
+            return TwitterStatusMetadata(protocolBuffer: linkPreview)
         } else {
-            return Article(protocolBuffer: linkPreview)
+            let metadata = ArticleMetadata(protocolBuffer: linkPreview)
+            guard !metadata.isBlacklisted else { return nil }
+            return metadata
         }
+    }
+
+    /// Returns the first link attachment that we need to embed in the UI.
+    public var mainLinkAttachment: LinkAttachment? {
+        return linkAttachments?.first
     }
     
     var firstZMLinkPreview: ZMLinkPreview? {
@@ -120,19 +126,7 @@ extension ZMClientMessage: ZMImageOwner {
         guard let originalImageData = self.originalImageData() else { return CGSize.zero }
         return ZMImagePreprocessor.sizeOfPrerotatedImage(with: originalImageData)
     }
-    
-    @objc public func isInline(for format: ZMImageFormat) -> Bool {
-        return false
-    }
-    
-    @objc public func isPublic(for format: ZMImageFormat) -> Bool {
-        return false
-    }
-    
-    @objc public func isUsingNativePush(for format: ZMImageFormat) -> Bool {
-        return false
-    }
-    
+        
     @objc public func processingDidFinish() {
         self.linkPreviewState = .processed
         guard let moc = self.managedObjectContext else { return }
@@ -151,20 +145,9 @@ extension ZMClientMessage: ZMImageOwner {
     }
     
     @objc public var linkPreviewImageCacheKey: String? {
-        
-        if self.linkPreviewImageData != nil {
-            return self.nonce?.uuidString
-        }
-        
-        guard let linkPreview = self.firstZMLinkPreview else { return nil }
-        if linkPreview.article.hasImage() {
-            return linkPreview.article.image.uploaded.assetId
-        } else if linkPreview.hasImage() {
-            return linkPreview.image.uploaded.assetId
-        }
-        return nil
+        return self.nonce?.uuidString
     }
-    
+
     @objc public func setImageData(_ imageData: Data, for format: ZMImageFormat, properties: ZMIImageProperties?) {
         guard format == .medium else { return }
         guard let linkPreview = self.firstZMLinkPreview else { return }

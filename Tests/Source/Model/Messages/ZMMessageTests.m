@@ -39,6 +39,20 @@ NSString * const IsExpiredKey = @"isExpired";
 NSString * const ReactionsKey = @"reactions";
 
 @implementation BaseZMMessageTests : ModelObjectsTests
+
+- (void)setUp
+{
+    [super setUp];
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
+    [BackgroundActivityFactory.sharedFactory resume];
+}
+
+- (void)tearDown
+{
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
+    [super tearDown];
+}
+
 @end
 
 @interface ZMMessageTests : BaseZMMessageTests
@@ -380,7 +394,7 @@ NSString * const ReactionsKey = @"reactions";
                             @(ZMUpdateEventTypeConversationAssetAdd),
                             @(ZMUpdateEventTypeConversationKnock),
                             ];
-    for(NSUInteger evt = 0; evt < ZMUpdateEventType_LAST; ++evt) {
+    for(NSUInteger evt = 0; evt <= ZMUpdateEventTypeUserPropertiesDelete; ++evt) {
         XCTAssertEqual([ZMMessage doesEventTypeGenerateMessage:evt], [validTypes containsObject:@(evt)]);
     }
 }
@@ -437,7 +451,6 @@ NSString * const ReactionsKey = @"reactions";
     XCTAssertNotNil(fetchedMessage);
     XCTAssertTrue(fetchedMessage.needsUpdatingUsers);
     XCTAssertEqualObjects(olderDate, fetchedMessage.serverTimestamp);
-    XCTAssertEqual(conversation.messages.count, 2lu);
 }
 
 - (void)testThatItUpdatedNeedsUpdatingUsersOnPotentialGapSystemMessageCorrectlyIfUserNameIsNil
@@ -451,7 +464,6 @@ NSString * const ReactionsKey = @"reactions";
     
     ZMSystemMessage *systemMessage = [ZMSystemMessage fetchLatestPotentialGapSystemMessageInConversation:conversation];
     XCTAssertEqual(systemMessage.systemMessageType, ZMSystemMessageTypePotentialGap);
-    XCTAssertEqual(conversation.messages.count, 1lu);
     XCTAssertTrue(systemMessage.needsUpdatingUsers);
     
     // when
@@ -794,7 +806,7 @@ NSString * const ReactionsKey = @"reactions";
         @(ZMUpdateEventTypeConversationRename)
     ];
     
-    for(NSUInteger evt = 0; evt < ZMUpdateEventType_LAST; ++evt) {
+    for(NSUInteger evt = 0; evt <= ZMUpdateEventTypeUserPropertiesDelete; ++evt) {
         XCTAssertEqual([ZMSystemMessage doesEventTypeGenerateSystemMessage:evt], [validTypes containsObject:@(evt)]);
     }
 }
@@ -890,8 +902,7 @@ NSString * const ReactionsKey = @"reactions";
     
     FHAssertNotNil(fr, user1);
     FHAssertNotNil(fr, user2);
-    FHAssertEqual(fr, conversation.messages.count, 1u);
-    FHAssertEqual(fr, message, conversation.messages.firstObject);
+    FHAssertEqual(fr, message, conversation.lastMessage);
 }
 
 - (void)checkThatUpdateEventTypeDoesNotGenerateMessage:(ZMUpdateEventType)updateEventType {
@@ -919,7 +930,7 @@ NSString * const ReactionsKey = @"reactions";
 
 - (void)testThatItDoesNotGenerateSystemMessagesFromUpdateEventsOfTheWrongType
 {
-    for(NSUInteger evt = 0; evt < ZMUpdateEventType_LAST; ++evt)
+    for(NSUInteger evt = 0; evt <= ZMUpdateEventTypeUserPropertiesDelete; ++evt)
     {
         if( ! [ZMSystemMessage doesEventTypeGenerateSystemMessage:evt] ) {
             [self checkThatUpdateEventTypeDoesNotGenerateMessage:evt];
@@ -1418,7 +1429,7 @@ NSString * const ReactionsKey = @"reactions";
     // when
     __block ZMClientMessage *message;
     [self performPretendingUiMocIsSyncMoc:^{
-        message = (id)[ZMClientMessage messageUpdateResultFromUpdateEvent:event inManagedObjectContext:self.uiMOC prefetchResult:nil].message;
+        message = [ZMClientMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.uiMOC prefetchResult:nil];
     }];
     
     // then
@@ -1630,7 +1641,7 @@ NSString * const ReactionsKey = @"reactions";
     //then
     textMessage = (ZMTextMessage *)[ZMMessage fetchMessageWithNonce:nonce forConversation:conversation inManagedObjectContext:self.uiMOC];
     XCTAssertNil(textMessage);
-    XCTAssertEqual(conversation.messages.count, 0lu);
+    XCTAssertEqual(conversation.allMessages.count, 0lu);
 }
 
 - (void)testThatItDeletesTheMessageWithDelete
@@ -1821,7 +1832,7 @@ NSString * const ReactionsKey = @"reactions";
 
     //then
     XCTAssertEqual(conversation.hiddenMessages.count, 1lu);
-    ZMClientMessage *reactionMessage = [conversation.hiddenMessages lastObject];
+    ZMClientMessage *reactionMessage = (ZMClientMessage *)[conversation.hiddenMessages anyObject];
     XCTAssertNotNil(reactionMessage.genericMessage);
     XCTAssertTrue(reactionMessage.genericMessage.hasReaction);
     XCTAssertEqualObjects(reactionMessage.genericMessage.reaction.emoji, @"❤️");
