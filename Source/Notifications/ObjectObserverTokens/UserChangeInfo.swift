@@ -57,7 +57,8 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.isServiceUser),
             #keyPath(ZMUser.serviceIdentifier),
             #keyPath(ZMUser.providerIdentifier),
-            ZMUserKeys.legalHoldRequest
+            ZMUserKeys.legalHoldRequest,
+            #keyPath(ZMUser.isUnderLegalHold)
         ]
     }
 
@@ -176,6 +177,10 @@ extension ZMUser : ObjectInSnapshot {
 
     public var legalHoldStatusChanged: Bool {
         return !changedKeys.intersection(ZMUser.keysAffectingLegalHoldStatus()).isEmpty
+    }
+    
+    public var isUnderLegalHoldChanged: Bool {
+        return changedKeys.contains(#keyPath(ZMUser.isUnderLegalHold))
     }
     
     public let user: UserType
