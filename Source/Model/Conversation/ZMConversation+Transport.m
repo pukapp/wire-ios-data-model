@@ -246,7 +246,6 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 {
     NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
     NSMutableOrderedSet<ZMUser *> *users = [NSMutableOrderedSet orderedSet];
-    NSMutableOrderedSet<ZMUser *> *lastSyncedUsers = [NSMutableOrderedSet orderedSet];
     NSSet<ZMUser *> *lastSyncedUsers = [NSSet set];
     
     if (self.mutableLastServerSyncedActiveParticipants != nil) {
@@ -280,7 +279,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     }
     
     NSMutableOrderedSet<ZMUser *> *addedUsers = [users mutableCopy];
-    [addedUsers minusOrderedSet:lastSyncedUsers];
+    [addedUsers minusSet:lastSyncedUsers];
     NSMutableOrderedSet<ZMUser *> *removedUsers = [lastSyncedUsers mutableCopy];
     [removedUsers minusOrderedSet:users];
 

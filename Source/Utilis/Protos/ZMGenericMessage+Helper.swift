@@ -76,7 +76,7 @@ public extension ZMGenericMessage {
     }
     
     @objc
-    static func message(content: MessageContentType, nonce: UUID = UUID()) -> ZMGenericMessage {
+    public static func message(content: MessageContentType, nonce: UUID = UUID()) -> ZMGenericMessage {
         let builder = ZMGenericMessageBuilder()
         
         builder.setMessageId(nonce.transportString())
@@ -257,6 +257,40 @@ extension ZMKnock: EphemeralMessageContentType {
         return builder?.build()
     }
 
+}
+
+@objc
+extension ZMTextJson: MessageContentType{
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+    
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+    
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return .DISABLED
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+    
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+    
+    public static func text(with message: String) -> ZMTextJson {
+        let builder = ZMTextJsonBuilder()
+        builder.setContent(message)
+        return builder.build()
+    }
+    
+    public func setContent(on builder: ZMGenericMessageBuilder) {
+        builder.setTextJson(self)
+    }
 }
 
 @objc
@@ -442,6 +476,13 @@ extension ZMGenericMessage {
         }
         if hasEphemeral() && ephemeral.hasText() {
             return ephemeral.text
+        }
+        return nil
+    }
+    
+    @objc public var jsonTextData : ZMTextJson? {
+        if hasTextJson() {
+            return textJson
         }
         return nil
     }

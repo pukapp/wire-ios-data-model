@@ -69,9 +69,9 @@ extension ZMClientMessage {
         if  genericMessage.hasTextJson(),
             let data = genericMessage.textJson.content.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-            let msgType = json?["msgType"] as? String,
+            let msgType = json["msgType"] as? String,
             ["4", "6"].contains(msgType),
-            let msgData = json?["msgData"] as? [String: Any],
+            let msgData = json["msgData"] as? [String: Any],
             let sendUserId = msgData["sendUserId"] as? String {
             return [sendUserId]
         }

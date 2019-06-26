@@ -119,8 +119,30 @@ import Foundation
     /// Currend download / upload progress
     @NSManaged public var progress: Float
     
-    /// File transfer state
-    @NSManaged public var transferState: ZMFileTransferState
+    /// True if we are current in the process of downloading the asset
+    @NSManaged public var isDownloading: Bool
+    
+    /// State of the file transfer from the uploader's perspective
+    @NSManaged public internal(set) var transferState: AssetTransferState
+    
+    public func updateTransferState(_ transferState: AssetTransferState, synchronize: Bool) {
+        self.transferState = transferState
+        
+        if synchronize {
+            setLocallyModifiedKeys([#keyPath(ZMAssetClientMessage.transferState)])
+        }
+    }
+    
+    /// Download state
+    public var downloadState: AssetDownloadState {
+        if hasDownloadedFile {
+            return .downloaded
+        } else if isDownloading {
+            return .downloading
+        } else {
+            return .remote
+        }
+    }
 
     /// Upload state
     @objc public var uploadState: AssetUploadState {
@@ -140,10 +162,11 @@ import Foundation
         }
     }
     
-    /// Whether the image was downloaded
-    @objc public var hasDownloadedImage: Bool {
-        return self.asset?.hasDownloadedImage ?? false
+    /// Whether the image preview has been downloaded
+    @objc public var hasDownloadedPreview: Bool {
+        return self.asset?.hasDownloadedPreview ?? false
     }
+
     
     /// Whether the file was downloaded
     @objc public var hasDownloadedFile: Bool {
@@ -159,8 +182,7 @@ import Foundation
                 hasEncryptionKeys = true
             }
         } else if self.imageMessageData != nil {
-            let format: ZMImageFormat = self.isUploadOriginalImage ? .original : .medium
-            if let imageAsset = self.genericMessage(for: format)?.imageAssetData, imageAsset.hasOtrKey() {
+            if let imageAsset = mediumGenericMessage?.imageAssetData, imageAsset.hasOtrKey() {
                 hasEncryptionKeys = true
             }
         }
@@ -171,12 +193,6 @@ import Foundation
     /// The asset endpoint version used to generate this message
     /// values lower than 3 represent an enpoint version of 2
     @NSManaged public var version: Int16
-
-    // The image metaData if if this `ZMAssetClientMessage` represents an image
-    // or `nil` otherwise
-    public var imageAssetStorage: ImageAssetStorage {
-        return self
-    }
     
     /// Used to associate and persist the task identifier of the `NSURLSessionTask`
     /// with the upload or download of the file data. Can be used to verify that the
@@ -217,19 +233,9 @@ import Foundation
     public override func expire() {
         super.expire()
         
-        guard !self.delivered && self.transferState == .uploading else { return }
-
-        self.transferState = .failedUpload
-        
-        // When we expire an asset message because the conversation degraded we do not want to send
-        // a `NOT UPLOADED` message. In all other cases we do want to sent a `NOT UPLOADED` 
-        // message to let the reveicers know we stopped uploading.
-        if self.uploadState == .uploadingPlaceholder {
-            self.uploadState = .done
-        } else {
-            self.didFailToUploadFileData()
+        if transferState != .uploaded {
+            transferState = .uploadingFailed
         }
-
     }
     
     public override func markAsSent() {
@@ -272,23 +278,15 @@ import Foundation
     }
         
     public override func update(withPostPayload payload: [AnyHashable : Any], updatedKeys: Set<AnyHashable>?) {
-        guard let updatedKeys = updatedKeys,
-            updatedKeys.contains(#keyPath(ZMAssetClientMessage.uploadState))
-        else { return }
-        
-        let shouldUpdate = self.uploadState == .uploadingPlaceholder
-            || (self.uploadState == .uploadingFullAsset && self.v3_isImage)
-        
-        
-        if shouldUpdate {
-            if let serverTimestamp = (payload as NSDictionary).date(forKey: "time") {
-                self.serverTimestamp = serverTimestamp
-            }
-            conversation?.resortMessages(withUpdatedMessage: self)
-            conversation?.updateTimestampsAfterUpdatingMessage(self)
+        if let serverTimestamp = (payload as NSDictionary).optionalDate(forKey: "time") {
+            self.serverTimestamp = serverTimestamp
+            self.expectsReadConfirmation = self.conversation?.hasReadReceiptsEnabled ?? false
         }
         
-        _ = self.startDestructionIfNeeded()
+        conversation?.updateTimestampsAfterUpdatingMessage(self)
+        
+        // NOTE: Calling super since this is method overriden to handle special cases when receiving an asset
+        super.startDestructionIfNeeded()
     }
     
     // Private implementation
@@ -330,7 +328,7 @@ extension ZMAssetClientMessage {
             .union([
                 #keyPath(ZMAssetClientMessage.assetID_data),
                 #keyPath(ZMAssetClientMessage.preprocessedSize_data),
-                #keyPath(ZMAssetClientMessage.hasDownloadedImage),
+                #keyPath(ZMAssetClientMessage.hasDownloadedPreview),
                 #keyPath(ZMAssetClientMessage.hasDownloadedFile),
                 #keyPath(ZMAssetClientMessage.dataSet),
                 #keyPath(ZMAssetClientMessage.transferState),
@@ -360,4 +358,22 @@ extension ZMAssetClientMessage {
     case uploadingFailed = 4
 }
 
+@objc public enum AssetDownloadState: Int16 {
+    case remote = 0
+    case downloaded
+    case downloading
+}
+
+@objc public enum AssetTransferState: Int16 {
+    case uploading = 0
+    case uploaded
+    case uploadingFailed
+    case uploadingCancelled
+}
+
+@objc public enum AssetProcessingState: Int16 {
+    case done = 0
+    case preprocessing
+    case uploading
+}
 

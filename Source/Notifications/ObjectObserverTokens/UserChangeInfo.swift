@@ -50,7 +50,7 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.pkRobotState),
             #keyPath(ZMUser.darwinState),
             #keyPath(ZMUser.walletOpened),
-            #keyPath(ZMUser.payValidTime)
+            #keyPath(ZMUser.payValidTime),
             #keyPath(ZMUser.readReceiptsEnabled),
             #keyPath(ZMUser.readReceiptsEnabledChangedRemotely),
             ZMUserKeys.RichProfile,

@@ -840,29 +840,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return moc.conversationListDirectory.hugeGroupConversations;
 }
 
-- (void)sortMessages
-{
-    NSOrderedSet *sorted = [NSOrderedSet orderedSetWithArray:[self.messages sortedArrayUsingDescriptors:[ZMMessage defaultSortDescriptors]]];
-    // Be sure not to "dirty" the relationship, unless we need to:
-    if (! [self.messages isEqualToOrderedSet:sorted]) {
-        [self setValue:sorted forKey:ZMConversationMessagesKey];
-    }
-    // sortMessages is called when processing downloaded events (e.g. after slow sync) which can be unordered
-    // after sorting messages we also need to recalculate the unread properties
-    [self calculateLastUnreadMessages];
-}
 
-- (void)resortMessagesWithUpdatedMessage:(ZMMessage *)message
-{
-    if (message.visibleInConversation == nil) {
-        ZMLogWarn(@"Attempt to resort message not visible in conversation");
-        return;
-    }
-    
-    [self.mutableMessages removeObject:message];
-    [self sortedAppendMessage:message];
-    [self calculateLastUnreadMessages];
-}
 
 - (void)mergeWithExistingConversationWithRemoteID:(NSUUID *)remoteID;
 {
@@ -1048,7 +1026,10 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         conversation.topWebApps = [NSOrderedSet orderedSetWithArray:topapps];
     }
     
-    for (ZMUser *participant in participants) {
+    NSMutableSet<ZMUser *> *participantsSet = [NSMutableSet setWithArray:participants];
+    [participantsSet addObject:selfUser];
+    
+    NSArray<ZMUser *> *filteredParticipants = [participants filterWithBlock:^BOOL(ZMUser * participant) {
         Require([participant isKindOfClass:[ZMUser class]]);
         const BOOL isSelf = (participant == selfUser);
         RequireString(!isSelf, "Can't pass self user as a participant of a group conversation");
@@ -1094,16 +1075,23 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         conversation.allowGuests = allowGuests;
     }
 
-    // TODO: 万人群需要吗？
-    for (ZMUser *participant in participants) {
+    NSMutableSet<ZMUser *> *participantsSet = [NSMutableSet setWithArray:participants];
+    [participantsSet addObject:selfUser];
+    
+    NSArray<ZMUser *> *filteredParticipants = [participants filterWithBlock:^BOOL(ZMUser * participant) {
         Require([participant isKindOfClass:[ZMUser class]]);
         const BOOL isSelf = (participant == selfUser);
         RequireString(!isSelf, "Can't pass self user as a participant of a group conversation");
-        if(!isSelf) {
-            [conversation internalAddParticipants:[NSSet setWithObject:participant]];
-        }
-    }
+        return !isSelf;
+    }];
+    
+    // Add the new conversation system message
+    [conversation appendNewConversationSystemMessageAtTimestamp:[NSDate date] users:participantsSet];
+    
+    // Add the participants
+    [conversation internalAddParticipants:filteredParticipants];
 
+    // We need to check if we should add a 'secure' system message in case all participants are trusted
     NSMutableSet *allClients = [NSMutableSet set];
     for (ZMUser *user in conversation.activeParticipants) {
         [allClients unionSet:user.clients];
@@ -1112,7 +1100,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     // TODO: 万人群需要吗？
     // We need to check if we should add a 'secure' system message in case all participants are trusted
     [conversation increaseSecurityLevelIfNeededAfterTrustingClients:allClients];
-    [conversation appendNewConversationSystemMessageIfNeeded];
     return conversation;
 }
 

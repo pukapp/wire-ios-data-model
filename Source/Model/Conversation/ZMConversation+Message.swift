@@ -79,7 +79,7 @@ extension ZMConversation {
         clientMessage.needsLinkAttachmentsUpdate = fetchLinkPreview
         clientMessage.quote = quotedMessage as? ZMMessage
         
-        append(clientMessage, expires: true, hidden: false)
+        appendMessage(clientMessage, expires: true, hidden: false)
         
         if let managedObjectContext = managedObjectContext {
             NotificationInContext(name: ZMConversation.clearTypingNotificationName,
@@ -122,7 +122,7 @@ extension ZMConversation {
         
         message.sender = ZMUser.selfUser(in: managedObjectContext)
         
-        append(message)
+        appendMessage(message)
         unarchiveIfNeeded()
         
         managedObjectContext.zm_fileAssetCache.storeAssetData(message, encrypted: false, data: data)

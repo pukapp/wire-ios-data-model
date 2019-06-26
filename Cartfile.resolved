@@ -1,17 +1,13 @@
-
-github "pukapp/wire-ios-protos" "mergewire"
-github "pukapp/wire-ios-transport" "mergewire"
-github "pukapp/wire-ios-utilities" "mergewire"
-
+github "pukapp/wire-ios-images" "a81adff13f1636baba0efbfa81884b1e67ac0445"
+github "pukapp/wire-ios-link-preview" "35133082d2c02c0fe4413c7433ce7c9171ad11f6"
+github "pukapp/wire-ios-protos" "682b298194553909e1fb42894babe6350d38661e"
+github "pukapp/wire-ios-transport" "681ea87ffdbad44786c468b711d9823cb9608cbe"
+github "pukapp/wire-ios-utilities" "d6aafe84d5984ce4aadc6819ca80be88d8d168dc"
 github "wireapp/HTMLString" "4.1.0-beta.1-xcode_10_2"
 github "wireapp/PINCache" "2.3-swift3.1"
 github "wireapp/ocmock" "v3.4.3"
 github "wireapp/protobuf-objc" "1.9.14"
-
 github "wireapp/swift-protobuf" "1.5.0"
 github "wireapp/wire-ios-cryptobox" "19.0.0"
-github "wireapp/wire-ios-images" "27.0.0"
-github "wireapp/wire-ios-link-preview" "23.0.0"
-github "wireapp/wire-ios-system" "28.0.0"
+github "wireapp/wire-ios-system" "28.0.1"
 github "wireapp/wire-ios-testing" "20.0.0"
-

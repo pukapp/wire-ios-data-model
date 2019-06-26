@@ -1,10 +1,8 @@
 
-
-github "pukapp/wire-ios-protos" "mergewire"
-github "wireapp/libPhoneNumber-iOS" "0.9.2-swift3.1"
-github "wireapp/PINCache" "2.3-swift3.1"
 github "pukapp/wire-ios-transport"  "mergewire"
-github "wireapp/wire-ios-cryptobox" ~> 19.0
-github "wireapp/wire-ios-images" ~> 27.0
-github "wireapp/wire-ios-link-preview" ~> 23.0
+github "pukapp/wire-ios-protos" "mergewire"
+github "pukapp/wire-ios-images" "mergewire"
+github "pukapp/wire-ios-link-preview" "mergewire"
 
+github "wireapp/PINCache" "2.3-swift3.1"
+github "wireapp/wire-ios-cryptobox" ~> 19.0

@@ -88,6 +88,11 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypePerformedCall,
     ZMSystemMessageTypeTeamMemberLeave,
     ZMSystemMessageTypeMessageTimerUpdate,
+    ZMSystemMessageTypeReadReceiptsEnabled,
+    ZMSystemMessageTypeReadReceiptsDisabled,
+    ZMSystemMessageTypeReadReceiptsOn,
+    ZMSystemMessageTypeLegalHoldEnabled,
+    ZMSystemMessageTypeLegalHoldDisabled,
     ZMSystemMessageTypeAllDisableSendMsg,
     ZMSystemMessageTypeMemberDisableSendMsg,
     ZMSystemMessageTypeServiceMessage,
@@ -98,12 +103,7 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
     ZMSystemManagerMessageTypeMeBecameManager = 0,
     ZMSystemManagerMessageTypeOtherBecameManager,
     ZMSystemManagerMessageTypeMeDropManager,
-    ZMSystemManagerMessageTypeOtherDropManager
-    ZMSystemMessageTypeReadReceiptsEnabled,
-    ZMSystemMessageTypeReadReceiptsDisabled,
-    ZMSystemMessageTypeReadReceiptsOn,
-    ZMSystemMessageTypeLegalHoldEnabled,
-    ZMSystemMessageTypeLegalHoldDisabled
+    ZMSystemManagerMessageTypeOtherDropManager,
 };
 
 @protocol ZMJsonTextMessageData <NSObject>

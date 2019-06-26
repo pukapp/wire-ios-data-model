@@ -609,7 +609,7 @@ extension ZMConversation {
         
         systemMessage.relevantForConversationStatus = relevantForStatus
         
-        self.append(systemMessage)
+        self.appendMessage(systemMessage)
         
         return systemMessage
     }

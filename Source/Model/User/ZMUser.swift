@@ -161,58 +161,6 @@ public extension Notification.Name {
 }
 
 extension ZMUser {
-<<<<<<< HEAD
-
-    /// Retrieves all users (excluding bots), having ZMConnectionStatusAccepted connection statuses.
-    @objc static var predicateForConnectedNonBotUsers: NSPredicate {
-        return predicateForUsers(withSearch: "", connectionStatuses: [ZMConnectionStatus.accepted.rawValue])
-    }
-    
-    /// Retrieves connected users with name or handle matching search string
-    ///
-    /// - Parameter query: search string
-    /// - Returns: predicate having search query and ZMConnectionStatusAccepted connection statuses
-    @objc(predicateForConnectedUsersWithSearchString:)
-    public static func predicateForConnectedUsers(withSearch query: String) -> NSPredicate {
-        return predicateForUsers(withSearch: query, connectionStatuses: [ZMConnectionStatus.accepted.rawValue])
-    }
-    
-    /// Retrieves all users with name or handle matching search string
-    ///
-    /// - Parameter query: search string
-    /// - Returns: predicate having search query
-    public static func predicateForAllUsers(withSearch query: String) -> NSPredicate {
-        return predicateForUsers(withSearch: query, connectionStatuses: nil)
-    }
-    
-    /// Retrieves users with name or handle matching search string, having one of given connection statuses
-    ///
-    /// - Parameters:
-    ///   - query: search string
-    ///   - connectionStatuses: an array of connections status of the users. E.g. for connected users it is [ZMConnectionStatus.accepted.rawValue]
-    /// - Returns: predicate having search query and supplied connection statuses
-    @objc(predicateForUsersWithSearchString:connectionStatusInArray:)
-    public static func predicateForUsers(withSearch query: String, connectionStatuses: [Int16]? ) -> NSPredicate {
-        var allPredicates = [[NSPredicate]]()
-        if let statuses = connectionStatuses {
-            allPredicates.append([predicateForUsers(withConnectionStatuses: statuses)])
-        }
-
-        let normalizedQuery = query.normalizedAndTrimmed()
-
-        if !normalizedQuery.isEmpty {
-            let namePredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedName) : "%K MATCHES %@"], matchingSearch: normalizedQuery)
-            let normalizedHandle = normalizedQuery.strippingLeadingAtSign()
-            let handlePredicate = NSPredicate(format: "%K BEGINSWITH %@", #keyPath(ZMUser.handle), normalizedHandle)
-            ///新增备注搜索
-            let remarkPredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedRemark) : "%K MATCHES %@"], matchingSearch: normalizedQuery)
-            allPredicates.append([namePredicate, handlePredicate, remarkPredicate].compactMap {$0})
-        }
-        
-        let orPredicates = allPredicates.map { NSCompoundPredicate(orPredicateWithSubpredicates: $0) }
-        
-        return NSCompoundPredicate(andPredicateWithSubpredicates: orPredicates)
-    }
     
     @objc static let previewProfileAssetIdentifierKey = #keyPath(ZMUser.previewProfileAssetIdentifier)
     @objc static let completeProfileAssetIdentifierKey = #keyPath(ZMUser.completeProfileAssetIdentifier)
@@ -228,7 +176,7 @@ extension ZMUser {
     
     /// Team membership for this user
     @NSManaged public internal(set) var membership: Member?
-
+    
     /// Reactions expressed by this user
     @NSManaged var reactions: Set<Reaction>
     
@@ -356,6 +304,7 @@ extension ZMUser {
         }
     }
 }
+
 
 extension ZMUser {
         
