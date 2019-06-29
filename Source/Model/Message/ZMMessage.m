@@ -978,8 +978,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
     if (type == ZMSystemMessageTypeParticipantsAdded || type == ZMSystemMessageTypeParticipantsRemoved) {
         if ( usersSet.count == 0 ) {return nil;}
-        //// 当添加或者删除成员是，若群变动不可见，也不是群主，且加人信息里不包含自己。该系统消息不需要入库
-        if (!conversation.isVisibleForMemberChange && !conversation.creator.isSelfUser && ![usersSet containsObject:[ZMUser selfUserInContext: moc]]) {return nil;}
+        //// 当添加或者删除成员是，若群变动不可见，也不是群主和管理员，且加人信息里不包含自己。该系统消息不需要入库
+        if (!conversation.isVisibleForMemberChange &&
+            !conversation.creator.isSelfUser &&
+            ![conversation.manager containsObject:[ZMUser selfUserInContext: moc].remoteIdentifier.transportString] &&
+            ![usersSet containsObject:[ZMUser selfUserInContext: moc]]) {return nil;}
     }
     
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
