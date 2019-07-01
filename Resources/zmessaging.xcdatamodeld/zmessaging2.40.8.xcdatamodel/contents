@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14460.32" systemVersion="18F132" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.8">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18D109" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.8">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -11,6 +11,7 @@
         <attribute name="associatedTaskIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="associatedTaskIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="delivered" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isDownloading" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isUploadOriginalImage" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="preprocessedSize" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="preprocessedSize_data" optional="YES" attributeType="Binary" syncable="YES"/>
@@ -52,6 +53,7 @@
         <attribute name="draftMessageData" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="groupImageMediumKey" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="groupImageSmallKey" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="hasReadReceiptsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="hasUnreadUnsentMessage" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="imageMediumData" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="imageSmallProfileData" optional="YES" attributeType="Binary" syncable="YES"/>
@@ -80,6 +82,7 @@
         <attribute name="lastServiceMessageTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastUnreadKnockDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastUnreadMissedCallDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="legalHoldStatus" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="localMessageDestructionTimeout" optional="YES" attributeType="Double" defaultValueString="0" usesScalarValueType="NO" elementID="messageDestructionTimeout" syncable="YES"/>
         <attribute name="manager" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="managerAdd" optional="YES" attributeType="Transformable" syncable="YES"/>
@@ -88,6 +91,7 @@
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="mutedStatus" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" elementID="mutedStatus" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="needsToVerifyLegalHold" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="normalizedUserDefinedName" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="orator" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="remoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
@@ -101,6 +105,7 @@
         <attribute name="topapps" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="userDefinedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="voiceChannel" optional="YES" transient="YES" syncable="YES"/>
+        <relationship name="allMessages" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="connection" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Connection" inverseName="conversation" inverseEntity="Connection" syncable="YES"/>
         <relationship name="creator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="conversationsCreated" inverseEntity="User" syncable="YES"/>
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
@@ -108,7 +113,7 @@
         <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inConversation" inverseEntity="ServiceMessage" syncable="YES"/>
         <relationship name="membersAliasname" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
         <relationship name="membersSendMsgStatuses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserDisableSendMsgStatus" inverseName="withConversation" inverseEntity="UserDisableSendMsgStatus" syncable="YES"/>
-        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" syncable="YES"/>
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="conversations" inverseEntity="Team" syncable="YES"/>
         <relationship name="topWebApps" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="WebApp" inverseName="conversations" inverseEntity="WebApp" syncable="YES"/>
         <compoundIndexes>
@@ -148,7 +153,9 @@
     <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" syncable="YES">
         <attribute name="bibiCashType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="cachedCategory" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="delivered" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="destructionDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
+        <attribute name="expectsReadConfirmation" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
         <attribute name="isConfrimInvite" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isExpired" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
@@ -158,7 +165,9 @@
         <attribute name="isObfuscated" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isRefuse" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isSelfSend" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="linkAttachments" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="needsLinkAttachmentsUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="nonce" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="nonce_data" optional="YES" attributeType="Binary" indexed="YES" versionHashModifier="add_index1" syncable="YES"/>
@@ -166,13 +175,14 @@
         <attribute name="senderClientID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="confirmations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MessageConfirmation" inverseName="message" inverseEntity="MessageConfirmation" syncable="YES"/>
+        <relationship name="discoveredClients" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserClient" inverseName="discoveredByMessage" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="hiddenInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="hiddenMessages" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="missingRecipients" optional="YES" transient="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="messagesMissingRecipient" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="quote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="replies" inverseEntity="Message" syncable="YES"/>
         <relationship name="reactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reaction" inverseName="message" inverseEntity="Reaction" syncable="YES"/>
         <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="quote" inverseEntity="Message" syncable="YES"/>
         <relationship name="sender" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
-        <relationship name="visibleInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="messages" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="visibleInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="allMessages" inverseEntity="Conversation" syncable="YES"/>
     </entity>
     <entity name="MessageConfirmation" representedClassName="ZMMessageConfirmation" syncable="YES">
         <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
@@ -248,14 +258,20 @@
         <attribute name="handle" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="imageMediumData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
         <attribute name="imageSmallProfileData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+        <attribute name="isAccountDeleted" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="legalHoldRequest" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="localMediumRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="localMediumRemoteIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="localSmallProfileRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="localSmallProfileRemoteIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="managedBy" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="mediumRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="mediumRemoteIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="needsPropertiesUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="needsRichProfileUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="needsToAcknowledgeLegalHoldStatus" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="normalizedEmailAddress" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="normalizedName" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -265,9 +281,12 @@
         <attribute name="pkRobotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="previewProfileAssetIdentifier" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="providerIdentifier" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="readReceiptsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="readReceiptsEnabledChangedRemotely" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="reMark" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="remoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="remoteIdentifier_data" optional="YES" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <attribute name="richProfile" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="robotType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="serviceIdentifier" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="smallProfileRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
@@ -302,11 +321,13 @@
         <attribute name="apsDecryptionKey" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="apsVerificationKey" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="deviceClass" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="discoveryDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="fingerprint" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="label" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="markedToDelete" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="model" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="needsToBeUpdatedFromBackend" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToNotifyUser" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToUploadSignalingKeys" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="numberOfKeysRemaining" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
@@ -315,6 +336,7 @@
         <attribute name="remoteIdentifier" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="type" attributeType="String" defaultValueString="permanent" syncable="YES"/>
         <relationship name="addedOrRemovedInSystemMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="clients" inverseEntity="SystemMessage" syncable="YES"/>
+        <relationship name="discoveredByMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="discoveredClients" inverseEntity="Message" syncable="YES"/>
         <relationship name="ignoredByClients" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="ignoredClients" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="ignoredClients" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="ignoredByClients" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="messagesMissingRecipient" optional="YES" transient="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="missingRecipients" inverseEntity="Message" syncable="YES"/>
@@ -350,16 +372,16 @@
     </entity>
     <elements>
         <element name="AddressBookEntry" positionX="9" positionY="153" width="128" height="90"/>
-        <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
+        <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="255"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1155"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1215"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="135"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="450"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="525"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
@@ -367,9 +389,9 @@
         <element name="SystemMessage" positionX="27" positionY="57" width="128" height="345"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
-        <element name="User" positionX="-434" positionY="-72" width="128" height="810"/>
+        <element name="User" positionX="-434" positionY="-72" width="128" height="945"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
-        <element name="UserClient" positionX="9" positionY="153" width="128" height="465"/>
+        <element name="UserClient" positionX="9" positionY="153" width="128" height="510"/>
         <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="135"/>
         <element name="WebApp" positionX="-234" positionY="-117" width="128" height="255"/>
     </elements>
