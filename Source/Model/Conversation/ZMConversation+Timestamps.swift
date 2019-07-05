@@ -239,21 +239,27 @@ extension ZMConversation {
     public func markMessagesAsRead(until message: ZMConversationMessage) {
         //根据cpu检测，列表滑动的时候下面lastUnreadMessage的方法执行大约占用9%的cpum，所以此处做一个提前判断
         //pendingLastReadServerTimestamp默认为nil，第一次调用先给赋值，此后调用全部进行比较，判断当前从conversation的最后一条消息的时间是否大于它，大于它才继续代码流程
-        if let data = pendingLastReadServerTimestamp {
-            if  message.serverTimestampIncludingChildMessages?.compare(data) != .orderedDescending  {
-                return
-            }
-        } else {
-            pendingLastReadServerTimestamp = message.serverTimestampIncludingChildMessages
-        }
+//        if let data = pendingLastReadServerTimestamp {
+//            if  message.serverTimestampIncludingChildMessages?.compare(data) != .orderedDescending  {
+//                return
+//            }
+//        } else {
+//            pendingLastReadServerTimestamp = message.serverTimestampIncludingChildMessages
+//        }
         
+        if let currentTimestamp = lastReadServerTimeStamp,
+            let messageTimestamp = message.serverTimestamp,
+            currentTimestamp.compare(messageTimestamp) == .orderedDescending {
+            // Current last read timestamp is newer than message we are marking as read
+            return
+        }
         // Any unsent unread message is cleared when entering a conversation
         if hasUnreadUnsentMessage {
             hasUnreadUnsentMessage = false
         }
         
         guard let messageTimestamp = message.serverTimestampIncludingChildMessages,
-              let unreadTimestamp = message.isSent ? messageTimestamp : unreadMessagesIncludingInvisible(until: messageTimestamp).last?.serverTimestamp else { return }
+            let unreadTimestamp = message.isSent ? messageTimestamp : unreadMessagesIncludingInvisible(until: messageTimestamp).last?.serverTimestamp else { return }
         
         enqueueUpdateLastRead(unreadTimestamp)
     }
