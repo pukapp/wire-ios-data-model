@@ -151,7 +151,7 @@
     <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" syncable="YES">
         <attribute name="bibiCashType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="cachedCategory" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="delivered" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="delivered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="destructionDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="expectsReadConfirmation" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
@@ -183,6 +183,7 @@
         <relationship name="visibleInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="allMessages" inverseEntity="Conversation" syncable="YES"/>
     </entity>
     <entity name="MessageConfirmation" representedClassName="ZMMessageConfirmation" syncable="YES">
+        <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="message" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="confirmations" inverseEntity="Message" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
@@ -380,7 +381,7 @@
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="135"/>
         <element name="Message" positionX="106" positionY="-261" width="128" height="525"/>
-        <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="90"/>
+        <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
