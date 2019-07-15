@@ -282,7 +282,8 @@ extension ZMConversation : ObjectInSnapshot {
                 "languageChanged \(languageChanged)",
                 "hasReadReceiptsEnabledChanged \(hasReadReceiptsEnabledChanged)",
                 "externalParticipantsStateChanged \(externalParticipantsStateChanged)",
-                "legalHoldStatusChanged: \(legalHoldStatusChanged)"
+                "legalHoldStatusChanged: \(legalHoldStatusChanged)",
+                "groupCreatorChanged: \(groupCreatorChanged)"
             ].joined(separator: ", ")
     }
     
