@@ -1110,6 +1110,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             case ZMSystemMessageTypeAllDisableSendMsg:
             case ZMSystemMessageTypeMemberDisableSendMsg:
             case ZMSystemMessageTypeManagerMsg:
+            case ZMSystemMessageTypeCreatorChangeMsg:
             case ZMSystemMessageTypeServiceMessage:
                 return NO;
         }
@@ -1140,6 +1141,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
     if (type == ZMUpdateEventTypeConversationUpdate && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoManagerKey]) {
         number = @(ZMSystemMessageTypeManagerMsg);
+    }
+    if (type == ZMUpdateEventTypeConversationUpdate && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoOTRCreatorChangeKey]) {
+        number = @(ZMSystemMessageTypeCreatorChangeMsg);
     }
     if(number == nil) {
         return ZMSystemMessageTypeInvalid;

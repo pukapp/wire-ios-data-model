@@ -97,6 +97,7 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeMemberDisableSendMsg,
     ZMSystemMessageTypeServiceMessage,
     ZMSystemMessageTypeManagerMsg,///管理员系统消息
+    ZMSystemMessageTypeCreatorChangeMsg///群主更换消息
 };
 
 typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
