@@ -81,7 +81,7 @@ extension UserDisableSendMsgStatus {
         var blockTime: NSNumber?
         for status in conver.membersSendMsgStatuses {
             if status.userid == user {
-                if status.block_time < Int64(Date().timeIntervalSince1970) {
+                if status.block_time < Int64(Date().timeIntervalSince1970) && status.block_time != -1 {
                     blockTime = NSNumber(value: 0)
                     status.block_time = 0
                     managedObjectContext.saveOrRollback()

@@ -97,7 +97,7 @@ public extension MessageDestructionSendDisableValue {
         var display: String?
         display = longStyleFormatter.string(from: TimeInterval(rawValue))
         if case .forever = self {
-            display = "永久"
+            display = NSLocalizedString("conversation.setting.disableSendMsg.duration.forever", comment: "")
         }
         return display
     }
