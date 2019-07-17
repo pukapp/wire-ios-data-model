@@ -59,25 +59,15 @@ public class SnapshotCenter {
         let attributes = Array(object.entity.attributesByName.keys)
         let relationships = object.entity.relationshipsByName
         
-        var attributesDict = attributes.mapToDictionaryWithOptionalValue{object.primitiveValue(forKey: $0) as? NSObject}
+        let attributesDict = attributes.mapToDictionaryWithOptionalValue{object.primitiveValue(forKey: $0) as? NSObject}
         let toManyRelationshipsDict : [String : Int] = relationships.mapKeysAndValues(keysMapping: {$0}, valueMapping: { (key, relationShipDescription) in
             guard relationShipDescription.isToMany else { return nil }
             return (object.primitiveValue(forKey: key) as? Countable)?.count
         })
 
         let toOneRelationshipsDict : [String : Bool] = relationships.mapKeysAndValues(keysMapping: {$0}, valueMapping: { (key, relationshipDescription) in
-//            guard !relationshipDescription.isToMany else { return nil }
-//            return object.primitiveValue(forKey: key) != nil
-            ///这里由于需要监听到creator的更改，所以需要把这个属性加在attributesDict里面，那样可以通过值的不同来比较而不是只通过值是否为空而判断
-            if key == "creator" {
-                if let creator = object.primitiveValue(forKey: key) as? ZMUser {
-                    attributesDict["creator"] = creator
-                }
-                return true
-            } else {
-                guard !relationshipDescription.isToMany else { return nil }
-                return object.primitiveValue(forKey: key) != nil
-            }
+            guard !relationshipDescription.isToMany else { return nil }
+            return object.primitiveValue(forKey: key) != nil
         })
 
         return Snapshot(
