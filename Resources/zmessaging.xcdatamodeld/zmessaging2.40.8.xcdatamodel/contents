@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18D109" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.8">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18F203" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.8">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -47,6 +47,7 @@
         <attribute name="clearedTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="communityID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="conversationType" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="creatorChangeTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="disableSendLastModifiedDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="draftMessageData" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="groupImageMediumKey" optional="YES" attributeType="String" syncable="YES"/>
@@ -374,7 +375,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1215"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1230"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>

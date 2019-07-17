@@ -185,6 +185,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 // 是否公众号
 @property (nonatomic) BOOL isServiceNotice;
 
+///群主更换监听属性
+@property (nonatomic, nullable) NSDate *creatorChangeTimestamp;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 

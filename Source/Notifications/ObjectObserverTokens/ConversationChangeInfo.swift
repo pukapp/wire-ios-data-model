@@ -50,7 +50,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.isAllowViewMembers),
                     #keyPath(ZMConversation.isOpenCreatorInviteVerify),
                     #keyPath(ZMConversation.isOpenMemberInviteVerify),
-                    #keyPath(ZMConversation.creator),
+                    #keyPath(ZMConversation.creatorChangeTimestamp),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
                     #keyPath(ZMConversation.topWebApps),
@@ -162,7 +162,7 @@ extension ZMConversation : ObjectInSnapshot {
     }
     
     public var groupCreatorChanged: Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.creator))
+        return changedKeysContain(keys: #keyPath(ZMConversation.creatorChangeTimestamp))
     }
     
     public var openUrlChanged: Bool {

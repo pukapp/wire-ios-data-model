@@ -241,7 +241,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
 @synthesize lastReadTimestampUpdateCounter;
-
+@synthesize creatorChangeTimestamp;
 
 
 - (BOOL)isArchived
