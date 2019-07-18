@@ -133,6 +133,10 @@ extension ZMConversation : ObjectInSnapshot {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite)) ||
                changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
     }
+    /// 开启链接加入允许开启
+    public var onlyCreatorInviteChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite))
+    }
     //群禁言
     public var disableSendMsgChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isDisableSendMsg))
