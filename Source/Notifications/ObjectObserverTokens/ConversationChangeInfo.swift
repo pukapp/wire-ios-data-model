@@ -130,6 +130,10 @@ extension ZMConversation : ObjectInSnapshot {
         return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite)) ||
                changedKeysContain(keys: #keyPath(ZMConversation.isOpenCreatorInviteVerify))
     }
+    /// 仅限群主加人
+    public var onlyCreatorInviteChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isOnlyCreatorInvite))
+    }
     //群禁言
     public var disableSendMsgChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isDisableSendMsg))
