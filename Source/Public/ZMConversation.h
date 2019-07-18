@@ -148,10 +148,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nullable, nonatomic, copy) NSData *imageMediumData;
 @property (nullable, nonatomic, copy) NSData *imageSmallProfileData;
 //群应用
-@property (nullable, nonatomic, copy) NSString *topapps;
-@property (nullable, nonatomic, copy) NSString *apps;
-
-@property (nullable, nonatomic) NSOrderedSet<ZMWebApp *> *topWebApps;
+@property (nullable, nonatomic, copy) NSString *apps;///群内添加的所有应用
+@property (nullable, nonatomic) NSOrderedSet<ZMWebApp *> *topWebApps;///群内置顶的应用
 ///绑定的社区ID
 @property (nullable, nonatomic, copy) NSString *communityID;
 // 置顶聊天

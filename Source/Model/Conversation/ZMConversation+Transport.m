@@ -72,7 +72,7 @@ NSString *const ZMConversationInfoManagerDelKey = @"man_del";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
-NSString *const ZMConversationInfoTopAppsKey = @"top_apps_detail";
+NSString *const ZMConversationInfoTopWebAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
 NSString *const ZMConversationInfoIsVisitorsVisibleKey = @"show_invitor_list";
@@ -185,9 +185,9 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (nil != apps) {
         [self updateWithApps:apps];
     }
-    NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopAppsKey];
-    if (nil != topApps) {
-        [self updateWithTopApps:topApps];
+    NSArray *topWebApps = [transportData optionalArrayForKey:ZMConversationInfoTopWebAppsKey];
+    if (nil != topWebApps) {
+        [self updateWithTopWebApps:topWebApps];
     }
     NSArray *orator = [transportData optionalArrayForKey:ZMConversationInfoOratorKey];
     if (orator && orator.count > 0) {
@@ -342,7 +342,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     }
 }
 
-- (void)updateWithTopApps:(NSArray *)topApps {
+- (void)updateWithTopWebApps:(NSArray *)topApps {
 
     NSMutableOrderedSet<ZMWebApp *> *topWebApps = [NSMutableOrderedSet orderedSet];
     

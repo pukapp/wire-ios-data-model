@@ -53,7 +53,6 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.creatorChangeTimestamp),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
-                    #keyPath(ZMConversation.topWebApps),
                     #keyPath(ZMConversation.communityID),
                     #keyPath(ZMConversation.isPlacedTop),
                     #keyPath(ZMConversation.isDisableSendMsg),
@@ -114,9 +113,7 @@ extension ZMConversation : ObjectInSnapshot {
     public var appsChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.apps))
     }
-    public var topAppsChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.topWebApps))
-    }
+
     /// 新增对别人的回复类型改变
     public var replyTypeChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.autoReply))
@@ -262,7 +259,6 @@ extension ZMConversation : ObjectInSnapshot {
     public override var debugDescription : String {
         return ["replyTypeChanged: \(replyTypeChanged)",
                 "appsChanged: \(appsChanged)",
-                "topAppsChanged: \(topAppsChanged)",
                 "messagesChanged: \(messagesChanged)",
                 "headerImgChanged: \(headerImgChanged)",
                 "canOpenUrlChanged: \(canOpenUrlChanged)",
