@@ -216,17 +216,18 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     ? membersCountNumber.integerValue
     : (NSInteger)self.activeParticipants.count;
     
-    NSNumber *receiptMode = [transportData optionalNumberForKey:ConversationInfoReceiptMode];
-    if (nil != receiptMode) {
-        BOOL enabled = receiptMode.intValue > 0;
-        BOOL receiptModeChanged = !self.hasReadReceiptsEnabled && enabled;
-        self.hasReadReceiptsEnabled = enabled;
-        
-        // We only want insert a system message if this is an existing conversation (non empty)
-        if (receiptModeChanged && self.lastMessage != nil) {
-            [self appendMessageReceiptModeIsOnMessageWithTimestamp:[NSDate date]];
-        }
-    }
+    // 暂时屏蔽群的已读回执系统消息
+//    NSNumber *receiptMode = [transportData optionalNumberForKey:ConversationInfoReceiptMode];
+//    if (nil != receiptMode) {
+//        BOOL enabled = receiptMode.intValue > 0;
+//        BOOL receiptModeChanged = !self.hasReadReceiptsEnabled && enabled;
+//        self.hasReadReceiptsEnabled = enabled;
+//
+//        // We only want insert a system message if this is an existing conversation (non empty)
+//        if (receiptModeChanged && self.lastMessage != nil) {
+//            [self appendMessageReceiptModeIsOnMessageWithTimestamp:[NSDate date]];
+//        }
+//    }
     
     self.accessModeStrings = [transportData optionalArrayForKey:ConversationInfoAccessModeKey];
     self.accessRoleString = [transportData optionalStringForKey:ConversationInfoAccessRoleKey];
