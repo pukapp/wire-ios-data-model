@@ -989,6 +989,12 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         return nil;
     }
     
+    BOOL isSelfSend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"from"] isEqualToString:[ZMUser selfUserInContext:moc].remoteIdentifier.transportString];
+    
+    if (type == ZMSystemMessageTypeServiceMessage && isSelfSend) {
+        return nil;
+    }
+    
     NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
     NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
     
@@ -1010,34 +1016,32 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
-    message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
     message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
     message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
     message.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
-    
-    if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify) {
-        if (![[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"from"] isEqualToString:[ZMUser selfUserInContext:moc].remoteIdentifier.transportString]) {
-            ///这条动态不是自己的
-            ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
-            serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
-            serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
-            serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
-            serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
-            message.serviceMessage = serviceMessage;
-            conversation.lastServiceMessage = serviceMessage;
-            NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
-            serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
-            ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
-            if (webapp) {
-                serviceMessage.inWebApp = webapp;
-            }
-            conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateForKey:@"time"];
-            message.isService = YES;
-        }
-    }
-    
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
+    
+    if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify && !isSelfSend)  {
+        ///这条动态不是自己的
+        ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
+        serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
+        serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
+        serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
+        serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
+        message.serviceMessage = serviceMessage;
+        conversation.lastServiceMessage = serviceMessage;
+        NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
+        serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
+        ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
+        if (webapp) {
+            serviceMessage.inWebApp = webapp;
+        }
+        conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateForKey:@"time"];
+        message.isService = YES;
+        message.hiddenInConversation = conversation;
+        message.visibleInConversation = nil;
+    }
     
     if (![usersSet isEqual:[NSSet setWithObject:message.sender]]) {
         [usersSet removeObject:message.sender];
