@@ -28,7 +28,9 @@ extension ZMConversation {
 
     @objc
     public class func predicate(forSearchQuery searchQuery: String) -> NSPredicate! {
-        let formatDict = [ZMConversationLastServerSyncedActiveParticipantsKey: "ANY %K.normalizedName MATCHES %@", ZMNormalizedUserDefinedNameKey: "%K MATCHES %@"]
+        let formatDict = [ZMNormalizedUserDefinedNameKey: "%K MATCHES %@"]
+        ///去除匹配所有群群成员的名称，当群和群成员非常多的时候，这个搜索所花费时间非常长
+//                          ZMConversationLastServerSyncedActiveParticipantsKey: "(ANY %K.normalizedName MATCHES %@)"]
         guard let searchPredicate = NSPredicate(formatDictionary: formatDict, matchingSearch: searchQuery) else { return .none }
         let activeMemberPredicate = NSPredicate(format: "%K == NULL OR %K == YES", ZMConversationClearedTimeStampKey, ZMConversationIsSelfAnActiveMemberKey)
         let basePredicate = NSPredicate(format: "(\(ZMConversationConversationTypeKey) == \(ZMConversationType.group.rawValue)) OR (\(ZMConversationConversationTypeKey) == \(ZMConversationType.hugeGroup.rawValue))")
