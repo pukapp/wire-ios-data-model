@@ -348,6 +348,10 @@ struct CacheAsset: Asset {
         self.cache = cache
     }
     
+    var needsUploadOriginal: Bool {
+        return self.owner.isUploadOriginalImage
+    }
+
     var needsPreprocessing: Bool {
         switch type {
         case .file:
@@ -545,6 +549,8 @@ public protocol AssetMessage {
 
 /// Represent a single asset like file, thumbnail, image and image preview.
 public protocol Asset {
+    ///是否需要上传原图
+    var needsUploadOriginal: Bool { get }
     
     /// True if the original unprocessed data is available on disk
     var hasOriginal: Bool { get }
