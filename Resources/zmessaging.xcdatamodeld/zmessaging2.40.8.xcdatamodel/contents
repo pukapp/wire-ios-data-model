@@ -219,6 +219,7 @@
         <attribute name="messageTimer" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsUpdatingUsers" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="numberOfGuestsAdded" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="opt_id" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="relevantForConversationStatus" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="systemMessageType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
@@ -385,7 +386,7 @@
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
-        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="345"/>
+        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="360"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="945"/>

@@ -950,6 +950,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic messageTimer;
 @dynamic blockTime;
 @dynamic blockDuration;
+@dynamic opt_id;
 @dynamic serviceMessage;
 @dynamic blockUser;
 @dynamic managerType;
@@ -1020,6 +1021,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
     message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
     message.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
+    message.opt_id = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoOpt_idKey];
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     
     if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify && !isSelfSend)  {

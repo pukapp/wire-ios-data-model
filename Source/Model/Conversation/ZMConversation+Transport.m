@@ -64,6 +64,7 @@ NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
 NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
 NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
 NSString *const ZMConversationInfoBlockDurationKey = @"block_duration";
+NSString *const ZMConversationInfoOpt_idKey = @"opt_id";
 NSString *const ZMConversationInfoBlockUserKey = @"block_user";
 NSString *const ZMConversationInfoOratorKey = @"orator";
 NSString *const ZMConversationInfoManagerKey = @"manager";
