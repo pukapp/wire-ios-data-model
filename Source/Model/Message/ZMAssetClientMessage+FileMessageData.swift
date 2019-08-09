@@ -93,8 +93,7 @@ import Foundation
 }
 
 ///使用关联属性来对值进行存储，避免每次都进行计算
-private var AssociateIsAudioKey: String = "AssociateIsAudioKey"
-private var AssociateIsVideoKey: String = "AssociateIsVideoKey"
+private var AssociateRichAssetTypeKey: String = "AssociateRichAssetTypeKey"
 
 extension ZMAssetClientMessage: ZMFileMessageData {
     
@@ -129,9 +128,21 @@ extension ZMAssetClientMessage: ZMFileMessageData {
         return nil
     }
 
+    private var _richAssetType: RichAssetFileType? {
+        get {
+            return objc_getAssociatedObject(self, &AssociateRichAssetTypeKey) as? RichAssetFileType
+        }
+        set(newValue) {
+            objc_setAssociatedObject(self, &AssociateRichAssetTypeKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
     /// If the asset is a rich file type, this returns its type.
     public var richAssetType: RichAssetFileType? {
-        return mimeType.flatMap(RichAssetFileType.init)
+        if _richAssetType == nil {
+            _richAssetType = mimeType.flatMap(RichAssetFileType.init)
+        }
+        return _richAssetType
     }
     
     public var fileURL: URL? {
