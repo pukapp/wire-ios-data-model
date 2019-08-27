@@ -220,6 +220,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic communityID;
     
 @dynamic isPlacedTop;
+@dynamic isReadAnnouncement;
 
 @dynamic orator;
 @dynamic manager;

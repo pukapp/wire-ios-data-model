@@ -178,6 +178,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 /// 群公告
 @property (nullable, nonatomic, copy) NSString *announcement;
 
+@property (nonatomic) BOOL isReadAnnouncement;
+
 @property (nonatomic) NSDate * _Nullable lastServiceMessageTimeStamp;
 
 // 是否公众号
