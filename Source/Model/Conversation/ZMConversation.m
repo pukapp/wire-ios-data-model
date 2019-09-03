@@ -1319,6 +1319,18 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         NSSet *existingUsers = [self.lastServerSyncedActiveParticipants.set copy];
         [self.mutableLastServerSyncedActiveParticipants unionOrderedSet:otherUsers];
         
+        ///收到了万人群加人推送，万人群的话则不需要校验设备的合法性。
+        /*
+         <ZMUpdateEvent> 0d6bcf3c-cd7d-11e9-8001-0a24fd4248cc [AnyHashable("type"): conversation.member-join, AnyHashable("conversation"): 5dca1691-5b7b-4aaf-b8f5-5a8301ac0200, AnyHashable("from"): 6f8569e4-ef1c-4392-a96e-8db4b395b1e3, AnyHashable("time"): 2019-09-02T12:27:38.886Z, AnyHashable("data"): {
+         memsum = 4674;
+         "user_ids" =     (
+         "0a1d8c0c-8bba-4ca5-b010-cfe789f2a6c3"
+         );
+         }, AnyHashable("eid"): 6a4047ae-7305-4735-b842-6f0ea055175c]
+         */
+        if (self.conversationType == ZMConvTypeHugeGroup) {
+            return;
+        }
         [otherUsers minusSet:existingUsers];
         if (otherUsers.count > 0) {
             NSSet<ZMUser *> *otherUsersSet = otherUsers.set;
@@ -1341,6 +1353,10 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
     
     [self.mutableLastServerSyncedActiveParticipants minusOrderedSet:otherUsers];
+    ///收到了万人群删人推送，万人群的话则不需要校验设备的合法性。
+    if (self.conversationType == ZMConvTypeHugeGroup) {
+        return;
+    }
     [self increaseSecurityLevelIfNeededAfterRemovingUsers:otherUsers.set];
 }
 
