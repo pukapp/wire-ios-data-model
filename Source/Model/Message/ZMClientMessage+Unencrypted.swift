@@ -47,6 +47,10 @@ extension ZMClientMessage: UnencryptedMessagePayloadGenerator {
             params["recipients"] = sendUserIds
         }
         
+        if self.unblock {
+            params["unblock"] = true
+        }
+        
         return params
     }
 

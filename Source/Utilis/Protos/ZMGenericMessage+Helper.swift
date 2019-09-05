@@ -651,13 +651,16 @@ public extension ZMUserEntry {
 
 public extension ZMNewOtrMessage {
     
-    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil) -> ZMNewOtrMessage {
+    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil, unblock: Bool = false) -> ZMNewOtrMessage {
         let builder = ZMNewOtrMessage.builder()!
         builder.setNativePush(nativePush)
         builder.setSender(sender.clientId)
         builder.setRecipientsArray(recipients)
         if nil != blob {
             builder.setBlob(blob)
+        }
+        if unblock {
+            builder.setUnblock(unblock)
         }
         return builder.build()
     }

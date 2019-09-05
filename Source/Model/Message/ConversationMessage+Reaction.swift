@@ -52,8 +52,8 @@ extension ZMMessage {
         return appendReaction(reaction.unicodeValue, toMessage: message)
     }
     
-    @objc public static func removeReaction(onMessage message:ZMConversationMessage) {
-        _ = appendReaction(nil, toMessage: message)
+    @objc public static func removeReaction(onMessage message:ZMConversationMessage) -> ZMClientMessage? {
+        return appendReaction(nil, toMessage: message)
     }
     
     @objc public func addReaction(_ unicodeValue: String?, forUser user:ZMUser) {

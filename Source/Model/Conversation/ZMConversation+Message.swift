@@ -42,14 +42,15 @@ extension ZMConversation {
         return appendClientMessage(with: ZMGenericMessage.message(content: ZMKnock.knock(), nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
     }
     
-    @discardableResult @objc(appendJsonText:nonce:)
-    public func append(jsonText: String,
+    @discardableResult @objc(appendJsonText:unblock:nonce:)
+    public func append(jsonText: String, unblock: Bool = false,
                        nonce: UUID = UUID()) -> ZMConversationMessage? {
         
 //        guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
         let textContent = ZMTextJson.text(with: jsonText)
         let clientMessage = ZMGenericMessage.message(content: textContent, nonce: nonce)
         let message = appendClientMessage(with: clientMessage)!
+        message.unblock = unblock
         return message
     }
     
