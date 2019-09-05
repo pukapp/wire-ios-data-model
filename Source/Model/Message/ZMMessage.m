@@ -1295,7 +1295,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 + (NSFetchRequest *)fetchRequestForEphemeralMessagesThatNeedToBeDeleted
 {
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:self.entityName];
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K != nil AND %K != nil AND %K == FALSE AND hiddenInConversation.conversationType != 5",
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K != nil AND %K != nil AND %K == FALSE AND (hiddenInConversation.conversationType != 5 OR visibleInConversation.conversationType != 5)",
                               ZMMessageDestructionDateKey,          // If it has a destructionDate, the timer did not fire in time
                               ZMMessageSenderKey,                   // As soon as the message is deleted, we would delete the sender
                               ZMMessageIsObfuscatedKey];            // If the message is obfuscated, we don't need to obfuscate it again
