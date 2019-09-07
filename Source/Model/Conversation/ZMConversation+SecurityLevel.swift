@@ -188,7 +188,7 @@ extension ZMConversation {
     }
 
     private func updateSecurityLevel(cause: SecurityChangeCause) {
-        //guard self.conversationType != .hugeGroup else { return }
+        guard self.conversationType != .hugeGroup else { return }
         
         switch cause {
         case .addedUsers, .addedClients, .ignoredClients:
