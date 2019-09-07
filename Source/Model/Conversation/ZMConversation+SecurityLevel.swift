@@ -167,6 +167,8 @@ extension ZMConversation {
     }
 
     private func updateLegalHoldState(cause: SecurityChangeCause) {
+        guard self.conversationType != .hugeGroup else { return }
+        
         let detectedParticipantsUnderLegalHold = activeParticipants.any(\.isUnderLegalHold)
 
         switch (legalHoldStatus, detectedParticipantsUnderLegalHold) {
@@ -186,6 +188,8 @@ extension ZMConversation {
     }
 
     private func updateSecurityLevel(cause: SecurityChangeCause) {
+        //guard self.conversationType != .hugeGroup else { return }
+        
         switch cause {
         case .addedUsers, .addedClients, .ignoredClients:
             degradeSecurityLevelIfNeeded(for: cause)
