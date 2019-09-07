@@ -62,6 +62,7 @@ extension ZMMessage {
         guard let conversation = conversation, let messageNonce = nonce else { return nil}
         
         let message =  conversation.append(message: ZMMessageDelete.delete(messageId: messageNonce), hidden: true)
+        message?.unblock = true
         
         removeClearingSender(false)
         updateCategoryCache()
