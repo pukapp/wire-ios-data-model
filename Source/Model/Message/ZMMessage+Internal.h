@@ -214,6 +214,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL isConfrimInvite;
 // 用户是否确认拒绝被邀请
 @property (nonatomic) BOOL isRefuse;
+//此消息是否强制不被禁言
+@property (nonatomic) BOOL unblock;
 
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;

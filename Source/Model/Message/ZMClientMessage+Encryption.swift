@@ -68,7 +68,7 @@ extension ZMClientMessage: EncryptedPayloadGenerator {
         guard let genericMessage = self.genericMessage, let conversation = self.conversation else {
             return nil
         }
-        return genericMessage.encryptedMessagePayloadData(conversation, externalData: nil)
+        return genericMessage.encryptedMessagePayloadData(conversation, externalData: nil, unblock: self.unblock)
     }
 
     public var debugInfo: String {
@@ -98,11 +98,11 @@ extension ZMAssetClientMessage: EncryptedPayloadGenerator {
 
 extension ZMGenericMessage {
     
-    public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?) -> (data: Data, strategy: MissingClientsStrategy)? {
+    public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?, unblock: Bool = false) -> (data: Data, strategy: MissingClientsStrategy)? {
         guard let context = conversation.managedObjectContext else { return nil }
         
         let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context))
-        if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context) {
+        if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
             return (data, recipientsAndStrategy.strategy)
         }
         
@@ -119,7 +119,7 @@ extension ZMGenericMessage {
         return nil
     }
     
-    fileprivate func encryptedMessagePayloadData(for recipients: Set<ZMUser>, externalData: Data?, context: NSManagedObjectContext) -> Data? {
+    fileprivate func encryptedMessagePayloadData(for recipients: Set<ZMUser>, externalData: Data?, context: NSManagedObjectContext, unblock: Bool = false) -> Data? {
         guard let selfClient = ZMUser.selfUser(in: context).selfClient(), selfClient.remoteIdentifier != nil
             else { return nil }
         
@@ -127,7 +127,7 @@ extension ZMGenericMessage {
         var messageData : Data?
         
         encryptionContext.perform { (sessionsDirectory) in
-            let message = otrMessage(selfClient, recipients: recipients, externalData: externalData, sessionDirectory: sessionsDirectory)
+            let message = otrMessage(selfClient, recipients: recipients, externalData: externalData, sessionDirectory: sessionsDirectory, unblock: unblock)
 
             messageData = message.data()
             
@@ -228,11 +228,12 @@ extension ZMGenericMessage {
     fileprivate func otrMessage(_ selfClient: UserClient,
                                 recipients: Set<ZMUser>,
                                 externalData: Data?,
-                                sessionDirectory: EncryptionSessionsDirectory) -> ZMNewOtrMessage {
+                                sessionDirectory: EncryptionSessionsDirectory,
+                                unblock: Bool = false) -> ZMNewOtrMessage {
         
         let userEntries = self.recipientsWithEncryptedData(selfClient, recipients: recipients, sessionDirectory: sessionDirectory)
         let nativePush = !hasConfirmation() // We do not want to send pushes for delivery receipts
-        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush, recipients: userEntries, blob: externalData)
+        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush, recipients: userEntries, blob: externalData, unblock: unblock)
         
         return message
     }

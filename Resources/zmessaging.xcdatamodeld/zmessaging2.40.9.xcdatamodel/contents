@@ -173,6 +173,7 @@
         <attribute name="normalizedText" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="senderClientID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="unblock" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="confirmations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MessageConfirmation" inverseName="message" inverseEntity="MessageConfirmation" syncable="YES"/>
         <relationship name="discoveredClients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="discoveredByMessage" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="hiddenInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="hiddenMessages" inverseEntity="Conversation" syncable="YES"/>
@@ -382,7 +383,7 @@
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="135"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="525"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="540"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
