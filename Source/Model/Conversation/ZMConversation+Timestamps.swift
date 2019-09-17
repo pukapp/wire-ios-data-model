@@ -31,9 +31,12 @@ fileprivate extension ZMConversationMessage {
     
 }
 
-fileprivate extension ZMMessage {
+public extension ZMMessage {
     
     static func isVisible(_ message: ZMMessage) -> Bool {
+        if (message as? ZMSystemMessage)?.systemMessageType == .serviceMessage {
+            return true
+        }
         if let systemMessage = message as? ZMSystemMessage, let parentMessage = systemMessage.parentMessage as? ZMMessage {
             return parentMessage.visibleInConversation != nil
         } else {
