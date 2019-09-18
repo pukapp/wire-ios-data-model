@@ -32,7 +32,7 @@ enum MessageKey: String {
 extension ZMMessage : ObjectInSnapshot {
     
     @objc public class var observableKeys : Set<String> {
-        return [#keyPath(ZMMessage.deliveryState), #keyPath(ZMMessage.isObfuscated), #keyPath(ZMMessage.isConfrimInvite)]
+        return [#keyPath(ZMMessage.deliveryState), #keyPath(ZMMessage.isObfuscated)]
     }
     
     public var notificationName : Notification.Name {
@@ -129,7 +129,6 @@ extension ZMSystemMessage {
                 "transferStateChanged: \(transferStateChanged)",
                 "senderChanged: \(senderChanged)",
                 "isObfuscatedChanged: \(isObfuscatedChanged)",
-                "isConfrimInviteChanged: \(isConfrimInviteChanged)",
                 "genericMessageChanged: \(genericMessageChanged)",
                 "linkAttachmentsChanged: \(linkAttachmentsChanged)"
                 ].joined(separator: ", ")
@@ -186,10 +185,6 @@ extension ZMSystemMessage {
     
     public var linkPreviewChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMClientMessage.linkPreviewState), MessageKey.linkPreview.rawValue)
-    }
-    
-    public var isConfrimInviteChanged: Bool {
-        return changedKeysContain(keys: #keyPath(ZMClientMessage.isConfrimInvite))
     }
 
     public var transferStateChanged: Bool {

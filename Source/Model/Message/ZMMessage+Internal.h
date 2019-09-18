@@ -210,8 +210,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL  isGet;
 // 标记币币兑换状态
 @property (nonatomic) ZMBiBiCashType bibiCashType;
-// 群主是否确认邀请
-@property (nonatomic) BOOL isConfrimInvite;
 // 用户是否确认拒绝被邀请
 @property (nonatomic) BOOL isRefuse;
 //此消息是否强制不被禁言
