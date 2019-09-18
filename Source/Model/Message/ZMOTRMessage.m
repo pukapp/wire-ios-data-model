@@ -252,18 +252,9 @@ NSString * const DeliveredKey = @"delivered";
             return nil;
         }
         
+        // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
         if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-            // 被同步的设备需要在这里修改邀请成员消息的已确认属性
-            if (message.hasTextJson){
-                NSString *jsonText = message.textJson.content;
-                NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:[jsonText dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
-                
-                NSDictionary *data = dic[@"msgData"];
-                int type = [data[@"type"] intValue];
-                if (type == 2){
-                    clientMessage.isConfrimInvite = true;
-                }
-            }
+            isNewMessage = true;
         }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
