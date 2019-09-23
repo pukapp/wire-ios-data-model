@@ -953,6 +953,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic opt_id;
 @dynamic serviceMessage;
 @dynamic blockUser;
+@dynamic add_friend;
 @dynamic managerType;
 @dynamic relevantForConversationStatus;
 
@@ -1022,6 +1023,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
     message.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
     message.opt_id = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoOpt_idKey];
+    message.add_friend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoIsAllowMemberAddEachOtherKey] stringValue];
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     
     if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify && !isSelfSend)  {
@@ -1118,6 +1120,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             case ZMSystemMessageTypeManagerMsg:
             case ZMSystemMessageTypeCreatorChangeMsg:
             case ZMSystemMessageTypeServiceMessage:
+            case ZMSystemMessageTypeAllowAddFriend:
                 return NO;
         }
     }];
@@ -1150,6 +1153,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
     if (type == ZMUpdateEventTypeConversationUpdate && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoOTRCreatorChangeKey]) {
         number = @(ZMSystemMessageTypeCreatorChangeMsg);
+    }
+    if (type == ZMUpdateEventTypeConversationUpdate && [[event.payload optionalDictionaryForKey:@"data"].allKeys containsObject:ZMConversationInfoIsAllowMemberAddEachOtherKey]) {
+        number = @(ZMSystemMessageTypeAllowAddFriend);
     }
     if(number == nil) {
         return ZMSystemMessageTypeInvalid;

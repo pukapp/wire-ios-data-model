@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18G95" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.11">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18G87" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.11">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -210,6 +210,7 @@
         <relationship name="selfUser" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
     </entity>
     <entity name="SystemMessage" representedClassName="ZMSystemMessage" parentEntity="Message" syncable="YES">
+        <attribute name="add_friend" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="allTeamUsersAdded" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="blockDuration" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="blockTime" optional="YES" attributeType="Integer 64" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
@@ -387,7 +388,7 @@
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
-        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="360"/>
+        <element name="SystemMessage" positionX="27" positionY="57" width="128" height="375"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="945"/>
