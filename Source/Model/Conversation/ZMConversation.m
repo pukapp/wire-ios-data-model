@@ -196,6 +196,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic team;
 // 新增
 
+@dynamic lastVisibleMessage;
 @dynamic selfRemark;
 
 @dynamic autoReply;
@@ -292,7 +293,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     NSFetchRequest *request = [super sortedFetchRequest];
 
     if(request.predicate) {
-        request.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[request.predicate, self.predicateForFilteringResults]];
+        request.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[request.predicate]];
     }
     else {
         request.predicate = self.predicateForFilteringResults;
@@ -659,7 +660,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 + (NSArray *)defaultSortDescriptors
 {
     return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsPlacedTopKey ascending:NO],
-             [NSSortDescriptor sortDescriptorWithKey:ZMConversationIsArchivedKey ascending:YES],
              [NSSortDescriptor sortDescriptorWithKey:LastModifiedDateKey ascending:NO],
              [NSSortDescriptor sortDescriptorWithKey:ZMConversationRemoteIdentifierDataKey ascending:YES],];
 }
@@ -1192,6 +1192,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     Require(message != nil);
     [message updateNormalizedText];
     message.visibleInConversation = self;
+    self.lastVisibleMessage = message;
     
     [self addAllMessagesObject:message];
     [self updateTimestampsAfterInsertingMessage:message];

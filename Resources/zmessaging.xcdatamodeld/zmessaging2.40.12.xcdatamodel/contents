@@ -110,6 +110,7 @@
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="lastServerSyncedActiveParticipants" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="User" inverseName="lastServerSyncedActiveConversations" inverseEntity="User" syncable="YES"/>
         <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inConversation" inverseEntity="ServiceMessage" syncable="YES"/>
+        <relationship name="lastVisibleMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
         <relationship name="membersAliasname" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
         <relationship name="membersSendMsgStatuses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserDisableSendMsgStatus" inverseName="withConversation" inverseEntity="UserDisableSendMsgStatus" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" syncable="YES"/>
@@ -377,7 +378,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1230"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1245"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>

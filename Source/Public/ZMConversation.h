@@ -188,6 +188,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 ///群主更换监听属性
 @property (nonatomic, nullable) NSDate *creatorChangeTimestamp;
 
+///群内最后一条可见消息
+@property (nonatomic, nullable) ZMMessage *lastVisibleMessage;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 

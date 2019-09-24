@@ -216,6 +216,8 @@ NSString * const DeliveredKey = @"delivered";
         ZMClientMessage *editedMessage = [ZMClientMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
         if ([editedMessage processMessageEdit:message.edited from:updateEvent]) {
             [editedMessage updateCategoryCache];
+            
+            conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
         }
     } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasCalling || message.hasAvailability)) {
@@ -272,6 +274,7 @@ NSString * const DeliveredKey = @"delivered";
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
         
+        conversation.lastVisibleMessage = clientMessage;
         return clientMessage;
     }
 

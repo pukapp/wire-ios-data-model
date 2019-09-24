@@ -1055,7 +1055,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     message.text = messageText != nil ? messageText : name;
     
     [conversation updateTimestampsAfterUpdatingMessage:message];
-    
+    conversation.lastVisibleMessage = message;
     return message;
 }
 
