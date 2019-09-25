@@ -223,7 +223,9 @@ private let zmLog = ZMSLog(tag: "UserClient")
     /// If called on a client belonging to the self user this method does nothing.
     
     public func update(with payload: [String: Any]) {
-        guard user?.isSelfUser == false, let deviceClass = payload["class"] as? String else { return }
+        //guard user?.isSelfUser == false, let deviceClass = payload["class"] as? String else { return }
+        //自己的设备增加当没有从推送过来时，而是从消息响应带过来的时候needsToBeUpdatedFromBackend就会为true，这里把自己的设备过滤就会导致消息一直发布出去的bug
+        guard let deviceClass = payload["class"] as? String else { return }
         
         self.deviceClass = DeviceClass(rawValue: deviceClass)
         self.needsToBeUpdatedFromBackend = false
