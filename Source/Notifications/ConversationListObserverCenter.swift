@@ -117,7 +117,7 @@ public class ConversationListObserverCenter : NSObject, ChangeInfoConsumer {
               || changes.mutedMessageTypesChanged || changes.lastModifiedDateChanged || changes.conversationListIndicatorChanged
               || changes.clearedChanged           || changes.securityLevelChanged    || changes.teamChanged
               || changes.messagesChanged          || changes.selfRemarkChanged       || changes.headerImgChanged
-              || changes.replyTypeChanged
+              || changes.replyTypeChanged         || changes.placeTopStatusChanged
         else { return }
         zmLog.debug("conversationDidChange with changes \(changes.customDebugDescription)")
         forwardToSnapshots{$0.processConversationChanges(changes)}
