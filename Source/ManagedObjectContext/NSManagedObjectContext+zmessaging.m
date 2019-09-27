@@ -178,12 +178,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 
 - (BOOL)zm_shouldRefreshObjectsWithSyncContextPolicy
 {
-    return self.zm_isSyncContext && !self.zm_isRefreshOfObjectsDisabled;
+    return self.zm_isSyncContext && !self.zm_isRefreshOfObjectsDisabled && self.shouldRefreshObjects;
 }
 
 - (BOOL)zm_shouldRefreshObjectsWithUIContextPolicy
 {
-    return self.zm_isUserInterfaceContext && !self.zm_isRefreshOfObjectsDisabled && self.shouldRefreshObjects;
+    return self.zm_isUserInterfaceContext && !self.zm_isRefreshOfObjectsDisabled;
 }
 
 - (DisplayNameGenerator *)zm_displayNameGenerator {
