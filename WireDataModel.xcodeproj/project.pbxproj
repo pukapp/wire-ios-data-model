@@ -189,6 +189,7 @@
 		87F7288D21B02E2A000ED371 /* store2-56-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 87F7288821B02DD7000ED371 /* store2-56-0.wiredatabase */; };
 		87F7288E21B02E2A000ED371 /* store2-57-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 87F7288621B02DD6000ED371 /* store2-57-0.wiredatabase */; };
 		87FFC71A20DBF2820005076E /* store2-47-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 87FFC71920DBF2820005076E /* store2-47-0.wiredatabase */; };
+		A0172FF1233DF5EB008BD618 /* NSManagedObjectContext+delayRefreshObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0172FF0233DF5EB008BD618 /* NSManagedObjectContext+delayRefreshObjects.swift */; };
 		A01D508422770A6400E7AF52 /* ZMConversation+SendDisable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01D508322770A6400E7AF52 /* ZMConversation+SendDisable.swift */; };
 		A04AC76F221E9E0F0005C9E3 /* UserAliasname.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */; };
 		A0EDE7202271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */; };
@@ -741,6 +742,7 @@
 		87F7288721B02DD7000ED371 /* store2-55-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; name = "store2-55-0.wiredatabase"; path = "Tests/Resources/store2-55-0.wiredatabase"; sourceTree = SOURCE_ROOT; };
 		87F7288821B02DD7000ED371 /* store2-56-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; name = "store2-56-0.wiredatabase"; path = "Tests/Resources/store2-56-0.wiredatabase"; sourceTree = SOURCE_ROOT; };
 		87FFC71920DBF2820005076E /* store2-47-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; name = "store2-47-0.wiredatabase"; path = "Tests/Resources/store2-47-0.wiredatabase"; sourceTree = SOURCE_ROOT; };
+		A0172FF0233DF5EB008BD618 /* NSManagedObjectContext+delayRefreshObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+delayRefreshObjects.swift"; sourceTree = "<group>"; };
 		A01D508322770A6400E7AF52 /* ZMConversation+SendDisable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+SendDisable.swift"; sourceTree = "<group>"; };
 		A03FBCE42248D65F00B2B2A4 /* zmessaging2.40.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.40.1.xcdatamodel; sourceTree = "<group>"; };
 		A040AFA22296479200C7506D /* zmessaging2.40.5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.40.5.xcdatamodel; sourceTree = "<group>"; };
@@ -1396,6 +1398,7 @@
 				D5FA30C42063DC2D00716618 /* BackupMetadata.swift */,
 				54D7B83E1E12774600C1B347 /* NSPersistentStore+Metadata.swift */,
 				5473CC721E14245C00814C03 /* NSManagedObjectContext+Debugging.swift */,
+				A0172FF0233DF5EB008BD618 /* NSManagedObjectContext+delayRefreshObjects.swift */,
 			);
 			name = ManagedObjectContext;
 			path = Source/ManagedObjectContext;
@@ -2607,6 +2610,7 @@
 				F16378511E5C805100898F84 /* ZMConversationSecurityLevel.swift in Sources */,
 				5E9EA4E22243E0D300D401B2 /* ConversationMessage+Attachments.swift in Sources */,
 				F93C4C7D1E24E1B1007E9CEE /* NotificationDispatcher.swift in Sources */,
+				A0172FF1233DF5EB008BD618 /* NSManagedObjectContext+delayRefreshObjects.swift in Sources */,
 				F9A706951CAEE01D00C2F5FE /* UserClient.swift in Sources */,
 				54FB03A31E41E64A000E13DC /* UserClient+Patches.swift in Sources */,
 				F9A706971CAEE01D00C2F5FE /* UserClientTypes.m in Sources */,
