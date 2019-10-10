@@ -41,22 +41,16 @@ static NSString *const ConversationInfoAccessRoleKey = @"access_role";
 static NSString *const ConversationInfoMessageTimer = @"message_timer";
 static NSString *const ConversationInfoReceiptMode = @"receipt_mode";
 
-static NSString *const ConversationInfoAppsKey = @"apps";
-
-
 NSString *const ZMConversationInfoOTRMutedValueKey = @"otr_muted";
 NSString *const ZMConversationInfoOTRMutedStatusValueKey = @"otr_muted_status";
 NSString *const ZMConversationInfoOTRMutedReferenceKey = @"otr_muted_ref";
 NSString *const ZMConversationInfoOTRArchivedValueKey = @"otr_archived";
 NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 
-
 // 新增
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
-// 聊天置顶
 NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
-
 NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
 NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
@@ -73,6 +67,7 @@ NSString *const ZMConversationInfoManagerDelKey = @"man_del";
 NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
+NSString *const ZMConversationInfoAppsKey = @"apps";
 NSString *const ZMConversationInfoTopWebAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
@@ -182,7 +177,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (nil != teamId) {
         [self updateTeamWithIdentifier:teamId];
     }
-    NSArray *apps = [transportData optionalArrayForKey:ConversationInfoAppsKey];
+    NSArray *apps = [transportData optionalArrayForKey:ZMConversationInfoAppsKey];
     if (nil != apps) {
         [self updateWithApps:apps];
     }

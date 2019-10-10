@@ -50,6 +50,7 @@ extern NSString *const ZMConversationInfoManagerDelKey;
 extern NSString *const ZMConversationInfoOTRCanAddKey;
 extern NSString *const ZMCOnversationInfoOTROpenUrlJoinKey;
 extern NSString *const ZMCOnversationInfoOTRAllowViewMembersKey;
+extern NSString *const ZMConversationInfoAppsKey;
 extern NSString *const ZMConversationInfoTopWebAppsKey;
 extern NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey;
 extern NSString *const ZMConversationInfoIsVisibleForMemberChangeKey;
