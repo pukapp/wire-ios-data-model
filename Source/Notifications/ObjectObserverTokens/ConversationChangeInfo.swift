@@ -61,6 +61,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.orator),
                     #keyPath(ZMConversation.manager),
                     #keyPath(ZMConversation.isVisitorsVisible),
+                    #keyPath(ZMConversation.conversationType),
                     #keyPath(ZMConversation.isMessageVisibleOnlyManagerAndCreator),
                     #keyPath(ZMConversation.announcement),
                     #keyPath(ZMConversation.hasReadReceiptsEnabled),
@@ -154,6 +155,7 @@ extension ZMConversation : ObjectInSnapshot {
     public var oratorChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.orator))
     }
+    
     public var managersChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.manager))
     }
@@ -164,6 +166,10 @@ extension ZMConversation : ObjectInSnapshot {
     
     public var groupCreatorChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.creatorChangeTimestamp))
+    }
+    
+    public var groupTypeChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.conversationType))
     }
     
     public var openUrlChanged: Bool {
