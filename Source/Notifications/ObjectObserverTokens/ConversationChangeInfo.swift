@@ -53,6 +53,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.creatorChangeTimestamp),
                     #keyPath(ZMConversation.selfRemark),
                     #keyPath(ZMConversation.apps),
+                    #keyPath(ZMConversation.topWebApps),
                     #keyPath(ZMConversation.communityID),
                     #keyPath(ZMConversation.isPlacedTop),
                     #keyPath(ZMConversation.isDisableSendMsg),
@@ -112,7 +113,7 @@ extension ZMConversation : ObjectInSnapshot {
     }
     
     public var appsChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.apps))
+        return changedKeysContain(keys: #keyPath(ZMConversation.apps)) || changedKeysContain(keys: #keyPath(ZMConversation.topWebApps))
     }
 
     /// 新增对别人的回复类型改变
