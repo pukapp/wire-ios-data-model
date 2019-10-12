@@ -324,15 +324,15 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 {
     [super awakeFromFetch];
     self.lastReadTimestampSaveDelay = ZMConversationDefaultLastReadTimestampSaveDelay;
-    if (self.managedObjectContext.zm_isSyncContext) {
-        // From the documentation: The managed object context’s change processing is explicitly disabled around this method so that you can use public setters to establish transient values and other caches without dirtying the object or its context.
-        // Therefore we need to do a dispatch async  here in a performGroupedBlock to update the unread properties outside of awakeFromFetch
-        ZM_WEAK(self);
-        [self.managedObjectContext performGroupedBlock:^{
-            ZM_STRONG(self);
-            [self calculateLastUnreadMessages];
-        }];
-    }
+//    if (self.managedObjectContext.zm_isSyncContext) {
+//        // From the documentation: The managed object context’s change processing is explicitly disabled around this method so that you can use public setters to establish transient values and other caches without dirtying the object or its context.
+//        // Therefore we need to do a dispatch async  here in a performGroupedBlock to update the unread properties outside of awakeFromFetch
+//        ZM_WEAK(self);
+//        [self.managedObjectContext performGroupedBlock:^{
+//            ZM_STRONG(self);
+//            [self calculateLastUnreadMessages];
+//        }];
+//    }
 }
 
 - (void)awakeFromInsert;
@@ -1192,7 +1192,11 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     Require(message != nil);
     [message updateNormalizedText];
     message.visibleInConversation = self;
-    self.lastVisibleMessage = message;
+    if ([message isKindOfClass:[ZMSystemMessage classForCoder]] && ((ZMSystemMessage*)message).systemMessageType == ZMSystemMessageTypePotentialGap) {
+        ///如果是此系统消息则不做存储，否则聊天列表的显示存在问题
+    } else {
+        self.lastVisibleMessage = message;
+    }
     
     [self addAllMessagesObject:message];
     [self updateTimestampsAfterInsertingMessage:message];

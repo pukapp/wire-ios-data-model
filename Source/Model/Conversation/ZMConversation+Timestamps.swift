@@ -212,9 +212,20 @@ extension ZMConversation {
         if let sender = message.sender, sender.isSelfUser {
             // if the message was sent by the self user we don't want to send a lastRead event, since we consider this message to be already read
             updateLastRead(timestamp, synchronize: false)
+        } else {
+            ///当来了新消息的时候，判断此消息类型，并做一个统计，用来作为会话列表页面的显示数据，由于ping和missedCall的logo显示位置一样，所以是互斥，所以最新的是哪种消息，就把另外一种消息类型清除。
+            if message.isKnock {
+                updateLastUnreadMissedCall(nil)
+                updateLastUnreadKnock(message.serverTimestamp)
+            } else if let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
+                    internalEstimatedUnreadSelfMentionCount += 1
+            } else if let textMessageData = message.textMessageData, textMessageData.isQuotingSelf {
+                internalEstimatedUnreadSelfReplyCount += 1
+            } else if message.shouldGenerateUnreadCount() {
+                internalEstimatedUnreadCount += 1
+            }
         }
-        
-        calculateLastUnreadMessages()
+        //calculateLastUnreadMessages()
     }
     
     /// Update timetamps after an message has been inserted locally by the self user
@@ -225,8 +236,12 @@ extension ZMConversation {
         if message.shouldGenerateUnreadCount() {
             updateLastModified(timestamp)
         }
-
-        calculateLastUnreadMessages()
+        if message.isSystem, let systemMessage = message as? ZMSystemMessage, systemMessage.systemMessageType == .missedCall {
+            //missedCall是系统消息，是从本机发送的，所以在这个方法进行判断，由于ping和missedCall的logo显示位置一样，所以是互斥，所以最新的是哪种消息，就把另外一种消息类型清除。
+            updateLastUnreadKnock(nil)
+            updateLastUnreadMissedCall(message.serverTimestamp)
+        }
+        //calculateLastUnreadMessages()
     }
     
     /// Update timetamps after an message has been deleted
@@ -273,6 +288,20 @@ extension ZMConversation {
             
             self?.savePendingLastRead()
             managedObjectContext.leaveAllGroups(groups)
+        }
+        ///当点击进入会话页面，会调用此方法来更新消息已读时间，在此方法内重置所有的消息统计状态
+        let conversationID = self.objectID
+        guard let syncContext = managedObjectContext.zm_sync else { return }
+        syncContext.performGroupedBlock {
+            guard let syncObject = try? syncContext.existingObject(with: conversationID), let syncConversation = syncObject as? ZMConversation else {
+                return
+            }
+            syncConversation.updateLastUnreadKnock(nil)
+            syncConversation.updateLastUnreadMissedCall(nil)
+            syncConversation.internalEstimatedUnreadSelfMentionCount = 0
+            syncConversation.internalEstimatedUnreadSelfReplyCount = 0
+            syncConversation.internalEstimatedUnreadCount = 0
+            syncContext.saveOrRollback()
         }
     }
     
