@@ -147,7 +147,10 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     }
     
     if (serverTimeStamp != nil) {
-        [self updateLastModified:serverTimeStamp];
+         // If the lastModifiedDate is non-nil, e.g. restore from backup, do not update the lastModifiedDate
+        if (self.lastModifiedDate == nil) {
+            [self updateLastModified:serverTimeStamp];
+        }
         [self updateServerModified:serverTimeStamp];
     }
     
@@ -364,7 +367,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 - (BOOL)updateIsArchivedWithPayload:(NSDictionary *)dictionary
 {
     if (dictionary[ZMConversationInfoOTRArchivedReferenceKey] != nil && dictionary[ZMConversationInfoOTRArchivedReferenceKey] != [NSNull null]) {
-        NSDate *silencedRef = [dictionary dateForKey:ZMConversationInfoOTRArchivedReferenceKey];
+        NSDate *silencedRef = [dictionary dateFor:ZMConversationInfoOTRArchivedReferenceKey];
         if (silencedRef != nil && [self updateArchived:silencedRef synchronize:NO]) {
             NSNumber *archived = [dictionary optionalNumberForKey:ZMConversationInfoOTRArchivedValueKey];
             self.internalIsArchived = [archived isEqual:@1];

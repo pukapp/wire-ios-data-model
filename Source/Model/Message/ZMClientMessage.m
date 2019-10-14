@@ -81,14 +81,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     return self.updatedTimestamp;
 }
 
-- (void)prepareForDeletion
-{
-    [super prepareForDeletion];
-    for (ZMGenericMessageData *messageData in self.dataSet) {
-        [messageData.managedObjectContext deleteObject:messageData];
-    }
-}
-
 - (NSData *)hashOfContent
 {
     if (self.serverTimestamp == nil) {
@@ -237,6 +229,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     if (self.genericMessage.hasEdited) {
         // Re-apply the edit since we've restored the orignal nonce when the message expired
         [self editText:self.textMessageData.messageText mentions:self.textMessageData.mentions fetchLinkPreview:YES];
+        [super resend];
     } else {
         [super resend];
     }
@@ -293,7 +286,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
             ZMLogWarn(@"send message response nonce does not match");
             return;
         }
-        NSDate *serverTimestamp = [payload dateForKey:@"time"];
+        NSDate *serverTimestamp = [payload dateFor:@"time"];
         if (serverTimestamp != nil) {
             self.updatedTimestamp = serverTimestamp;
         }
