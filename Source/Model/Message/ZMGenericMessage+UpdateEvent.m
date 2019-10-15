@@ -57,34 +57,13 @@
             
         case ZMUpdateEventTypeConversationUserServiceNoticeAdd:
         case ZMUpdateEventTypeConversationWalletNotify: {
-            NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
-            if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
-                break;
-            }
-            NSData *data = [NSJSONSerialization dataWithJSONObject:dataDictionary options:NSJSONWritingPrettyPrinted error:nil];
-            NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            
-            ZMTextJson *temp = [ZMTextJson textWith:jsonString];
-            ZMGenericMessage *msg = [ZMGenericMessage messageWithContent:temp nonce:[updateEvent uuid]];
-            message = [self genericMessageWithBase64String:msg.data.base64String updateEvent:updateEvent];
+            message = [self serviceGenericMessageWithUpdateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
             break;
             
         case ZMUpdateEventTypeConversationMemberJoinask: {
-            NSDictionary *dataDictionary = [updateEvent.payload dictionaryForKey:@"data"];
-            if (![NSJSONSerialization isValidJSONObject:dataDictionary]){
-                break;
-            }
-            NSData *data = [NSJSONSerialization dataWithJSONObject:dataDictionary options:NSJSONWritingPrettyPrinted error:nil];
-            NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            ZMTextJson *temp = [ZMTextJson textWith:jsonString];
-            NSUUID *messageUuid = [[dataDictionary dictionaryForKey:@"msgData"] optionalUuidForKey:@"code"];
-            if (messageUuid == nil) {
-                break;
-            }
-            ZMGenericMessage *msg = [ZMGenericMessage messageWithContent:temp nonce:messageUuid];
-            message = [self genericMessageWithBase64String:msg.data.base64String updateEvent:updateEvent];
+            message = [self memberJoinAskGenericMessageWithUpdateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
             break;
