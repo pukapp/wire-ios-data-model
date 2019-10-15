@@ -185,7 +185,7 @@ extension ZMMessage {
             }
         }
         get {
-            let key = #keyPath(ZMClientMessage.visibleInConversation)
+            let key = #keyPath(ZMMessage.visibleInConversation)
             self.willAccessValue(forKey: key)
             let value = self.primitiveValue(forKey: key) as? ZMConversation
             self.didAccessValue(forKey: key)
@@ -199,9 +199,16 @@ extension ZMMessage {
             self.willChangeValue(forKey: key)
             self.setPrimitiveValue(newValue, forKey: key)
             self.didChangeValue(forKey: key)
+            if let conv = newValue, let nonce = self.nonce {
+                if let messagesNonceSet = conv.messagesNonceSet {
+                    conv.messagesNonceSet = messagesNonceSet.union([nonce])
+                } else {
+                    conv.messagesNonceSet = [nonce]
+                }
+            }
         }
         get {
-            let key = #keyPath(ZMClientMessage.hiddenInConversation)
+            let key = #keyPath(ZMMessage.hiddenInConversation)
             self.willAccessValue(forKey: key)
             let value = self.primitiveValue(forKey: key) as? ZMConversation
             self.didAccessValue(forKey: key)
