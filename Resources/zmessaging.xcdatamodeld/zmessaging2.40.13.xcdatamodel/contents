@@ -88,6 +88,7 @@
         <attribute name="managerAdd" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="managerDel" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="membersCount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="messagesNonceSet" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="mutedStatus" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" elementID="mutedStatus" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
@@ -378,7 +379,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1245"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1260"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>

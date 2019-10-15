@@ -224,34 +224,32 @@ NSString * const DeliveredKey = @"delivered";
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
-        ZMOTRMessage *clientMessage = [messageClass fetchMessageWithNonce:nonce
-                                                          forConversation:conversation
-                                                   inManagedObjectContext:moc
-                                                           prefetchResult:prefetchResult];
-        
-        ///由于topic推送机制，在万人群发消息的时候也会给自己发送一条推送消息，所以这里判断senderClientID为空则说明是自己发送的消息，并且是万人群，则直接不做任何处理
-        if (clientMessage && !clientMessage.senderClientID && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
-            return nil;
-        }
-        ///万人群忽略送达的状态
-        if (clientMessage && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
-            clientMessage.delivered = YES;
-        }
-        
-        if (clientMessage.isZombieObject) {
-            return nil;
-        }
-        
+        ZMOTRMessage *clientMessage;
         BOOL isNewMessage = NO;
-        if (clientMessage == nil) {
-            isNewMessage = YES;
-            
+        if ([conversation.messagesNonceSet containsObject:nonce]) {
+            clientMessage = [messageClass fetchMessageWithNonce:nonce
+                                                forConversation:conversation
+                                         inManagedObjectContext:moc
+                                                 prefetchResult:prefetchResult];
+            ///由于topic推送机制，在万人群发消息的时候也会给自己发送一条推送消息，所以这里判断senderClientID为空则说明是自己发送的消息，并且是万人群，则直接不做任何处理
+            if (clientMessage && !clientMessage.senderClientID && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
+                return nil;
+            }
+            ///万人群忽略送达的状态
+            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
+                clientMessage.delivered = YES;
+            }
+            if (clientMessage.isZombieObject) {
+                return nil;
+            }
+            if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
+                return nil;
+            }
+        } else {
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
             isNewMessage = YES;
-        } else if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
-            return nil;
         }
         
         // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的

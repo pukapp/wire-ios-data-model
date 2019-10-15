@@ -196,6 +196,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic team;
 // 新增
 
+@dynamic messagesNonceSet;
 @dynamic lastVisibleMessage;
 @dynamic selfRemark;
 
