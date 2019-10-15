@@ -46,11 +46,13 @@ typedef NS_ENUM(int16_t, ZMRobotState) {
 // 1 : 祖冲之机器人
 // 2 : Pk机器人
 // 3 : 公众号
+// 5 : 新增的带应用公众号类型
 typedef NS_ENUM(int16_t, ZMRobotType) {
     ZMRobotTypeNormal = 0,
     ZMRobotTypeZuChongZhi,
     ZMRobotTypePK,
-    ZMRobotTypeService
+    ZMRobotTypeService,
+    ZMRobotTypeAppService = 5
 };
 
 extern NSString * _Nonnull const ZMPersistedClientIdKey;
