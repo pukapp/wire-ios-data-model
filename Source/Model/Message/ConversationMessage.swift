@@ -176,12 +176,25 @@ extension ZMMessage {
             self.willChangeValue(forKey: key)
             self.setPrimitiveValue(newValue, forKey: key)
             self.didChangeValue(forKey: key)
+            
+            ///设置messagesNonceSet
             if let conv = newValue, let nonce = self.nonce {
                 if let messagesNonceSet = conv.messagesNonceSet {
                     conv.messagesNonceSet = messagesNonceSet.union([nonce])
                 } else {
                     conv.messagesNonceSet = [nonce]
                 }
+            }
+            
+            ///设置lastVisibleMessage
+            if let sysMessage = self as? ZMSystemMessage, sysMessage.systemMessageType == .potentialGap {
+                ///如果是此系统消息则不做存储，否则聊天列表的显示存在问题
+                return
+            }
+            if newValue != nil {
+                visibleInConversation?.lastVisibleMessage = self
+            } else {
+                visibleInConversation?.lastVisibleMessage = nil
             }
         }
         get {

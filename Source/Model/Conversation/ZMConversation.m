@@ -1193,11 +1193,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     Require(message != nil);
     [message updateNormalizedText];
     message.visibleInConversation = self;
-    if ([message isKindOfClass:[ZMSystemMessage classForCoder]] && ((ZMSystemMessage*)message).systemMessageType == ZMSystemMessageTypePotentialGap) {
-        ///如果是此系统消息则不做存储，否则聊天列表的显示存在问题
-    } else {
-        self.lastVisibleMessage = message;
-    }
     
     [self addAllMessagesObject:message];
     [self updateTimestampsAfterInsertingMessage:message];

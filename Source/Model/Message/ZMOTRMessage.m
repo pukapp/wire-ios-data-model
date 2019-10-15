@@ -276,7 +276,6 @@ NSString * const DeliveredKey = @"delivered";
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
         
-        conversation.lastVisibleMessage = clientMessage;
         return clientMessage;
     }
 
