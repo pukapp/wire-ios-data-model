@@ -36,7 +36,7 @@ extension ZMGenericMessage {
                 url = (msgData["en"] as? [String: Any])?["url"] as? String
             }
             if let newsText = text, let newsUrl = url{
-                let tempMessage = ZMGenericMessage.message(content: ZMText.text(with: "\(newsText)/\n\(newsUrl)"), nonce: uuid)
+                let tempMessage = ZMGenericMessage.message(content: ZMText.text(with: "\(newsText)\n\(newsUrl)"), nonce: uuid)
                 guard let base64String = tempMessage.data()?.base64String() else {
                     return nil
                 }
