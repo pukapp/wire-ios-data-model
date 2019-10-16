@@ -259,6 +259,10 @@ NSString * const DeliveredKey = @"delivered";
         if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
             isNewMessage = true;
         }
+        // 收到新闻公众号的消息，主动去识别链接（后期时间冲突，改成自定义识别）
+        if (updateEvent.type == ZMUpdateEventTypeConversationUserServiceNoticeAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
+            ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
+        }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
         [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate:isNewMessage];
