@@ -360,15 +360,15 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             [activeParticipants addObject:self.connectedUser];
         }
     }
-    else if(self.isSelfAnActiveMember) {
+    else if(self.isSelfAnActiveMember &&
+            ![self.lastServerSyncedActiveParticipants containsObject:[ZMUser selfUserInContext:self.managedObjectContext]]) {
         [activeParticipants addObject:[ZMUser selfUserInContext:self.managedObjectContext]];
         [activeParticipants unionSet:[self.lastServerSyncedActiveParticipants set]];
     }
     else
     {
-        [activeParticipants unionSet:[self.lastServerSyncedActiveParticipants set]];
+        return [self.lastServerSyncedActiveParticipants set];
     }
-    
     return activeParticipants;
 }
 

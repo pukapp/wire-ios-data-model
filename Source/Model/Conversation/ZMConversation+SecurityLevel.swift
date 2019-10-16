@@ -316,6 +316,8 @@ extension ZMConversation {
     /// Adds the user to the list of participants if not already present and inserts a .participantsAdded system message
     @objc(addParticipantIfMissing:date:)
     public func addParticipantIfMissing(_ user: ZMUser, at date: Date = Date()) {
+        ///activeParticipants的计算过程占用cpu比较多，这里还是之前的逻辑，但是换种写法，来降低cpu计算量。
+        if case .hugeGroup = conversationType { return }
         guard !activeParticipants.contains(user) else { return }
         
         switch conversationType {
@@ -330,8 +332,6 @@ extension ZMConversation {
             }
             
             user.connection?.needsToBeUpdatedFromBackend = true
-        case .hugeGroup:
-            return
         default:
             break
         }
