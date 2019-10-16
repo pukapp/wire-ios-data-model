@@ -337,6 +337,23 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     [conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
+- (void)updateWithSender:(ZMUser *)sender forConversation:(ZMConversation *)conversation
+{
+    if (self.managedObjectContext != conversation.managedObjectContext) {
+        conversation = [ZMConversation conversationWithRemoteID:conversation.remoteIdentifier createIfNeeded:NO inContext:self.managedObjectContext];
+    }
+    
+    self.visibleInConversation = conversation;
+    if (sender != nil && !sender.isZombieObject && self.managedObjectContext == sender.managedObjectContext) {
+        self.sender = sender;
+    } else {
+        ZMLogError(@"Sender is nil or from a different context than message. \n Sender is zombie %@: %@ \n Message: %@", @(sender.isZombieObject), sender, self);
+    }
+    
+    [self updateQuoteRelationships];
+    [conversation updateTimestampsAfterUpdatingMessage:self];
+}
+
 + (ZMConversation *)conversationForUpdateEvent:(ZMUpdateEvent *)event inContext:(NSManagedObjectContext *)moc prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
     NSUUID *conversationUUID = event.conversationUUID;
@@ -390,6 +407,19 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                                         inManagedObjectContext:moc];
     
     [localMessage addReaction:reaction.emoji forUser:user];
+    [localMessage updateCategoryCache];
+}
+
++ (void)addReaction:(ZMReaction *)reaction sender:(ZMUser *)sender conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc;
+{
+    //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
+    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
+    NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
+    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
+                                               forConversation:conversation
+                                        inManagedObjectContext:moc];
+    
+    [localMessage addReaction:reaction.emoji forUser:sender];
     [localMessage updateCategoryCache];
 }
 

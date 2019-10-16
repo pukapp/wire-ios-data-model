@@ -117,6 +117,10 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
            senderID:(NSUUID * _Nonnull)senderID
        conversation:(ZMConversation * _Nonnull)conversation
 inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
++ (void)addReaction:(ZMReaction * _Nonnull)reaction
+           sender:(ZMUser * _Nonnull)sender
+       conversation:(ZMConversation * _Nonnull)conversation
+inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @end
 
@@ -272,6 +276,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 - (void)removePendingDeliveryReceipts;
 - (void)updateWithUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent forConversation:(ZMConversation * _Nonnull)conversation;
+- (void)updateWithSender:(ZMUser * _Nonnull)sender forConversation:(ZMConversation * _Nonnull)conversation;
 
 /// Returns whether the data represents animated GIF
 + (BOOL)isDataAnimatedGIF:(NSData * _Nonnull)data;

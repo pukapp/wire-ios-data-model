@@ -190,7 +190,9 @@ NSString * const DeliveredKey = @"delivered";
     }
     
     // Verify sender is part of conversation
-    [conversation addParticipantIfMissing:[ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc] date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
+    ZMUser * sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc];
+    [conversation addParticipantIfMissing:sender date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
+    //[conversation addParticipantIfMissing:[ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc] date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
 
     // Insert the message
 
@@ -208,7 +210,8 @@ NSString * const DeliveredKey = @"delivered";
             return nil;
         }
         
-        [ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
+        //[ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
+        [ZMMessage addReaction:message.reaction sender:sender conversation:conversation inManagedObjectContext:moc];
     } else if (message.hasConfirmation) {
         [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent];
     } else if (message.hasEdited) {
@@ -268,7 +271,8 @@ NSString * const DeliveredKey = @"delivered";
             return nil;
         }
         
-        [clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
+        [clientMessage updateWithSender:sender forConversation:conversation];
+        //[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
         
