@@ -84,6 +84,13 @@ import WireLinkPreview
         let mediumKey =  FileAssetCache.cacheKeyForAsset(self, format: .medium)
         
         queue.async {
+//            let a1 = [mediumKey, originalKey].lazy.compactMap({ $0 }) as [String]
+//            let a2 = a1.compactMap({ (s) -> Data? in
+//                let df = cache.assetData(s)
+//                return df
+//            })
+//            let a3 = a2.first
+//            completionHandler(a3)
             completionHandler([mediumKey, originalKey].lazy.compactMap({ $0 }).compactMap({ cache.assetData($0) }).first)
         }
     }
