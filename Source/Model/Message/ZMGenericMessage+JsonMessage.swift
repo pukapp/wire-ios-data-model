@@ -28,7 +28,7 @@ extension ZMGenericMessage {
             let language = NSLocale.preferredLanguages.first
             var text: String?
             var url: String?
-            if language == "zh-Hans-US" {
+            if language?.hasPrefix("zh-Hans") ?? false {
                 text = (msgData["zh"] as? [String: Any])?["text"] as? String
                 url = (msgData["zh"] as? [String: Any])?["url"] as? String
             } else {
