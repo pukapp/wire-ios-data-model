@@ -348,6 +348,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
 }
 
+///activeParticipants的计算过程占用cpu比较多，这里还是之前的逻辑，但是换种写法，来降低cpu计算量。
 -(NSSet <ZMUser *> *)activeParticipants
 {
     

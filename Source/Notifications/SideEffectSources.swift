@@ -113,7 +113,7 @@ extension ZMUser : SideEffectSource {
         var keys = mappedKeys.map{keyStore.observableKeysAffectedByValue(classIdentifier, key: $0)}.reduce(Set()){$0.union($1)}
 
         conversations.forEach {
-            if $0.allUsersTrusted {
+            if $0.conversationType != .hugeGroup && $0.allUsersTrusted {
                 keys.insert(SecurityLevelKey)
             }
             if keys.count > 0 {
