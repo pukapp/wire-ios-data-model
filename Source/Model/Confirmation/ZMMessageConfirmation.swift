@@ -81,6 +81,27 @@ open class ZMMessageConfirmation: ZMManagedObject, ReadReceipt {
         }
     }
     
+    @objc
+    @discardableResult
+    public static func createMessageConfirmations(_ confirmation: ZMConfirmation, conversation: ZMConversation, updateEvent: ZMUpdateEvent, sender: ZMUser) -> [ZMMessageConfirmation] {
+        
+        let type = MessageConfirmationType.convert(confirmation.type)
+        
+        guard let managedObjectContext = conversation.managedObjectContext,
+            let serverTimestamp = updateEvent.timeStamp(),
+            let firstMessageId = confirmation.firstMessageId else { return [] }
+        
+        let moreMessageIds = confirmation.moreMessageIds as? [String] ?? []
+        let confirmedMesssageIds = ([firstMessageId] + moreMessageIds).compactMap({ UUID(uuidString: $0) })
+        
+        return confirmedMesssageIds.compactMap { confirmedMessageId in
+            guard let message = ZMMessage.fetch(withNonce: confirmedMessageId, for: conversation, in: managedObjectContext),
+                !message.confirmations.contains(where: { $0.user == sender && $0.type == type }) else { return nil }
+            
+            return ZMMessageConfirmation(type: type, message: message, sender: sender, serverTimestamp: serverTimestamp, managedObjectContext: managedObjectContext)
+        }
+    }
+    
     convenience init(type: MessageConfirmationType, message: ZMMessage, sender: ZMUser, serverTimestamp: Date, managedObjectContext: NSManagedObjectContext) {
         let entityDescription = NSEntityDescription.entity(forEntityName: ZMMessageConfirmation.entityName(), in: managedObjectContext)!
         self.init(entity: entityDescription, insertInto: managedObjectContext)

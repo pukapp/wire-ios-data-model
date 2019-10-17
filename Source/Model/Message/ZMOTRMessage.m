@@ -190,7 +190,7 @@ NSString * const DeliveredKey = @"delivered";
     }
     
     // Verify sender is part of conversation
-    ZMUser * sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc];
+    ZMUser * sender = [self getSenderWithId:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
     [conversation addParticipantIfMissing:sender date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
     //[conversation addParticipantIfMissing:[ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc] date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
 
@@ -213,7 +213,7 @@ NSString * const DeliveredKey = @"delivered";
         //[ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
         [ZMMessage addReaction:message.reaction sender:sender conversation:conversation inManagedObjectContext:moc];
     } else if (message.hasConfirmation) {
-        [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent];
+        [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent sender: sender];
     } else if (message.hasEdited) {
         NSUUID *editedMessageId = [NSUUID uuidWithTransportString:message.edited.replacingMessageId];
         ZMClientMessage *editedMessage = [ZMClientMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
@@ -284,6 +284,20 @@ NSString * const DeliveredKey = @"delivered";
     }
 
     return nil;
+}
+
+// 先从conversation的lastServerSyncedActiveParticipants中查找user，找不到再去数据库中去，降低从数据库中读取的频次
++ (ZMUser *)getSenderWithId:(NSUUID *)uuid conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc {
+    ZMUser * sender;
+    for (ZMUser * participants in conversation.lastServerSyncedActiveParticipants) {
+        if ([participants.remoteIdentifier isEqual:uuid]) {
+            sender = participants;
+        }
+    }
+    if (sender == nil) {
+        sender = [ZMUser userWithRemoteID:uuid createIfNeeded:YES inContext:moc];
+    }
+    return sender;
 }
 
 -(void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(NSSet *)updatedKeys {
