@@ -199,7 +199,7 @@ extension ZMMessage {
             }
             
             ///自己发送了一条万人群消息，服务端也会发送给自己这条消息，这里需要立即保存到数据库，防止消息插入那边的context没有同步conversation，导致插入了两个相同的消息
-            if case .hugeGroup? = newValue?.conversationType {
+            if case .hugeGroup? = newValue?.conversationType, self.sender?.isSelfUser ?? false {
                 self.managedObjectContext?.saveOrRollback()
             }
         }
