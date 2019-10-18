@@ -186,15 +186,21 @@ extension ZMMessage {
                 }
             }
             
-            ///设置lastVisibleMessage
+            ///设置lastVisible1Message
             if let sysMessage = self as? ZMSystemMessage, sysMessage.systemMessageType == .potentialGap {
                 ///如果是此系统消息则不做存储，否则聊天列表的显示存在问题
                 return
             }
-            if newValue != nil {
-                visibleInConversation?.lastVisibleMessage = self
-            } else {
+            if let conv = newValue {
+                conv.lastVisibleMessage = self
+            } else if visibleInConversation?.lastVisibleMessage == self {
+                ///newValue为空，则说明此消息不被展示了，那么conversation需要判断如果的最后一条消息是自己的话，就需要置为nil
                 visibleInConversation?.lastVisibleMessage = nil
+            }
+            
+            ///自己发送了一条万人群消息，服务端也会发送给自己这条消息，这里需要立即保存到数据库，防止消息插入那边的context没有同步conversation，导致插入了两个相同的消息
+            if case .hugeGroup? = newValue?.conversationType {
+                self.managedObjectContext?.saveOrRollback()
             }
         }
         get {

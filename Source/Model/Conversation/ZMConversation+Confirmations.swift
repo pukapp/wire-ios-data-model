@@ -45,7 +45,8 @@ extension ZMConversation {
     }
     
     public static func confirmDeliveredMessages(_ messages: Set<UUID>, in conversations: Set<UUID>, with managedObjectContext: NSManagedObjectContext) -> [ZMMessage] {
-        guard let conversationObjects = ZMConversation.fetchObjects(withRemoteIdentifiers: conversations, in: managedObjectContext) as? Set<ZMConversation> else { return [] }
+        guard let conversationObjects = ZMConversation.fetchObjects(withRemoteIdentifiers: conversations, in: managedObjectContext) as? Set<ZMConversation>,
+            conversationObjects.filter({ return $0.conversationType != .hugeGroup }).count > 0 else { return [] }
         var confirmationMessages: [ZMMessage] = []
         
         for conversation in conversationObjects {
