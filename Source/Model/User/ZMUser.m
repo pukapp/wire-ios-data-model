@@ -477,6 +477,20 @@ static NSString *const NeedsToAcknowledgeLegalHoldStatusKey = @"needsToAcknowled
     }
 }
 
+// 先从conversation的lastServerSyncedActiveParticipants中查找user，找不到再去数据库中去，降低从数据库中读取的频次
++ (ZMUser *)userWithRemoteID:(NSUUID *)uuid createIfNeeded:(BOOL)create inConversation:(ZMConversation *)conversation inContext:(NSManagedObjectContext *)moc {
+    ZMUser * user;
+    for (ZMUser * participants in conversation.lastServerSyncedActiveParticipants) {
+        if ([participants.remoteIdentifier isEqual:uuid]) {
+            user = participants;
+        }
+    }
+    if (user == nil) {
+        user = [self userWithRemoteID:uuid createIfNeeded:create inContext:moc];
+    }
+    return user;
+}
+
 + (nullable instancetype)userWithEmailAddress:(NSString *)emailAddress inContext:(NSManagedObjectContext *)context
 {
     RequireString(0 != emailAddress.length, "emailAddress required");

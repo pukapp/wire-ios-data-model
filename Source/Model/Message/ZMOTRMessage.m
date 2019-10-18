@@ -183,16 +183,15 @@ NSString * const DeliveredKey = @"delivered";
     // Check if the message is valid
 
     if (message == nil) {
-        ZMUser *sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:NO inContext:moc];
+        ZMUser *sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:NO inConversation:conversation inContext:moc];
         VerifyReturnNil(sender);
         [conversation appendInvalidSystemMessageAt:updateEvent.timeStamp sender:sender];
         return nil;
     }
     
     // Verify sender is part of conversation
-    ZMUser * sender = [self getSenderWithId:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
+    ZMUser * sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inConversation:conversation inContext:moc];
     [conversation addParticipantIfMissing:sender date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
-    //[conversation addParticipantIfMissing:[ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inContext:moc] date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
 
     // Insert the message
 
@@ -284,20 +283,6 @@ NSString * const DeliveredKey = @"delivered";
     }
 
     return nil;
-}
-
-// 先从conversation的lastServerSyncedActiveParticipants中查找user，找不到再去数据库中去，降低从数据库中读取的频次
-+ (ZMUser *)getSenderWithId:(NSUUID *)uuid conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc {
-    ZMUser * sender;
-    for (ZMUser * participants in conversation.lastServerSyncedActiveParticipants) {
-        if ([participants.remoteIdentifier isEqual:uuid]) {
-            sender = participants;
-        }
-    }
-    if (sender == nil) {
-        sender = [ZMUser userWithRemoteID:uuid createIfNeeded:YES inContext:moc];
-    }
-    return sender;
 }
 
 -(void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(NSSet *)updatedKeys {

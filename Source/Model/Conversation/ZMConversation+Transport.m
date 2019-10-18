@@ -264,7 +264,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
         [missingUUIDs minusSet:fetchedUUIDs];
                 
         for (NSUUID *userId in missingUUIDs) {
-            [participants addObject:[ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext]];
+            [participants addObject:[ZMUser userWithRemoteID:userId createIfNeeded:YES inConversation:self inContext:self.managedObjectContext]];
         }
     }
     

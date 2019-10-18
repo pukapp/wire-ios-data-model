@@ -401,7 +401,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 {
 //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
     // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
-    ZMUser *user = [ZMUser userWithRemoteID:senderID createIfNeeded:YES inContext:moc];
+    ZMUser *user = [ZMUser userWithRemoteID:senderID createIfNeeded:YES inConversation:conversation inContext:moc];
     NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
     ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
                                                forConversation:conversation
@@ -1033,7 +1033,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     
     NSMutableSet *usersSet = [NSMutableSet set];
     for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
-        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inContext:moc];
+        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inConversation:conversation inContext:moc];
         if (user.handle) {///只有当本地存在这个用户的时候，才加入（当万人群添加好友的时候，如果不在本地数据库，那么就不需要显示）
             [usersSet addObject:user];
         }
