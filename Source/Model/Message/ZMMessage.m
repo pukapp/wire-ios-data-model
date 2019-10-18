@@ -334,7 +334,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
     
     [self updateQuoteRelationships];
-    [conversation updateTimestampsAfterUpdatingMessage:self];
+    // 暂时注释掉，暂时解决重复计算未读的系统消息数量
+//    [conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
 - (void)updateWithSender:(ZMUser *)sender forConversation:(ZMConversation *)conversation

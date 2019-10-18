@@ -218,7 +218,7 @@ extension ZMConversation {
                 updateLastUnreadMissedCall(nil)
                 updateLastUnreadKnock(message.serverTimestamp)
             } else if let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
-                    internalEstimatedUnreadSelfMentionCount += 1
+                internalEstimatedUnreadSelfMentionCount += 1
             } else if let textMessageData = message.textMessageData, textMessageData.isQuotingSelf {
                 internalEstimatedUnreadSelfReplyCount += 1
             } else if message.shouldGenerateUnreadCount() {
