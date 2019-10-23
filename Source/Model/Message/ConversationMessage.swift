@@ -192,10 +192,14 @@ extension ZMMessage {
                 return
             }
             if let conv = newValue {
-                conv.lastVisibleMessage = self
+                self.managedObjectContext?.perform {
+                    conv.lastVisibleMessage = self
+                }
             } else if visibleInConversation?.lastVisibleMessage == self {
                 ///newValue为空，则说明此消息不被展示了，那么conversation需要判断如果的最后一条消息是自己的话，就需要置为nil
-                visibleInConversation?.lastVisibleMessage = nil
+                self.managedObjectContext?.perform {
+                    self.visibleInConversation?.lastVisibleMessage = nil
+                }
             }
             
             ///自己发送了一条万人群消息，服务端也会发送给自己这条消息，这里需要立即保存到数据库，防止消息插入那边的context没有同步conversation，导致插入了两个相同的消息
