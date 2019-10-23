@@ -306,6 +306,12 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (nil == latestSystemMessage) {
         return;
     }
+    if (self.conversationType == ZMConvTypeHugeGroup) {
+        return; //万人群消息不做添加和删除成员的比较判断，因为万人群每次拉群的成员是不一样的
+    }
+    if (users.count == 0 || latestSystemMessage.users.count == 0) {
+        return; //增加错误控制
+    }
     
     NSMutableSet <ZMUser *>* removedUsers = latestSystemMessage.users.mutableCopy;
     [removedUsers minusSet:users];
