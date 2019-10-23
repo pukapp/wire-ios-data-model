@@ -363,8 +363,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     }
     else if(self.isSelfAnActiveMember &&
             ![self.lastServerSyncedActiveParticipants containsObject:[ZMUser selfUserInContext:self.managedObjectContext]]) {
+        activeParticipants = [[NSMutableSet alloc] initWithSet:[self.lastServerSyncedActiveParticipants set]];
         [activeParticipants addObject:[ZMUser selfUserInContext:self.managedObjectContext]];
-        [activeParticipants unionSet:[self.lastServerSyncedActiveParticipants set]];
     }
     else
     {
