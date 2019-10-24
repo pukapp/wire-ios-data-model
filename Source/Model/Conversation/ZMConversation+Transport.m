@@ -68,6 +68,7 @@ NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
 NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
 NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
 NSString *const ZMConversationInfoAppsKey = @"apps";
+NSString *const ZMConversationInfoTopAppsKey = @"top_apps";
 NSString *const ZMConversationInfoTopWebAppsKey = @"top_apps_detail";
 NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
 NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
@@ -180,6 +181,10 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     NSArray *apps = [transportData optionalArrayForKey:ZMConversationInfoAppsKey];
     if (nil != apps) {
         [self updateWithApps:apps];
+    }
+    NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopAppsKey];
+    if (nil != topApps) {
+        [self updateWithApps:topApps];
     }
     NSArray *topWebApps = [transportData optionalArrayForKey:ZMConversationInfoTopWebAppsKey];
     if (nil != topWebApps) {
@@ -340,8 +345,16 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 }
 
 - (void)updateWithApps:(NSArray *)apps {
-    if (apps && apps.count > 0) {
-        self.apps = [apps componentsJoinedByString:@","];
+    NSString *appsString = [apps componentsJoinedByString:@","];
+    if (![appsString isEqualToString:self.apps]) {
+        self.apps = appsString;
+    }
+}
+
+- (void)updateWithTopApps:(NSArray *)topApps {
+    NSString *appsString = [topApps componentsJoinedByString:@","];
+    if (![appsString isEqualToString:self.topApps]) {
+        self.topApps = appsString;
     }
 }
 
