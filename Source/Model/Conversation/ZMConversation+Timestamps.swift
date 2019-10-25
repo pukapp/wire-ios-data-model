@@ -207,6 +207,7 @@ extension ZMConversation {
         
         if message.shouldGenerateUnreadCount() {
             updateLastModified(timestamp)
+            self.lastVisibleMessage = message
         }
         
         if let sender = message.sender, sender.isSelfUser {
@@ -235,6 +236,7 @@ extension ZMConversation {
         
         if message.shouldGenerateUnreadCount() {
             updateLastModified(timestamp)
+            self.lastVisibleMessage = message
         }
         if message.isSystem, let systemMessage = message as? ZMSystemMessage, systemMessage.systemMessageType == .missedCall {
             //missedCall是系统消息，是从本机发送的，所以在这个方法进行判断，由于ping和missedCall的logo显示位置一样，所以是互斥，所以最新的是哪种消息，就把另外一种消息类型清除。
@@ -263,6 +265,7 @@ extension ZMConversation {
         }
         // Any unsent unread message is cleared when entering a conversation
         if hasUnreadUnsentMessage {
+            ///TODO:Secret: unread和unsent需要分开，不应该每次点进这个会话，就把unsent的状态改变了
             hasUnreadUnsentMessage = false
         }
         
