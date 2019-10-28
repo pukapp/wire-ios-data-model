@@ -163,7 +163,8 @@ static NSString *const NeedsToAcknowledgeLegalHoldStatusKey = @"needsToAcknowled
 
 - (BOOL)isServiceUser
 {
-    return self.serviceIdentifier != nil && self.providerIdentifier != nil;
+    return NO;///目前没有用到ServiceUser的功能，所以这里直接返回NO
+    //return self.serviceIdentifier != nil && self.providerIdentifier != nil;
 }
 
 + (NSSet<NSString *> *)keyPathsForValuesAffectingIsServiceUser
