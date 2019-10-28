@@ -16,9 +16,20 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+///使用关联属性来对值进行存储，避免每次都进行计算
+private var AssociateHasRasterImageKey: String = "AssociateHasRasterImageKey"
+
 public extension ZMAssetOriginal {
     var hasRasterImage: Bool {
-        return hasImage() && UTType(mimeType: mimeType)?.isSVG == false
+        get {
+            if let hasRasterImage = objc_getAssociatedObject(self, &AssociateHasRasterImageKey) as? Bool {
+                return hasRasterImage
+            } else {
+                let hasRasterImage = hasImage() && UTType(mimeType: mimeType)?.isSVG == false
+                objc_setAssociatedObject(self, &AssociateHasRasterImageKey, hasRasterImage, .OBJC_ASSOCIATION_RETAIN)
+                return hasRasterImage
+            }
+        }
     }
 }
 
