@@ -190,7 +190,8 @@ NSString * const DeliveredKey = @"delivered";
     }
     
     // Verify sender is part of conversation
-    [conversation verifySenderOf:updateEvent moc:moc];
+    ZMUser * sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inConversation:conversation inContext:moc];
+    [conversation addParticipantIfMissing:sender date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
 
     // Insert the message
 
