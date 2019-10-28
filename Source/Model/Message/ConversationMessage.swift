@@ -187,8 +187,7 @@ extension ZMMessage {
             }
             //自己在uiContext上发送了一条万人群消息，服务端也会发送给自己这条消息，收到推送处理消息是在syncContext上，
             //这里需要立即保存到数据库，防止syncContext的数据没有同步，导致插入了两个相同的消息
-            if case .hugeGroup? = newValue?
-                .conversationType,
+            if case .hugeGroup? = newValue?.conversationType,
                 self.sender?.isSelfUser ?? false,
                 self.managedObjectContext?.zm_isUserInterfaceContext ?? false {
                 self.managedObjectContext?.saveOrRollback()
@@ -247,8 +246,9 @@ extension ZMMessage : ZMConversationMessage {
         return confirmations.filter({ $0.type == .read }).sorted(by: { a, b in  a.serverTimestamp < b.serverTimestamp })
     }
 
+    ///优先获取消息nonce，避免取nonpersistedObjectIdentifer，减少计算量
     public var objectIdentifier: String {
-        return nonpersistedObjectIdentifer!
+        return self.nonce?.uuidString ?? nonpersistedObjectIdentifer!
     }
     
     public var causedSecurityLevelDegradation : Bool {
