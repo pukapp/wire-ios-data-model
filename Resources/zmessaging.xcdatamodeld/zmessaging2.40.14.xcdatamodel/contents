@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19A602" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.14">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="18G87" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.14">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -110,6 +110,7 @@
         <relationship name="connection" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Connection" inverseName="conversation" inverseEntity="Connection" syncable="YES"/>
         <relationship name="creator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="conversationsCreated" inverseEntity="User" syncable="YES"/>
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
+        <relationship name="labels" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Label" inverseName="conversations" inverseEntity="Label" syncable="YES"/>
         <relationship name="lastServerSyncedActiveParticipants" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="User" inverseName="lastServerSyncedActiveConversations" inverseEntity="User" syncable="YES"/>
         <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inConversation" inverseEntity="ServiceMessage" syncable="YES"/>
         <relationship name="lastVisibleMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
@@ -144,11 +145,22 @@
         <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <entity name="KnockMessage" representedClassName="ZMKnockMessage" parentEntity="Message" syncable="YES"/>
+    <entity name="Label" representedClassName=".Label" syncable="YES">
+        <attribute name="markedForDeletion" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="remoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
+        <attribute name="remoteIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="labels" inverseEntity="Conversation" syncable="YES"/>
+    </entity>
     <entity name="Member" representedClassName=".Member" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="permissionsRawValue" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="remoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="remoteIdentifier_data" optional="YES" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <relationship name="createdBy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="createdTeamMembers" inverseEntity="User" syncable="YES"/>
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="members" inverseEntity="Team" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="membership" inverseEntity="User" syncable="YES"/>
     </entity>
@@ -278,6 +290,7 @@
         <attribute name="needsRichProfileUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToAcknowledgeLegalHoldStatus" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="needsToRefetchLabels" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="normalizedEmailAddress" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="normalizedName" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
         <attribute name="normalizedRemark" optional="YES" attributeType="String" syncable="YES"/>
@@ -305,6 +318,7 @@
         <relationship name="clients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="user" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="connection" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Connection" inverseName="to" inverseEntity="Connection" syncable="YES"/>
         <relationship name="conversationsCreated" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="creator" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="createdTeamMembers" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Member" inverseName="createdBy" inverseEntity="Member" syncable="YES"/>
         <relationship name="createdTeams" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Team" inverseName="creator" inverseEntity="Team" syncable="YES"/>
         <relationship name="lastServerSyncedActiveConversations" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Conversation" inverseName="lastServerSyncedActiveParticipants" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="membership" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Member" inverseName="user" inverseEntity="Member" syncable="YES"/>
@@ -380,12 +394,12 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1275"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1290"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
-        <element name="Member" positionX="18" positionY="162" width="128" height="135"/>
+        <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
         <element name="Message" positionX="106" positionY="-261" width="128" height="525"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
@@ -394,10 +408,11 @@
         <element name="SystemMessage" positionX="27" positionY="57" width="128" height="375"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
-        <element name="User" positionX="-434" positionY="-72" width="128" height="945"/>
+        <element name="User" positionX="-434" positionY="-72" width="128" height="975"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="510"/>
         <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="135"/>
         <element name="WebApp" positionX="-234" positionY="-117" width="128" height="255"/>
+        <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
     </elements>
 </model>
