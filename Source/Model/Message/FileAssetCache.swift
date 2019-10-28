@@ -89,13 +89,14 @@ private struct FileCache : Cache {
         return data
     }
     
-    func storeAssetData(_ data: Data, key: String) {
+    func storeAssetData(_ data: Data, key: String, createdAt creationDate: Date = Date()) {
         let url = URLForKey(key)
         let coordinator = NSFileCoordinator()
         
         var error : NSError? = nil
         coordinator.coordinate(writingItemAt: url, options: NSFileCoordinator.WritingOptions.forReplacing, error: &error) { (url) in
-            FileManager.default.createFile(atPath: url.path, contents: data, attributes: convertToOptionalFileAttributeKeyDictionary([FileAttributeKey.protectionKey.rawValue : FileProtectionType.completeUntilFirstUserAuthentication]))
+            FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.protectionKey : FileProtectionType.completeUntilFirstUserAuthentication,
+                                                                                          .creationDate : creationDate])
         }
         
         if let error = error {
@@ -103,7 +104,7 @@ private struct FileCache : Cache {
         }
     }
     
-    func storeAssetFromURL(_ fromUrl: URL, key: String) {
+    func storeAssetFromURL(_ fromUrl: URL, key: String, createdAt creationDate: Date = Date()) {
         guard fromUrl.scheme == NSURLFileScheme else { fatal("Can't save remote URL to cache: \(fromUrl)") }
         
         let toUrl = URLForKey(key)
@@ -113,7 +114,8 @@ private struct FileCache : Cache {
         coordinator.coordinate(writingItemAt: toUrl, options: .forReplacing, error: &error) { (url) in
             do {
                 try FileManager.default.copyItem(at: fromUrl, to: url)
-                try FileManager.default.setAttributes([FileAttributeKey.protectionKey : FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: url.path)
+                try FileManager.default.setAttributes([.protectionKey : FileProtectionType.completeUntilFirstUserAuthentication,
+                                                       .creationDate: creationDate], ofItemAtPath: url.path)
             } catch {
                 fatal("Failed to copy from \(url) to \(url), \(error)")
             }
@@ -170,6 +172,29 @@ private struct FileCache : Cache {
     func wipeCaches() {
         _ = try? FileManager.default.removeItem(at: cacheFolderURL)
     }
+    
+    /// Deletes assets created earlier than the given date
+    ///
+    /// - parameter date: assets earlier than this date will be deleted
+    func deleteAssetsOlderThan(_ date: Date) throws {
+        for expiredAsset in try assetsOlderThan(date) {
+            try FileManager.default.removeItem(at: expiredAsset)
+        }
+    }
+    
+    /// Returns assets created earlier than the given date
+    func assetsOlderThan(_ date: Date) throws -> [URL] {
+        let fileManager = FileManager.default
+        let files = try fileManager.contentsOfDirectory(at: cacheFolderURL, includingPropertiesForKeys: [.creationDateKey], options: [.skipsSubdirectoryDescendants])
+        
+        return try files.filter { (file) -> Bool in
+            let attributes = try fileManager.attributesOfItem(atPath: file.path)
+            
+            guard let creationDate = attributes[.creationDate] as? Date else { return true }
+            
+            return creationDate < date
+        }
+    }
 }
 
 // MARK: - File asset cache
@@ -196,7 +221,19 @@ private struct FileCache : Cache {
     open func assetData(_ key: String) -> Data? {
         return cache.assetData(key)
     }
-    
+
+    /// Returns the team logo image asset data for a team. This will probably cause I/O
+    ///
+    /// - Parameters:
+    ///   - team: the team of the logo image
+    ///   - format: the format of the image
+    ///   - encrypted: encrypted or not
+    /// - Returns: the image data
+    open func assetData(for team : Team, format: ZMImageFormat, encrypted: Bool) -> Data? {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return nil }
+        return self.cache.assetData(key)
+    }
+
     /// Returns the image asset data for a given message. This will probably cause I/O
     open func assetData(_ message : ZMConversationMessage, format: ZMImageFormat, encrypted: Bool) -> Data? {
         guard let key = type(of: self).cacheKeyForAsset(message, format: format, encrypted: encrypted) else { return nil }
@@ -220,7 +257,12 @@ private struct FileCache : Cache {
         guard let key = type(of: self).cacheKeyForAsset(message, identifier: "request") else { return nil }
         return cache.assetURL(key)
     }
-    
+
+    open func hasDataOnDisk(for team : Team, format: ZMImageFormat, encrypted: Bool) -> Bool {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return false }
+        return cache.hasDataForKey(key)
+    }
+
     open func hasDataOnDisk(_ message : ZMConversationMessage, format: ZMImageFormat, encrypted: Bool) -> Bool {
         guard let key = type(of: self).cacheKeyForAsset(message, format: format, encrypted: encrypted) else { return false }
         return cache.hasDataForKey(key)
@@ -230,23 +272,38 @@ private struct FileCache : Cache {
         guard let key = type(of: self).cacheKeyForAsset(message, encrypted: encrypted) else { return false }
         return cache.hasDataForKey(key)
     }
-    
+
+    /// Sets the image asset data for a team. This will cause I/O
+    ///
+    /// - Parameters:
+    ///   - team: the team of the logo image
+    ///   - format: the format of the image
+    ///   - encrypted: encrypted or not
+    ///   - data: the image data
+    open func storeAssetData(for team: Team,
+                             format: ZMImageFormat,
+                             encrypted: Bool,
+                             data: Data) {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return }
+        self.cache.storeAssetData(data, key: key, createdAt: Date())
+    }
+
     /// Sets the image asset data for a given message. This will cause I/O
     open func storeAssetData(_ message : ZMConversationMessage, format: ZMImageFormat, encrypted: Bool, data: Data) {
         guard let key = type(of: self).cacheKeyForAsset(message, format: format, encrypted: encrypted) else { return }
-        self.cache.storeAssetData(data, key: key)
+        self.cache.storeAssetData(data, key: key, createdAt: message.serverTimestamp ?? Date())
     }
     
     /// Sets the asset data for a given message. This will cause I/O
     open func storeAssetData(_ message : ZMConversationMessage, encrypted: Bool, data: Data) {
         guard let key = type(of: self).cacheKeyForAsset(message, encrypted: encrypted) else { return }
-        self.cache.storeAssetData(data, key: key)
+        self.cache.storeAssetData(data, key: key, createdAt: message.serverTimestamp ?? Date())
     }
     
     /// Sets the request data for a given message and returns the asset url. This will cause I/O
     open func storeRequestData(_ message : ZMConversationMessage, data: Data) -> URL? {
         guard let key = type(of: self).cacheKeyForAsset(message, identifier: "request") else { return nil }
-        cache.storeAssetData(data, key: key)
+        cache.storeAssetData(data, key: key, createdAt: message.serverTimestamp ?? Date())
         return accessRequestURL(message)
     }
     
@@ -255,7 +312,18 @@ private struct FileCache : Cache {
         guard let key = type(of: self).cacheKeyForAsset(message, identifier: "request") else { return }
         cache.deleteAssetData(key)
     }
-    
+
+    /// Deletes the image data for a given message. This will cause I/O
+    ///
+    /// - Parameters:
+    ///   - team: the team of the logo image
+    ///   - format: the format of the image
+    ///   - encrypted: encrypted or not
+    open func deleteAssetData(for team : Team, format: ZMImageFormat, encrypted: Bool) {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return }
+        cache.deleteAssetData(key)
+    }
+
     /// Deletes the image data for a given message. This will cause I/O
     open func deleteAssetData(_ message : ZMConversationMessage, format: ZMImageFormat, encrypted: Bool) {
         guard let key = type(of: self).cacheKeyForAsset(message, format: format, encrypted: encrypted) else { return }
@@ -286,10 +354,18 @@ private struct FileCache : Cache {
         }
     }
     
+    public func deleteAssetsOlderThan(_ date: Date) {
+        do {
+            try cache.deleteAssetsOlderThan(date)
+        } catch let error {
+            zmLog.error("Error trying to delete assets older than \(date): \(error)")
+        }
+    }
+
     public static func cacheKeyForAsset(_ message : ZMConversationMessage, format: ZMImageFormat, encrypted: Bool = false) -> String? {
         return cacheKeyForAsset(message, identifier: StringFromImageFormat(format), encrypted: encrypted)
     }
-    
+
     public static func cacheKeyForAsset(_ message : ZMConversationMessage, identifier: String? = nil, encrypted: Bool = false) -> String? {
         guard let messageId = message.nonce?.transportString(),
               let senderId = message.sender?.remoteIdentifier?.transportString(),
@@ -302,7 +378,23 @@ private struct FileCache : Cache {
         
         return key.data(using: .utf8)?.zmSHA256Digest().zmHexEncodedString()
     }
-    
+
+    // MARK: - Team cache key
+
+    public static func cacheKeyForAsset(for team : Team, format: ZMImageFormat, encrypted: Bool = false) -> String? {
+        return cacheKeyForAsset(for: team, identifier: StringFromImageFormat(format), encrypted: encrypted)
+    }
+
+    public static func cacheKeyForAsset(for team : Team, identifier: String? = nil, encrypted: Bool = false) -> String? {
+        guard let teamID = team.remoteIdentifier?.uuidString, let assetID = team.pictureAssetId else {
+            return nil
+        }
+        
+        let key = [teamID, assetID, identifier, encrypted ? "encrypted" : nil].compactMap({ $0 }).joined(separator: "_")
+
+        return key.data(using: .utf8)?.zmSHA256Digest().zmHexEncodedString()
+    }
+
 }
 
 // MARK: - Testing

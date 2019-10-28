@@ -31,7 +31,7 @@
     if (self.isTransient || self.type == ZMUpdateEventTypeUserConnection) {
         return nil;
     }
-    return [self.payload dateForKey:@"time"];
+    return [self.payload dateFor:@"time"];
 }
 
 - (NSUUID *)senderUUID
@@ -52,6 +52,10 @@
     if (self.type == ZMUpdateEventTypeUserConnection) {
         return  [[self.payload optionalDictionaryForKey:@"connection"] optionalUuidForKey:@"conversation"];
     }
+    if (self.type == ZMUpdateEventTypeTeamConversationDelete) {
+        return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"conv"];
+    }
+    
     return [self.payload optionalUuidForKey:@"conversation"];
 }
 

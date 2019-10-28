@@ -71,13 +71,11 @@ NSString *const ZMConversationSilencedChangedTimeStampKey = @"silencedChangedTim
 NSString *const ZMConversationExternalParticipantsStateKey = @"externalParticipantsState";
 NSString *const ZMConversationLegalHoldStatusKey = @"legalHoldStatus";
 NSString *const ZMConversationNeedsToVerifyLegalHoldKey = @"needsToVerifyLegalHold";
-
 NSString *const ZMNotificationConversationKey = @"ZMNotificationConversationKey";
-
 NSString *const ZMConversationEstimatedUnreadCountKey = @"estimatedUnreadCount";
 NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data";
-
 NSString *const SecurityLevelKey = @"securityLevel";
+NSString *const ZMConversationLabelsKey = @"labels";
 
 // 新增智能回复
 // 新增自动回复状态
@@ -194,6 +192,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic archivedChangedTimestamp;
 @dynamic silencedChangedTimestamp;
 @dynamic team;
+@dynamic labels;
 // 新增
 
 @dynamic messagesNonceSet;
@@ -240,6 +239,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isAllowMemberAddEachOther;
 @dynamic isVisibleForMemberChange;
 @dynamic isDisableSendMsg;
+
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;
@@ -475,7 +475,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             @"isServiceNotice",
             HasReadReceiptsEnabledKey,
             ZMConversationLegalHoldStatusKey,
-            ZMConversationNeedsToVerifyLegalHoldKey
+            ZMConversationNeedsToVerifyLegalHoldKey,
+            ZMConversationLabelsKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];
@@ -884,7 +885,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     } else if (create) {
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:moc];
         conversation.remoteIdentifier = UUID;
-        conversation.lastModifiedDate = [NSDate dateWithTimeIntervalSince1970:0];
         conversation.lastServerTimeStamp = [NSDate dateWithTimeIntervalSince1970:0];
         if (nil != created) {
             *created = YES;
@@ -899,7 +899,6 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     VerifyReturnNil(team != nil);
     VerifyReturnNil(!participant.isSelfUser);
     ZMUser *selfUser = [ZMUser selfUserInContext:moc];
-    VerifyReturnNil(selfUser.canCreateConversation);
 
     ZMConversation *conversation = [self existingTeamConversationInManagedObjectContext:moc withParticipant:participant team:team];
     if (nil != conversation) {

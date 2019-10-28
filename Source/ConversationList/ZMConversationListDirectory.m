@@ -38,9 +38,17 @@ static NSString * const PendingKey = @"Pending";
 @property (nonatomic) ZMConversationList* archivedConversations;
 @property (nonatomic) ZMConversationList* pendingConnectionConversations;
 @property (nonatomic) ZMConversationList* clearedConversations;
+@property (nonatomic) ZMConversationList* oneToOneConversations;
+@property (nonatomic) ZMConversationList* groupConversations;
+@property (nonatomic) ZMConversationList* favoriteConversations;
+
+//
 @property (nonatomic) ZMConversationList* hugeGroupConversations;
 
-@property (nonatomic) Team *team;
+@property (nonatomic, readwrite) NSMutableDictionary<NSManagedObjectID *, ZMConversationList *> *listsByFolder;
+@property (nonatomic) FolderList *folderList;
+
+@property (nonatomic) NSManagedObjectContext *managedObjectContext;
 
 @end
 
@@ -52,7 +60,13 @@ static NSString * const PendingKey = @"Pending";
 {
     self = [super init];
     if (self) {
+        self.managedObjectContext = moc;
+        
         NSArray *allConversations = [self fetchAllConversations:moc];
+        NSArray *allFolders = [self fetchAllFolders:moc];
+        
+        self.folderList = [[FolderList alloc] initWithLabels:allFolders];
+        self.listsByFolder = [self createListsFromFolders:allFolders allConversations:allConversations];
 
         self.unarchivedConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
                                                                          filteringPredicate:ZMConversation.predicateForConversationsExcludingArchived
@@ -74,11 +88,23 @@ static NSString * const PendingKey = @"Pending";
                                                                       filteringPredicate:ZMConversation.predicateForClearedConversations
                                                                                      moc:moc
                                                                              description:@"clearedConversations"];
-        
         self.hugeGroupConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
                                                                         filteringPredicate:ZMConversation.predicateForHugeGroupConversations
                                                                                        moc:moc
                                                                                description:@"hugeGroupConversations"];
+        self.oneToOneConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
+                                                                       filteringPredicate:ZMConversation.predicateForOneToOneConversations
+                                                                                      moc:moc
+                                                                              description:@"oneToOneConversations"];
+        
+        self.groupConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
+                                                                    filteringPredicate:ZMConversation.predicateForGroupConversations
+                                                                                   moc:moc
+                                                                           description:@"groupConversations"];
+        
+        self.favoriteConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
+                                                                       filteringPredicate:[ZMConversation predicateForLabeledConversations:[Label fetchFavoriteLabelIn:moc]]
+                                                                                      moc:moc description:@"favorites"];
     }
     return self;
 }
@@ -97,12 +123,67 @@ static NSString * const PendingKey = @"Pending";
     NSAssert(error != nil, @"Failed to fetch");
 }
 
+- (NSArray *)fetchAllFolders:(NSManagedObjectContext *)context
+{
+    return [context executeFetchRequestOrAssert:[Label sortedFetchRequest]];
+}
+
+- (NSMutableDictionary *)createListsFromFolders:(NSArray<Label *> *)folders allConversations:(NSArray<ZMConversation *> *)allConversations
+{
+    NSMutableDictionary *listsByFolder = [NSMutableDictionary new];
+
+    for (Label *folder in folders) {
+        listsByFolder[folder.objectID] = [self createListForFolder:folder allConversations:allConversations];
+    }
+    
+    return listsByFolder;
+}
+
+- (ZMConversationList *)createListForFolder:(Label *)folder allConversations:(NSArray<ZMConversation *> *)allConversations
+{
+    return [[ZMConversationList alloc] initWithAllConversations:allConversations
+                                             filteringPredicate:[ZMConversation predicateForLabeledConversations:folder]
+                                                            moc:self.managedObjectContext
+                                                    description:folder.objectIDURLString
+                                                          label:folder];
+}
+
+- (void)insertFolders:(NSArray<Label *> *)labels
+{
+    if (labels.count == 0) {
+        return;
+    }
+    
+    NSArray<ZMConversation *> *allConversations = [self fetchAllConversations:self.managedObjectContext];
+    for (Label *label in labels) {        
+        ZMConversationList *folderList = [self createListForFolder:label allConversations:allConversations];
+        self.listsByFolder[label.objectID] = folderList;
+        [self.folderList insertLabel:label];
+    }
+}
+
+- (void)deleteFolders:(NSArray<Label *> *)labels
+{
+    if (labels.count == 0) {
+        return;
+    }
+    
+    for (Label *label in labels) {
+        [self.listsByFolder removeObjectForKey:label.objectID];
+        [self.folderList removeLabel:label];
+    }
+}
+
 - (void)refetchAllListsInManagedObjectContext:(NSManagedObjectContext *)moc
 {
     NSArray *allConversations = [self fetchAllConversations:moc];
     for (ZMConversationList* list in self.allConversationLists){
         [list recreateWithAllConversations:allConversations];
     }
+    
+    NSArray *allFolders = [self fetchAllFolders:moc];
+    self.folderList = [[FolderList alloc] initWithLabels:allFolders];
+    self.listsByFolder = [self createListsFromFolders:allFolders allConversations:allConversations];
 }
 
 - (NSArray *)allConversationLists;
@@ -112,8 +193,16 @@ static NSString * const PendingKey = @"Pending";
              self.archivedConversations,
              self.conversationsIncludingArchived,
              self.unarchivedConversations,
-             self.clearedConversations
+             self.clearedConversations,
+             self.oneToOneConversations,
+             self.groupConversations,
+             self.favoriteConversations
              ];
+}
+
+- (NSArray<id<LabelType>> *)allFolders
+{
+    return self.folderList.backingList;
 }
 
 @end

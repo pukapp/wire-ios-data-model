@@ -67,7 +67,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.announcement),
                     #keyPath(ZMConversation.hasReadReceiptsEnabled),
                     ZMConversation.externalParticipantsStateKey,
-                    #keyPath(ZMConversation.legalHoldStatus)
+                    #keyPath(ZMConversation.legalHoldStatus),
+                    #keyPath(ZMConversation.labels)
             ])
     }
 
@@ -268,6 +269,10 @@ extension ZMConversation : ObjectInSnapshot {
         return changedKeysContain(keys: #keyPath(ZMConversation.legalHoldStatus))
     }
     
+    public var labelsChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.labels))
+    }
+    
     public var conversation : ZMConversation { return self.object as! ZMConversation }
     
     public override var description : String { return self.debugDescription }
@@ -294,7 +299,8 @@ extension ZMConversation : ObjectInSnapshot {
                 "languageChanged \(languageChanged)",
                 "hasReadReceiptsEnabledChanged \(hasReadReceiptsEnabledChanged)",
                 "externalParticipantsStateChanged \(externalParticipantsStateChanged)",
-                "legalHoldStatusChanged: \(legalHoldStatusChanged)"
+                "legalHoldStatusChanged: \(legalHoldStatusChanged)",
+                "labelsChanged: \(labelsChanged)"
             ].joined(separator: ", ")
     }
     

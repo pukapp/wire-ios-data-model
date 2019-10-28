@@ -190,8 +190,7 @@ NSString * const DeliveredKey = @"delivered";
     }
     
     // Verify sender is part of conversation
-    ZMUser * sender = [ZMUser userWithRemoteID:updateEvent.senderUUID createIfNeeded:YES inConversation:conversation inContext:moc];
-    [conversation addParticipantIfMissing:sender date: [updateEvent.timeStamp dateByAddingTimeInterval:-0.01]];
+    [conversation verifySenderOf:updateEvent moc:moc];
 
     // Insert the message
 
@@ -287,7 +286,7 @@ NSString * const DeliveredKey = @"delivered";
 
 -(void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(NSSet *)updatedKeys {
 
-    NSDate *timestamp = [payload dateForKey:@"time"];
+    NSDate *timestamp = [payload dateFor:@"time"];
     if (timestamp == nil) {
         ZMLogWarn(@"No time in message post response from backend.");
     } else if( ! [timestamp isEqualToDate:self.serverTimestamp]) {

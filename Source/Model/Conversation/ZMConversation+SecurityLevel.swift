@@ -168,6 +168,10 @@ extension ZMConversation {
 
     private func updateLegalHoldState(cause: SecurityChangeCause) {
         guard self.conversationType != .hugeGroup else { return }
+        guard !needsToVerifyLegalHold, !activeParticipants.any({ $0.clients.any(\.needsToBeUpdatedFromBackend) }) else {
+            // We don't update the legal hold status if we are still gathering information about which clients were added/deleted
+            return
+        }
         
         let detectedParticipantsUnderLegalHold = activeParticipants.any(\.isUnderLegalHold)
 
@@ -233,17 +237,13 @@ extension ZMConversation {
 
     /// Update the legal hold status based on the hint of a message.
     private func updateLegalHoldIfNeededWithHint(from message: ZMGenericMessage, timestamp: Date) {
-        guard let statusHint = message.content?.legalHoldStatusHint else {
-            return
-        }
-
-        switch statusHint {
-        case .ENABLED where !legalHoldStatus.denotesEnabledComplianceDevice:
+        switch message.content?.legalHoldStatus {
+        case .ENABLED? where !legalHoldStatus.denotesEnabledComplianceDevice:
             needsToVerifyLegalHold = true
             legalHoldStatus = .pendingApproval
             appendLegalHoldEnabledSystemMessageForConversationAfterReceivingMessage(at: timestamp)
             expireAllPendingMessagesBecauseOfSecurityLevelDegradation()
-        case .DISABLED where legalHoldStatus.denotesEnabledComplianceDevice:
+        case .DISABLED? where legalHoldStatus.denotesEnabledComplianceDevice:
             needsToVerifyLegalHold = true
             legalHoldStatus = .disabled
             appendLegalHoldDisabledSystemMessageForConversationAfterReceivingMessage(at: timestamp)
@@ -288,9 +288,8 @@ extension ZMConversation {
                                                      timestamp: timestamp)
         systemMessage.needsUpdatingUsers = true
         
-        if let previousLastMessage = previousLastMessage as? ZMSystemMessage,
-            previousLastMessage.systemMessageType == .potentialGap,
-            previousLastMessage.serverTimestamp < timestamp {
+        if let previousLastMessage = previousLastMessage as? ZMSystemMessage, previousLastMessage.systemMessageType == .potentialGap,
+           let previousLastMessageTimestamp = previousLastMessage.serverTimestamp, previousLastMessageTimestamp <= timestamp {
             // In case the message before the new system message was also a system message of
             // the type ZMSystemMessageTypePotentialGap, we delete the old one and update the
             // users property of the new one to use old users and calculate the added / removed users
@@ -314,10 +313,15 @@ extension ZMConversation {
     }
 
     /// Adds the user to the list of participants if not already present and inserts a .participantsAdded system message
+    ///
+    /// - Parameters:
+    ///   - user: the participant to add
+    ///   - dateOptional: if provide a nil, current date will be used
     @objc(addParticipantIfMissing:date:)
-    public func addParticipantIfMissing(_ user: ZMUser, at date: Date = Date()) {
+    public func addParticipantIfMissing(_ user: ZMUser, date dateOptional: Date?) {
         ///万人群消息直接过滤，不执行activeParticipants的判断
         if case .hugeGroup = conversationType { return }
+        let date = dateOptional ?? Date()
         guard !activeParticipants.contains(user) else { return }
         
         switch conversationType {
@@ -343,7 +347,7 @@ extension ZMConversation {
     private func appendLegalHoldEnabledSystemMessageForConversation(cause: SecurityChangeCause) {
         var timestamp : Date?
         
-        if case .addedClients(_, let message) = cause, message?.conversation == self {
+        if case .addedClients(_, let message) = cause, message?.conversation == self, message?.isUpdatingExistingMessage == false {
             timestamp = self.timestamp(before: message)
         }
         
@@ -457,11 +461,10 @@ extension ZMConversation {
         
         let timeoutLimit = Date().addingTimeInterval(-ZMMessage.defaultExpirationTime())
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
-        let undeliveredMessagesPredicate = NSPredicate(format: "%K == %@ AND %K == %@ AND %K == NO AND %K > %@",
+        let undeliveredMessagesPredicate = NSPredicate(format: "%K == %@ AND %K == %@ AND %K == NO",
                                                        ZMMessageConversationKey, self,
                                                        ZMMessageSenderKey, selfUser,
-                                                       DeliveredKey,
-                                                       ZMMessageServerTimestampKey, timeoutLimit as NSDate)
+                                                       DeliveredKey)
         
         let fetchRequest = NSFetchRequest<ZMClientMessage>(entityName: ZMClientMessage.entityName())
         fetchRequest.predicate = undeliveredMessagesPredicate
@@ -473,7 +476,9 @@ extension ZMConversation {
         undeliveredMessages += managedObjectContext.fetchOrAssert(request: fetchRequest) as [ZMOTRMessage]
         undeliveredMessages += managedObjectContext.fetchOrAssert(request: assetFetchRequest) as [ZMOTRMessage]
         
-        return undeliveredMessages
+        return undeliveredMessages.filter { message in
+            return message.serverTimestamp > timeoutLimit || message.updatedAt > timeoutLimit
+        }
     }
     
 }
@@ -698,6 +703,15 @@ extension ZMSystemMessage {
         let fetchRequest = ZMSystemMessage.sortedFetchRequest(with: compound)!
         let result = conversation.managedObjectContext!.executeFetchRequestOrAssert(fetchRequest)!
         return result.first as? ZMSystemMessage
+    }
+}
+
+extension ZMOTRMessage {
+    
+    fileprivate var isUpdatingExistingMessage: Bool {
+        guard let genericMessage = genericMessage else { return false }
+        
+        return genericMessage.hasEdited() || genericMessage.hasReaction()
     }
 }
 

@@ -225,10 +225,10 @@ private let zmLog = ZMSLog(tag: "UserClient")
     public func update(with payload: [String: Any]) {
         //guard user?.isSelfUser == false, let deviceClass = payload["class"] as? String else { return }
         //自己的设备增加当没有从推送过来时，而是从消息响应带过来的时候needsToBeUpdatedFromBackend就会为true，这里把自己的设备过滤就会导致消息一直发布出去的bug
+        self.needsToBeUpdatedFromBackend = false
         guard let deviceClass = payload["class"] as? String else { return }
         
         self.deviceClass = DeviceClass(rawValue: deviceClass)
-        self.needsToBeUpdatedFromBackend = false
     }
 
     /// Resets releationships and ends an exisiting session before deleting the object
@@ -345,7 +345,7 @@ public extension UserClient {
         let activationAddress = payloadAsDictionary.optionalString(forKey: "address")?.removingExtremeCombiningCharacters
         let model = payloadAsDictionary.optionalString(forKey: "model")?.removingExtremeCombiningCharacters
         let deviceClass = payloadAsDictionary.optionalString(forKey: "class")
-        let activationDate = payloadAsDictionary.date(forKey: "time")
+        let activationDate = payloadAsDictionary.date(for: "time")
         
         let locationCoordinates = payloadData["location"] as? [String: Double]
         let latitude = (locationCoordinates?["lat"] as NSNumber?) ?? 0
@@ -354,7 +354,8 @@ public extension UserClient {
         // TODO: could optimize: look into self user relationship before executing a fetch request
         let fetchedClient = fetchExistingUserClient(with: id, in: context)
         let client = fetchedClient ?? UserClient.insertNewObject(in: context)
-
+        let isNewClient = fetchedClient == nil
+        
         client.label = label
         client.type = DeviceType(rawValue: type)
         client.activationAddress = activationAddress
@@ -368,15 +369,13 @@ public extension UserClient {
         let selfUser = ZMUser.selfUser(in: context)
         client.user = client.user ?? selfUser
 
-        if client.isLegalHoldDevice {
+        if client.isLegalHoldDevice, isNewClient {
             selfUser.legalHoldRequest = nil
             selfUser.needsToAcknowledgeLegalHoldStatus = true
         }
 
         if let selfClient = selfUser.selfClient() {
-            if client.remoteIdentifier != selfClient.remoteIdentifier &&
-                fetchedClient == .none
-            {
+            if client.remoteIdentifier != selfClient.remoteIdentifier && isNewClient {
                 client.fetchFingerprintOrPrekeys()
                 
                 if let selfClientActivationdate = selfClient.activationDate , client.activationDate?.compare(selfClientActivationdate) == .orderedDescending {

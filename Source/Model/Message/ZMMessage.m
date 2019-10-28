@@ -552,16 +552,13 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         return;
     }
     
-    BOOL updatedTimestamp = NO;
-    NSDate *timestamp = [payload dateForKey:@"time"];
+    NSDate *timestamp = [payload dateFor:@"time"];
     if (timestamp == nil) {
         ZMLogWarn(@"No time in message post response from backend.");
-    } else if( ! [timestamp isEqualToDate:self.serverTimestamp]) {
+    } else {
         self.serverTimestamp = timestamp;
-        updatedTimestamp = YES;
     }
     
-    [self.conversation updateServerModified:timestamp];
     [self.conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
@@ -1072,7 +1069,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         if (webapp) {
             serviceMessage.inWebApp = webapp;
         }
-        conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateForKey:@"time"];
+        conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
         message.isService = YES;
         message.hiddenInConversation = conversation;
         message.visibleInConversation = nil;
@@ -1248,17 +1245,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         default:
             return NO;
     }
-}
-
-- (NSDate *)lastChildMessageDate
-{
-    NSDate *date = self.serverTimestamp;
-    for (ZMSystemMessage *message in self.childMessages) {
-        if ([message.serverTimestamp compare:date] == NSOrderedDescending) {
-            date = message.serverTimestamp;
-        }
-    }
-    return date;
 }
 
 - (BOOL)userIsTheSender

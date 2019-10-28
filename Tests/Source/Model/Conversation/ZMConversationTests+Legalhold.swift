@@ -474,6 +474,40 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
         }
     }
     
+    func testThatItExpiresPendingMesssageEdit_WhenLegalholdIsDiscovered() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            
+            self.createSelfClient(onMOC: self.syncMOC)
+            self.createClient(ofType: .permanent, class: .phone, for: otherUser)
+            
+            let conversation = self.createConversation(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.internalAddParticipants([selfUser, otherUser])
+            
+            XCTAssertEqual(conversation.legalHoldStatus, .disabled)
+            
+            // WHEN
+            let message = conversation.append(text: "Legal hold is coming to town") as! ZMOTRMessage
+            message.delivered = true
+            message.serverTimestamp = Date().addingTimeInterval(-ZMMessage.defaultExpirationTime() * 2)
+            message.textMessageData?.editText("Legal hold is leaving", mentions: [], fetchLinkPreview: false)
+            Thread.sleep(forTimeInterval: 0.05)
+            
+            let legalHoldClient = self.createClient(ofType: .legalHold, class: .legalHold, for: otherUser)
+            conversation.decreaseSecurityLevelIfNeededAfterDiscovering(clients: [legalHoldClient], causedBy: message)
+            
+            // THEN
+            XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
+            
+            XCTAssertTrue(message.isExpired)
+            XCTAssertTrue(message.causedSecurityLevelDegradation)
+            XCTAssertEqual(conversation.messagesThatCausedSecurityLevelDegradation, [message])
+        }
+    }
+    
     func testItResendsAllPreviouslyExpiredMessages_WhenConfirmingLegalholdPresence() {
         syncMOC.performGroupedBlock {
             // GIVEN
@@ -522,6 +556,56 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             XCTAssertTrue(conversation.needsToVerifyLegalHold)
         }
     }
+    
+    func testThatItDoesntUpdateLegalHoldStatus_WhenNeedsToVerifyLegalHoldStatusIsTrue() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            
+            self.createSelfClient(onMOC: self.syncMOC)
+            self.createClient(ofType: .permanent, class: .phone, for: otherUser)
+            
+            let conversation = self.createConversation(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.needsToVerifyLegalHold = true
+            
+            XCTAssertEqual(conversation.legalHoldStatus, .disabled)
+            
+            // WHEN
+            let legalHoldClient = self.createClient(ofType: .legalHold, class: .legalHold, for: otherUser)
+            conversation.decreaseSecurityLevelIfNeededAfterDiscovering(clients: [legalHoldClient], causedBy: [otherUser])
+            
+            // THEN
+            XCTAssertEqual(conversation.legalHoldStatus, .disabled)
+        }
+    }
+    
+    func testThatItDoesntUpdateLegalHoldStatus_WhenAnyClientStillNeedsToBeFetchedFromTheBackend() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            
+            self.createSelfClient(onMOC: self.syncMOC)
+            self.createClient(ofType: .permanent, class: .phone, for: otherUser)
+            
+            let conversation = self.createConversation(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.internalAddParticipants([selfUser, otherUser])
+            
+            XCTAssertEqual(conversation.legalHoldStatus, .disabled)
+            
+            // WHEN
+            let legalHoldClient = self.createClient(ofType: .legalHold, class: .legalHold, for: otherUser)
+            legalHoldClient.needsToBeUpdatedFromBackend = true
+            conversation.decreaseSecurityLevelIfNeededAfterDiscovering(clients: [legalHoldClient], causedBy: [otherUser])
+            
+            // THEN
+            XCTAssertEqual(conversation.legalHoldStatus, .disabled)
+        }
+    }
 
     // MARK: - Message Status Hints
 
@@ -561,9 +645,9 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
         })
     }
 
-    func testThatItDoesNotUpdateFromMessageHint_EnabledReceivingMessageWithoutHint() {
-        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .DISABLED, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
-            ZMAvailability.availability(.busy)
+    func testThatItDoesNotUpdateFromMessageHint_EnabledReceivingMessageWithUnknownLegalHoldStatus() {
+        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .UNKNOWN, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
+            ZMText.text(with: "I know nothing")
         })
     }
     
