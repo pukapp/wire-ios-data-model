@@ -162,12 +162,11 @@ extension ZMConversation {
 
     /// Applies the security changes for the set of users.
     private func applySecurityChanges(cause: SecurityChangeCause) {
-        updateLegalHoldState(cause: cause)
-        updateSecurityLevel(cause: cause)
+//        updateLegalHoldState(cause: cause)
+//        updateSecurityLevel(cause: cause)
     }
 
     private func updateLegalHoldState(cause: SecurityChangeCause) {
-        guard self.conversationType != .hugeGroup else { return }
         guard !needsToVerifyLegalHold, !activeParticipants.any({ $0.clients.any(\.needsToBeUpdatedFromBackend) }) else {
             // We don't update the legal hold status if we are still gathering information about which clients were added/deleted
             return
@@ -192,8 +191,6 @@ extension ZMConversation {
     }
 
     private func updateSecurityLevel(cause: SecurityChangeCause) {
-        guard self.conversationType != .hugeGroup else { return }
-        
         switch cause {
         case .addedUsers, .addedClients, .ignoredClients:
             degradeSecurityLevelIfNeeded(for: cause)
@@ -393,19 +390,19 @@ extension ZMConversation {
 extension ZMConversation {
 
     private func acknowledgePrivacyChanges() {
-        precondition(managedObjectContext?.zm_isUserInterfaceContext == true)
-
-        // Downgrade the conversation to be unverified
-        if securityLevel == .secureWithIgnored {
-            securityLevel = .notSecure
-        }
-
-        // Accept legal hold
-        if legalHoldStatus == .pendingApproval {
-            legalHoldStatus = .enabled
-        }
-
-        managedObjectContext?.saveOrRollback()
+//        precondition(managedObjectContext?.zm_isUserInterfaceContext == true)
+//
+//        // Downgrade the conversation to be unverified
+//        if securityLevel == .secureWithIgnored {
+//            securityLevel = .notSecure
+//        }
+//
+//        // Accept legal hold
+//        if legalHoldStatus == .pendingApproval {
+//            legalHoldStatus = .enabled
+//        }
+//
+//        managedObjectContext?.saveOrRollback()
     }
 
     private func resendPendingMessagesAfterPrivacyChanges() {
