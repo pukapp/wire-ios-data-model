@@ -319,8 +319,13 @@ extension ZMConversation {
     ///   - dateOptional: if provide a nil, current date will be used
     @objc(addParticipantIfMissing:date:)
     public func addParticipantIfMissing(_ user: ZMUser, date dateOptional: Date?) {
-        ///万人群消息直接过滤，不执行activeParticipants的判断
-        if case .hugeGroup = conversationType { return }
+        ///万人群消息直接判断lastServerSyncedActiveParticipants是否包含，不执行activeParticipants的判断
+        if case .hugeGroup = conversationType {
+            if !self.lastServerSyncedActiveParticipants.contains(user) {
+                self.internalAddParticipants([user])
+            }
+            return
+        }
         let date = dateOptional ?? Date()
         guard !activeParticipants.contains(user) else { return }
         
