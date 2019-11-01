@@ -68,7 +68,7 @@ extension ZMClientMessage: EncryptedPayloadGenerator {
         guard let genericMessage = self.genericMessage, let conversation = self.conversation else {
             return nil
         }
-        return genericMessage.encryptedMessagePayloadData(conversation, externalData: nil, unblock: self.unblock)
+        return genericMessage.encryptedMessagePayloadData(conversation, externalData: nil, unblock: self.unblock, message: self)
     }
 
     public var debugInfo: String {
@@ -98,10 +98,17 @@ extension ZMAssetClientMessage: EncryptedPayloadGenerator {
 
 extension ZMGenericMessage {
     
-    public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?, unblock: Bool = false) -> (data: Data, strategy: MissingClientsStrategy)? {
+    public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?, unblock: Bool = false, message: ZMMessage? = nil) -> (data: Data, strategy: MissingClientsStrategy)? {
         guard let context = conversation.managedObjectContext else { return nil }
         
         let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context))
+        // 若消息有指定的接受者，仅为指定的用户加密
+        if let recipientUsers = message?.recipientUsers,
+            recipientUsers.count > 0 {
+            if let data = encryptedMessagePayloadData(for: recipientUsers, externalData: nil, context: context, unblock: unblock) {
+                return (data, .ignoreAllMissingClientsNotFromUsers(users: recipientUsers))
+            }
+        }
         if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
             return (data, recipientsAndStrategy.strategy)
         }

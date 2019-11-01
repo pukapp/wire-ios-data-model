@@ -218,6 +218,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 //此消息是否强制不被禁言
 @property (nonatomic) BOOL unblock;
 
+@property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
+
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;
 @property (nonatomic, readonly) NSDate * _Nullable destructionDate;
