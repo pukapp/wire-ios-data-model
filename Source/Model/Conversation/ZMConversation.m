@@ -664,7 +664,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 + (NSArray *)defaultSortDescriptors
 {
     return @[[NSSortDescriptor sortDescriptorWithKey:ZMConversationIsPlacedTopKey ascending:NO],
-             [NSSortDescriptor sortDescriptorWithKey:ZMConversationLastServerTimeStampKey ascending:NO],
+             [NSSortDescriptor sortDescriptorWithKey:LastModifiedDateKey ascending:NO],
              [NSSortDescriptor sortDescriptorWithKey:ZMConversationRemoteIdentifierDataKey ascending:YES],];
 }
 
