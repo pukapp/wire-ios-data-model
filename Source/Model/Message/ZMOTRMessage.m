@@ -146,6 +146,22 @@ NSString * const DeliveredKey = @"delivered";
         ZMLogError(@"Cannot create message from protobuffer: %@", e);
         message = nil;
     }
+    
+    // 与自己无关的币币兑换、红包消息不入库
+    if (message.hasTextJson){
+        NSString *jsonText = message.textJson.content;
+        NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:[jsonText dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
+        if ([@"4" isEqualToString:dic[@"msgType"]] || [@"6" isEqualToString:dic[@"msgType"]]){
+            NSDictionary *data = dic[@"msgData"];
+            NSString *sender = data[@"sendUserId"];
+            NSString *receiver = data[@"receiveUserId"];
+            ZMUser *user = [ZMUser selfUserInContext:moc];
+            NSString *selfId = user.remoteIdentifier.transportString;
+            if (![selfId isEqualToString:sender]  && ![selfId isEqualToString:receiver]){
+                return nil;
+            }
+        }
+    }
 
     ZMLogWithLevelAndTag(ZMLogLevelDebug, @"event-processing", @"processing:\n%@", [message debugDescription]);
     
