@@ -57,8 +57,8 @@ extension ZMUser {
         }
         
         if !query.isEmpty {
-            ///新增根据备注搜索用户
-            let remarkPredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedRemark) : "%K MATCHES %@"], matchingSearch: query)
+            ///新增根据备注搜索用户(判断是否包含字符串，而不是原本的是否开头包含)
+            let remarkPredicate = NSPredicate.init(format: "normalizedRemark MATCHES %@", ".*\(query).*")
             let namePredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedName) : "%K MATCHES %@"], matchingSearch: query)
             let handlePredicate = NSPredicate(format: "%K BEGINSWITH %@", #keyPath(ZMUser.handle), query.strippingLeadingAtSign())
             allPredicates.append([remarkPredicate, namePredicate, handlePredicate].compactMap {$0})
