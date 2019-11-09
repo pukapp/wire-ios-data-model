@@ -187,7 +187,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     }
     NSArray *topApps = [transportData optionalArrayForKey:ZMConversationInfoTopAppsKey];
     if (nil != topApps) {
-        [self updateWithApps:topApps];
+        [self updateWithTopApps:topApps];
     }
     NSArray *topWebApps = [transportData optionalArrayForKey:ZMConversationInfoTopWebAppsKey];
     if (nil != topWebApps) {
