@@ -212,7 +212,7 @@ struct stringAndStatus {
         ZMLogError(@"'to' UUID in connection doesn't match previous value.");
     }
     
-    NSDate *lastUpdateDate = [transportData dateFor: @"time"];
+    NSDate *lastUpdateDate = [transportData dateFor:@"last_update"];
     if(lastUpdateDate == nil) {
         ZMLogWarn(@"Invalid 'last_update' in connection: %@", transportData);
     } else {
