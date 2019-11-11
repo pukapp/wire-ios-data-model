@@ -302,7 +302,6 @@ extension ZMConversation {
             syncConversation.internalEstimatedUnreadSelfMentionCount = 0
             syncConversation.internalEstimatedUnreadSelfReplyCount = 0
             syncConversation.internalEstimatedUnreadCount = 0
-            syncContext.saveOrRollback()
         }
     }
     
