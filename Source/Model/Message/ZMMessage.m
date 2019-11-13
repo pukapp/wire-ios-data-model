@@ -201,6 +201,10 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return YES;
 }
 
+- (BOOL)shouldGenerateLastVisibleMessage {
+    return YES;
+}
+
 + (NSPredicate *)predicateForObjectsThatNeedToBeUpdatedUpstream;
 {
     return [NSPredicate predicateWithValue:NO];
@@ -1245,6 +1249,16 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
             return YES;
         default:
             return NO;
+    }
+}
+
+- (BOOL)shouldGenerateLastVisibleMessage;
+{
+    switch (self.systemMessageType) {
+        case ZMSystemMessageTypePotentialGap:
+            return NO;
+        default:
+            return YES;
     }
 }
 

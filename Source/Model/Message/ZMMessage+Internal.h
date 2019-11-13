@@ -94,6 +94,8 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 - (void)resend;
 - (BOOL)shouldGenerateUnreadCount;
 - (BOOL)shouldGenerateFirstUnread;
+///是否需要被赋值为conversation的lastMessage,即是否被展示在conversationList上
+- (BOOL)shouldGenerateLastVisibleMessage;
 
 @property (nonatomic) BOOL delivered;
 

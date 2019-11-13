@@ -205,6 +205,9 @@ extension ZMConversation {
         
         if message.shouldGenerateUnreadCount() {
             updateLastModified(timestamp)
+        }
+        
+        if message.shouldGenerateLastVisibleMessage() {
             if self.lastVisibleMessage?.serverTimestamp < message.serverTimestamp {
                 self.lastVisibleMessage = message
             }
@@ -236,10 +239,14 @@ extension ZMConversation {
         
         if message.shouldGenerateUnreadCount() {
             updateLastModified(timestamp)
+        }
+        
+        if message.shouldGenerateLastVisibleMessage() {
             if self.lastVisibleMessage?.serverTimestamp < message.serverTimestamp {
                 self.lastVisibleMessage = message
             }
         }
+        
         if message.isSystem, let systemMessage = message as? ZMSystemMessage, systemMessage.systemMessageType == .missedCall {
             //missedCall是系统消息，是从本机发送的，所以在这个方法进行判断，由于ping和missedCall的logo显示位置一样，所以是互斥，所以最新的是哪种消息，就把另外一种消息类型清除。
             updateLastUnreadKnock(nil)
