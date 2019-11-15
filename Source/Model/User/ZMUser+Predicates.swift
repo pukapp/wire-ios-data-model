@@ -57,11 +57,19 @@ extension ZMUser {
         }
         
         if !query.isEmpty {
-            ///新增根据备注搜索用户(判断是否包含字符串，而不是原本的是否开头包含)
-            let remarkPredicate = NSPredicate.init(format: "normalizedRemark MATCHES %@", ".*\(query).*")
+            /*新增根据备注搜索用户
+                1.reMark代表设置的备注如：钢铁侠老板
+                2.normalizedRemark是通过reMark生成的英文字符串如：gang tie xia lao ban
+             输入“老”
+             remarkPredicate匹配的是否包含“老”字符串
+             normalizedRemarkPredicate匹配的是 英文字符串'gang tie xia lao ban'中五个单词，是否有任意单词以‘lao’开头
+             */
+            let remarkPredicate = NSPredicate.init(format: "reMark MATCHES %@", ".*\(query).*")
+            let normalizedRemarkPredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedRemark) : "%K MATCHES %@"], matchingSearch: query)
+            
             let namePredicate = NSPredicate(formatDictionary: [#keyPath(ZMUser.normalizedName) : "%K MATCHES %@"], matchingSearch: query)
             let handlePredicate = NSPredicate(format: "%K BEGINSWITH %@", #keyPath(ZMUser.handle), query.strippingLeadingAtSign())
-            allPredicates.append([remarkPredicate, namePredicate, handlePredicate].compactMap {$0})
+            allPredicates.append([remarkPredicate, normalizedRemarkPredicate, namePredicate, handlePredicate].compactMap {$0})
         }
         
         let orPredicates = allPredicates.map { NSCompoundPredicate(orPredicateWithSubpredicates: $0) }
