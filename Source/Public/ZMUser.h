@@ -113,6 +113,8 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 @property (nonatomic) ZMRobotType robotType;
 // 钱包开启状态
 @property (nonatomic) BOOL walletOpened;
+// 私有id
+@property (nonatomic, copy, nullable) NSString *privateIdentifier;
 
 /// 支付有效时间，单位/秒，16位整型
 @property (nonatomic) NSInteger payValidTime;

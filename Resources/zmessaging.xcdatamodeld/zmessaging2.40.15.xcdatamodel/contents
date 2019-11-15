@@ -299,6 +299,7 @@
         <attribute name="phoneNumber" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="pkRobotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="previewProfileAssetIdentifier" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="privateIdentifier" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="providerIdentifier" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="readReceiptsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="readReceiptsEnabledChangedRemotely" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
@@ -410,7 +411,7 @@
         <element name="SystemMessage" positionX="27" positionY="57" width="128" height="375"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
-        <element name="User" positionX="-434" positionY="-72" width="128" height="975"/>
+        <element name="User" positionX="-434" positionY="-72" width="128" height="990"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="510"/>
         <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="135"/>

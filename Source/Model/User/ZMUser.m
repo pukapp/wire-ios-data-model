@@ -221,7 +221,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
 @dynamic pkRobotState;
 @dynamic walletOpened;
 @dynamic payValidTime;
-
+@dynamic privateIdentifier;
 
 - (NSString *)newName;
 {
