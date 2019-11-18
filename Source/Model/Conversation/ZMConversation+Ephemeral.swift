@@ -192,7 +192,7 @@ public extension ZMConversation {
             if let newTimeout = newValue {
                 switch (currentValue, newTimeout) {
                 case (_, .synced(let value)):
-                    if [.group, .hugeGroup].contains(conversationType) {
+                    if [.group].contains(conversationType) {
                         syncedMessageDestructionTimeout = value.rawValue
                     }
                 case (.synced?, .local):

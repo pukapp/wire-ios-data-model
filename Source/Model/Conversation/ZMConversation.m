@@ -631,6 +631,22 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     self.normalizedUserDefinedName = [self.userDefinedName normalizedString];
 }
 
+//增加conversationType的set方法，当conversationType被设置成了万人群，那么在界面上取消阅后即焚的按钮
+//这里需要改变localMessageDestructionTimeout和syncedMessageDestructionTimeout除了能通知到页面，还因为页面上的阅后即焚由这些参数共同决定，所以需要置为0
+- (void)setConversationType:(ZMConversationType)aType {
+    [self willChangeValueForKey:ZMConversationConversationTypeKey];
+    [self setPrimitiveValue:@(aType) forKey:ZMConversationConversationTypeKey];
+    [self didChangeValueForKey:ZMConversationConversationTypeKey];
+    if (aType == ZMConversationTypeHugeGroup) {
+        if (self.localMessageDestructionTimeout > 0) {
+            self.localMessageDestructionTimeout = 0;
+        }
+        if (self.syncedMessageDestructionTimeout > 0) {
+            self.syncedMessageDestructionTimeout = 0;
+        }
+    }
+}
+
 - (ZMConversationType)conversationType
 {
     ZMConversationType conversationType = [self internalConversationType];
