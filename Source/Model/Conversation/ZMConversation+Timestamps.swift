@@ -207,12 +207,6 @@ extension ZMConversation {
             updateLastModified(timestamp)
         }
         
-        if message.shouldGenerateLastVisibleMessage() {
-            if self.lastVisibleMessage?.serverTimestamp < message.serverTimestamp {
-                self.lastVisibleMessage = message
-            }
-        }
-        
         if let sender = message.sender, sender.isSelfUser {
             // if the message was sent by the self user we don't want to send a lastRead event, since we consider this message to be already read
             updateLastRead(timestamp, synchronize: false)
@@ -229,6 +223,13 @@ extension ZMConversation {
                 internalEstimatedUnreadCount += 1
             }
         }
+        
+        if message.shouldGenerateLastVisibleMessage() {
+            guard self.lastVisibleMessage?.serverTimestamp > message.serverTimestamp else {
+                self.lastVisibleMessage = message
+                return
+            }
+        }
         //calculateLastUnreadMessages()
     }
     
@@ -241,16 +242,17 @@ extension ZMConversation {
             updateLastModified(timestamp)
         }
         
-        if message.shouldGenerateLastVisibleMessage() {
-            if self.lastVisibleMessage?.serverTimestamp < message.serverTimestamp {
-                self.lastVisibleMessage = message
-            }
-        }
-        
         if message.isSystem, let systemMessage = message as? ZMSystemMessage, systemMessage.systemMessageType == .missedCall {
             //missedCall是系统消息，是从本机发送的，所以在这个方法进行判断，由于ping和missedCall的logo显示位置一样，所以是互斥，所以最新的是哪种消息，就把另外一种消息类型清除。
             updateLastUnreadKnock(nil)
             updateLastUnreadMissedCall(message.serverTimestamp)
+        }
+        
+        if message.shouldGenerateLastVisibleMessage() {
+            guard self.lastVisibleMessage?.serverTimestamp > message.serverTimestamp else {
+                self.lastVisibleMessage = message
+                return
+            }
         }
         //calculateLastUnreadMessages()
     }

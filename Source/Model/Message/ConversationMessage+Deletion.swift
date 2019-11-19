@@ -49,6 +49,11 @@ extension ZMMessage {
 
         // To avoid reinserting when receiving an edit we delete the message locally
         removeClearingSender(true)
+        ///消息被删除了，则最后一条消息也要改变
+        if let conversation = self.conversation,
+            conversation.lastVisibleMessage == self {
+             conversation.lastVisibleMessage = conversation.lastMessages(limit: 1).first
+        }
         managedObjectContext?.delete(self)
     }
     
@@ -66,6 +71,10 @@ extension ZMMessage {
         
         removeClearingSender(false)
         updateCategoryCache()
+        ///消息被删除了，则最后一条消息也要改变
+        if conversation.lastVisibleMessage == self {
+            conversation.lastVisibleMessage = conversation.lastMessages(limit: 1).first
+        }
         return message
     }
     

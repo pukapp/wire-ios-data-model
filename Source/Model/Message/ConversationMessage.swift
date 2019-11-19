@@ -215,10 +215,6 @@ extension ZMMessage {
                     conv.messagesNonceSet = [nonce]
                 }
             }
-            //此消息不被展示了，那么conversation需要判断如果的最后一条消息是自己的话，就需要置为nil
-            if newValue?.lastVisibleMessage == self {
-                newValue?.lastVisibleMessage = nil
-            }
         }
         get {
             let key = #keyPath(ZMMessage.hiddenInConversation)
