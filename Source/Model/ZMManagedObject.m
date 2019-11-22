@@ -23,6 +23,7 @@
 #import "ZMManagedObject+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMUser+Internal.h"
+#import "ZMMessage+Internal.h"
 
 NSString * const ZMDataPropertySuffix = @"_data";
 
@@ -369,7 +370,21 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K IN %@", [self remoteIdentifierDataKey], uuidDataArray];
     fetchRequest.fetchLimit = uuidDataArray.count + 1; // We only want 1 object for each uuid, but want to check if there are too many.
     NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
-    RequireString([fetchResult count] <= uuidDataArray.count, "More than one object with the same UUID");
+    ///由于改变了消息的插入机制，所以导致可能会有两条相同的消息被插入到数据库中，这里做一个删除处理
+    if (fetchResult.count > uuidDataArray.count) {
+        NSMutableArray * uuidarr = [NSMutableArray arrayWithCapacity:fetchResult.count];
+        for (NSManagedObject * ob in fetchResult) {
+            if ([ob isKindOfClass:[ZMMessage class]]) {
+                ZMMessage * me = (ZMMessage*)ob;
+                if ([uuidarr containsObject:me.nonce]) {
+                    [moc deleteObject:ob];
+                    [moc saveOrRollback];
+                }
+                [uuidarr addObject:me.nonce];
+            }
+        }
+    }
+    //RequireString([fetchResult count] <= uuidDataArray.count, "More than one object with the same UUID");
     [objects addObjectsFromArray:fetchResult];
     return objects;
 }
