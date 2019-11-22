@@ -399,7 +399,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     if (internalConversationType == ZMConversationTypeOneOnOne || internalConversationType == ZMConversationTypeConnection) {
         return self.connection.to;
     }
-    else if (self.conversationType == ZMConversationTypeOneOnOne) {
+    else if (self.conversationType == ZMConversationTypeOneOnOne && self.lastServerSyncedActiveParticipants.count > 0) {
         return self.lastServerSyncedActiveParticipants.firstObject;
     }
     
