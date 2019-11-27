@@ -379,6 +379,7 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
                 if ([uuidarr containsObject:me.nonce]) {
                     [moc deleteObject:ob];
                     [moc saveOrRollback];
+                    break;
                 }
                 [uuidarr addObject:me.nonce];
             }
