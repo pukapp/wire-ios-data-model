@@ -32,6 +32,6 @@
 - (nullable NSString *)senderClientID;
 - (nullable NSString *)recipientClientID;
 
-- (nonnull NSMutableSet *)usersFromUserIDsInManagedObjectContext:(nonnull NSManagedObjectContext *)context inConversation:(nonnull ZMConversation *)conversation createIfNeeded:(BOOL)createIfNeeded;
+- (nonnull NSMutableSet *)usersFromUserIDsInManagedObjectContext:(nonnull NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;
 
 @end

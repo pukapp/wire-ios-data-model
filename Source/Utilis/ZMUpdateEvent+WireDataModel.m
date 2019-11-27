@@ -104,14 +104,14 @@
     }
 }
 
-- (NSMutableSet *)usersFromUserIDsInManagedObjectContext:(NSManagedObjectContext *)context inConversation:(ZMConversation *)conversation createIfNeeded:(BOOL)createIfNeeded;
+- (NSMutableSet *)usersFromUserIDsInManagedObjectContext:(NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;
 {
     NSMutableSet *users = [NSMutableSet set];
     for (NSString *uuidString in [[self.payload optionalDictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"] ) {
         VerifyAction([uuidString isKindOfClass:[NSString class]], return [NSMutableSet set]);
         NSUUID *uuid = uuidString.UUID;
         VerifyAction(uuid != nil, return [NSMutableSet set]);
-        ZMUser *user = [ZMUser userWithRemoteID:uuid createIfNeeded:createIfNeeded inConversation:conversation inContext:context];
+        ZMUser *user = [ZMUser userWithRemoteID:uuid createIfNeeded:createIfNeeded inContext:context];
         if (user != nil) {
             [users addObject:user];
         }
