@@ -1378,6 +1378,32 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     [self increaseSecurityLevelIfNeededAfterRemovingUsers:otherUsers.set];
 }
 
+/*
+ 在万人群里lastServerSyncedActiveParticipants这个集合里是不停变动的，
+ 当来了一条万人群消息，会先从群里的lastServerSyncedActiveParticipants属性找发送者user，
+ 找不到再从数据库中读取，并将发送者加入到lastServerSyncedActiveParticipants里，来降低数据读读取频次
+ 但是当万人群消息积累越来越多时，此集合属性里的user也会越来越多，所以需要增加一个限制，防止出现内存暴涨
+ */
+- (void)internalRefreshParticipantsInHugeGroup {
+    if (self.conversationType != ZMConversationTypeHugeGroup || self.mutableLastServerSyncedActiveParticipants.count < 128) {
+        return;
+    }
+    
+    NSMutableOrderedSet<ZMUser *> *keepUsers = [NSMutableOrderedSet orderedSetWithArray: self.creator.isSelfUser ? @[] :  @[self.creator]];
+    NSMutableArray * priviligeUserIDs = [NSMutableArray arrayWithArray:self.manager.allObjects];
+    [priviligeUserIDs addObjectsFromArray:self.orator.allObjects];
+    for (NSString * userID in priviligeUserIDs) {
+        ZMUser * user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userID] createIfNeeded:YES inConversation:self inContext:self.managedObjectContext];
+        [keepUsers addObject:user];
+    }
+    if (keepUsers.count < 7) {
+        NSArray * sevenUsers = [self.mutableLastServerSyncedActiveParticipants objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 7)]];
+        [keepUsers unionSet:sevenUsers.set];
+    }
+    [self.mutableLastServerSyncedActiveParticipants intersectOrderedSet:keepUsers];
+}
+
+
 @dynamic isSelfAnActiveMember;
 @dynamic lastServerSyncedActiveParticipants;
 
@@ -1443,6 +1469,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             if ([obj isKindOfClass:ZMConversation.class]) {
                 ZMConversation *conversation = (ZMConversation *)obj;
                 
+                [conversation internalRefreshParticipantsInHugeGroup];
                 if(conversation.shouldNotBeRefreshed) {
                     [conversationsToKeep addObject:conversation];
                     [usersToKeep unionSet:conversation.lastServerSyncedActiveParticipants.set];
