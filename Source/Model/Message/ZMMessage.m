@@ -989,6 +989,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic add_friend;
 @dynamic managerType;
 @dynamic relevantForConversationStatus;
+@dynamic userIDs;
+@dynamic userNames;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
@@ -1001,6 +1003,101 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
     
     return self;
+}
+    
++(BOOL)vertifyIfCanCreateSystemMessageWithType:(ZMSystemMessageType)type
+                                          updateEvent:(ZMUpdateEvent *)updateEvent
+                                          inConversation:(ZMConversation *)conversation
+                                          inManagedObjectContext:(NSManagedObjectContext *)moc {
+    BOOL isSelfSend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"from"] isEqualToString:[ZMUser selfUserInContext:moc].remoteIdentifier.transportString];
+    switch (type) {
+        case ZMSystemMessageTypeServiceMessage:
+        case ZMUpdateEventTypeConversationServiceNotify:
+        {
+            return !isSelfSend;
+        }
+        case ZMSystemMessageTypeParticipantsAdded:
+        case ZMSystemMessageTypeParticipantsRemoved:
+        {
+            NSArray * userids = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"];
+            // 当添加或者删除成员是，若群变动不可见，也不是群主和管理员，且加人信息里不包含自己。该系统消息不需要入库
+            if (!conversation.isVisibleForMemberChange &&
+                !conversation.creator.isSelfUser &&
+                ![conversation.manager containsObject:[ZMUser selfUserInContext: moc].remoteIdentifier.transportString] &&
+                ![userids containsObject:[ZMUser selfUserInContext: moc].remoteIdentifier.transportString]) {
+                return false;
+            }
+        }
+        default:
+            return true;
+    }
+}
+    
++(void)fillSystemMessageWithSystemMessage:(ZMSystemMessage *)systemMessage
+                            updateEvent:(ZMUpdateEvent *)updateEvent
+                            inConversation:(ZMConversation *)conversation
+                            inManagedObjectContext:(NSManagedObjectContext *)moc {
+    
+    switch (systemMessage.systemMessageType) {
+        case ZMSystemMessageTypeAllDisableSendMsg:
+        case ZMSystemMessageTypeMemberDisableSendMsg:
+        {
+            systemMessage.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
+            systemMessage.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
+            systemMessage.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
+            systemMessage.opt_id = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoOpt_idKey];
+            break;
+        }
+        case ZMSystemMessageTypeAllowAddFriend:
+        {
+            systemMessage.add_friend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoIsAllowMemberAddEachOtherKey] stringValue];
+            break;
+        }
+        case ZMSystemMessageTypeServiceMessage:
+        {
+            ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
+            serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
+            serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
+            serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
+            serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
+            systemMessage.serviceMessage = serviceMessage;
+            conversation.lastServiceMessage = serviceMessage;
+            NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
+            serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
+            ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
+            if (webapp) {
+                serviceMessage.inWebApp = webapp;
+            }
+            conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
+            systemMessage.isService = YES;
+            systemMessage.hiddenInConversation = conversation;
+            systemMessage.visibleInConversation = nil;
+            break;
+        }
+        case ZMSystemMessageTypeParticipantsAdded:
+        case ZMSystemMessageTypeParticipantsRemoved:
+        {
+            NSOrderedSet * userNamesSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_names"].orderedSet;
+            systemMessage.userNames = userNamesSet;
+            NSOrderedSet * userIDsSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"].orderedSet;
+            systemMessage.userIDs = userIDsSet;
+            ///万人群加人删人都不需要走到最后对user赋值那里
+            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
+                return;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    
+    ///对user进行赋值
+    NSMutableSet *usersSet = [NSMutableSet set];
+    for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
+        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inConversation:conversation inContext:moc];
+        [usersSet addObject:user];
+    }
+    systemMessage.users = usersSet;
 }
 
 + (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
@@ -1024,68 +1121,24 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         return nil;
     }
     
-    BOOL isSelfSend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"from"] isEqualToString:[ZMUser selfUserInContext:moc].remoteIdentifier.transportString];
-    
-    if (type == ZMSystemMessageTypeServiceMessage && isSelfSend) {
+    ///创建系统消息之前先进行校验
+    if (![self vertifyIfCanCreateSystemMessageWithType:type updateEvent:updateEvent inConversation:conversation inManagedObjectContext:moc]) {
         return nil;
     }
     
-    NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
-    NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
-    
-    NSMutableSet *usersSet = [NSMutableSet set];
-    for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
-        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inConversation:conversation inContext:moc];
-        if (user.handle) {///只有当本地存在这个用户的时候，才加入（当万人群添加好友的时候，如果不在本地数据库，那么就不需要显示）
-            [usersSet addObject:user];
-        }
-    }
-    if (type == ZMSystemMessageTypeParticipantsAdded || type == ZMSystemMessageTypeParticipantsRemoved) {
-        if ( usersSet.count == 0 ) {return nil;}
-        //// 当添加或者删除成员是，若群变动不可见，也不是群主和管理员，且加人信息里不包含自己。该系统消息不需要入库
-        if (!conversation.isVisibleForMemberChange &&
-            !conversation.creator.isSelfUser &&
-            ![conversation.manager containsObject:[ZMUser selfUserInContext: moc].remoteIdentifier.transportString] &&
-            ![usersSet containsObject:[ZMUser selfUserInContext: moc]]) {return nil;}
-    }
-    
+    ///创建系统消息并配置基本信息
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
+    message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
-    message.blockTime = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockTimeKey];
-    message.blockUser = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoBlockUserKey];
-    message.blockDuration = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoBlockDurationKey];
-    message.opt_id = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:ZMConversationInfoOpt_idKey];
-    message.add_friend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoIsAllowMemberAddEachOtherKey] stringValue];
+    NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
+    NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
+    message.text = messageText != nil ? messageText : name;
+    
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     
-    if (updateEvent.type == ZMUpdateEventTypeConversationServiceNotify && !isSelfSend)  {
-        ///这条动态不是自己的
-        ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
-        serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
-        serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
-        serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
-        serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
-        message.serviceMessage = serviceMessage;
-        conversation.lastServiceMessage = serviceMessage;
-        NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
-        serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
-        ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
-        if (webapp) {
-            serviceMessage.inWebApp = webapp;
-        }
-        conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
-        message.isService = YES;
-        message.hiddenInConversation = conversation;
-        message.visibleInConversation = nil;
-    }
-    
-    if (![usersSet isEqual:[NSSet setWithObject:message.sender]]) {
-        [usersSet removeObject:message.sender];
-    }
-    
-    message.users = usersSet;
-    message.text = messageText != nil ? messageText : name;
+    ///针对特殊系统消息类型填充不同的数据
+    [self fillSystemMessageWithSystemMessage:message updateEvent:updateEvent inConversation:conversation inManagedObjectContext:moc];
     
     [conversation updateTimestampsAfterUpdatingMessage:message];
     return message;
@@ -1264,9 +1317,16 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 - (BOOL)userIsTheSender
 {
-    BOOL onlyOneUser = self.users.count == 1;
-    BOOL isSender = [self.users containsObject:self.sender];
-    return onlyOneUser && isSender;
+    ///在万人群加人删人的时候，users不会被赋值，只保存userIDs
+    if (self.conversation.conversationType == ZMConversationTypeHugeGroup && self.userIDs) {
+        BOOL onlyOneUser = self.userIDs.count == 1;
+        BOOL isSender = [self.userIDs containsObject:self.sender.remoteIdentifier.transportString];
+        return onlyOneUser && isSender;
+    } else {
+        BOOL onlyOneUser = self.users.count == 1;
+        BOOL isSender = [self.users containsObject:self.sender];
+        return onlyOneUser && isSender;
+    }
 }
 
 - (void)updateQuoteRelationships

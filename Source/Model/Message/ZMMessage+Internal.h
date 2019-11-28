@@ -197,6 +197,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 // Only filled for .messageTimerUpdate
 @property (nonatomic) BOOL relevantForConversationStatus; // If true (default), the message is considered to be shown inside the conversation list
 
+///新增属性，当群内收到加人，删人推送时，根据此属性就可在会话页面显示系统消息，不需要在本地创建user，并从后台获取user数据了（主要针对于万人群）
+@property (nonatomic) NSOrderedSet<NSString *> * _Nonnull userIDs;
+@property (nonatomic) NSOrderedSet<NSString *> * _Nonnull userNames;
+    
 + (ZMSystemMessage * _Nullable)fetchLatestPotentialGapSystemMessageInConversation:(ZMConversation * _Nonnull)conversation;
 - (void)updateNeedsUpdatingUsersIfNeeded;
 

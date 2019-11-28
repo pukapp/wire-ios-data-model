@@ -169,6 +169,8 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
 @property (nonatomic, nullable) NSString *add_friend;
 @property (nonatomic) ZMSystemManagerMessageType managerType;
 @property (nonatomic, nullable) ServiceMessage *serviceMessage;
+@property (nonatomic, readonly, nullable) NSOrderedSet <NSString *>*userIDs;
+@property (nonatomic, readonly, nullable) NSOrderedSet <NSString *>*userNames;
 @end
 
 
