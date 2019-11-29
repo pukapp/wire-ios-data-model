@@ -80,6 +80,11 @@ public struct SearchUserAssetKeys {
         return nil
     }
     
+    public init(previewKey: String?, completeKey: String?) {
+        self.preview = previewKey
+        self.complete = completeKey
+    }
+    
 }
 
 extension ZMSearchUser: SearchServiceUser {
