@@ -165,7 +165,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     
     NSUUID *creatorId = [transportData uuidForKey:ConversationInfoCreatorKey];
     if(creatorId != nil) {
-        self.creator = [ZMUser userWithRemoteID:creatorId createIfNeeded:YES inContext:self.managedObjectContext];
+        self.creator = [ZMUser userWithRemoteID:creatorId createIfNeeded:YES inConversation:self inContext:self.managedObjectContext];
     }
     
     NSDictionary *members = [transportData dictionaryForKey:ConversationInfoMembersKey];
@@ -198,7 +198,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
         [orator enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             NOT_USED(idx);
             NOT_USED(stop);
-            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inContext:self.managedObjectContext];
+            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inConversation:self inContext:self.managedObjectContext];
             user.needsToBeUpdatedFromBackend = YES;
         }];
         self.orator = orator.set;
@@ -208,7 +208,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
         [managers enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             NOT_USED(idx);
             NOT_USED(stop);
-            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inContext:self.managedObjectContext];
+            ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:obj] createIfNeeded:YES inConversation:self inContext:self.managedObjectContext];
             user.needsToBeUpdatedFromBackend = YES;
         }];
         self.manager = managers.set;
