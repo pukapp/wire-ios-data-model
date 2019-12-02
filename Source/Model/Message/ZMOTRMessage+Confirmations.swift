@@ -29,9 +29,11 @@ extension ZMOTRMessage {
         
         if conversation.conversationType == .oneOnOne {
             return genericMessage?.content?.expectsReadConfirmation() == true && ZMUser.selfUser(in: managedObjectContext).readReceiptsEnabled
-        } else if conversation.conversationType == .group {
-            return expectsReadConfirmation
         }
+        //屏蔽群的已读回执
+//        } else if conversation.conversationType == .group {
+//            return expectsReadConfirmation
+//        }
         
         return false
     }
