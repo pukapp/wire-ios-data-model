@@ -98,7 +98,8 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeServiceMessage,
     ZMSystemMessageTypeManagerMsg,///管理员系统消息
     ZMSystemMessageTypeCreatorChangeMsg,///群主更换消息
-    ZMSystemMessageTypeAllowAddFriend
+    ZMSystemMessageTypeAllowAddFriend,
+    ZMSystemMessageTypeMessageVisible
 };
 
 typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
@@ -171,6 +172,7 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
 @property (nonatomic, nullable) ServiceMessage *serviceMessage;
 @property (nonatomic, readonly, nullable) NSOrderedSet <NSString *>*userIDs;
 @property (nonatomic, readonly, nullable) NSOrderedSet <NSString *>*userNames;
+@property (nonatomic, readonly, nullable) NSString *messageVisible;
 @end
 
 
