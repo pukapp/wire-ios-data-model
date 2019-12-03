@@ -1320,6 +1320,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 {
     switch (self.systemMessageType) {
         case ZMSystemMessageTypePotentialGap:
+        case ZMSystemMessageTypeServiceMessage:
             return NO;
         default:
             return YES;

@@ -224,7 +224,8 @@ extension ZMConversation {
             }
         }
         
-        if message.shouldGenerateLastVisibleMessage() {
+        if message.shouldGenerateLastVisibleMessage(),
+            message.hiddenInConversation == nil && message.visibleInConversation == self {
             guard self.lastVisibleMessage?.serverTimestamp > message.serverTimestamp else {
                 self.lastVisibleMessage = message
                 return
@@ -248,7 +249,8 @@ extension ZMConversation {
             updateLastUnreadMissedCall(message.serverTimestamp)
         }
         
-        if message.shouldGenerateLastVisibleMessage() {
+        if message.shouldGenerateLastVisibleMessage(),
+            message.hiddenInConversation == nil && message.visibleInConversation == self {
             guard self.lastVisibleMessage?.serverTimestamp > message.serverTimestamp else {
                 self.lastVisibleMessage = message
                 return
