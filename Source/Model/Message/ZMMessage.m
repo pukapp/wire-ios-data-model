@@ -1083,7 +1083,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case ZMSystemMessageTypeParticipantsAdded:
         case ZMSystemMessageTypeParticipantsRemoved:
         {
-            NSOrderedSet * userNamesSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_names"].orderedSet;
+            NSArray * userNamesSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_names"];
             systemMessage.userNames = userNamesSet;
             NSOrderedSet * userIDsSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"].orderedSet;
             systemMessage.userIDs = userIDsSet;
