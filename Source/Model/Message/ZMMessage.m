@@ -1017,6 +1017,12 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         {
             return !isSelfSend;
         }
+        case ZMSystemMessageTypeCreatorChangeMsg:
+        {
+            NSString * opt_id = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"opt_id"];
+            NSString * new_creator = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"new_creator"];
+            return ![opt_id isEqualToString:new_creator];
+        }
         case ZMSystemMessageTypeParticipantsAdded:
         case ZMSystemMessageTypeParticipantsRemoved:
         {
