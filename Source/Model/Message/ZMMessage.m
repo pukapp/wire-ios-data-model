@@ -1027,6 +1027,10 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case ZMSystemMessageTypeParticipantsAdded:
         case ZMSystemMessageTypeParticipantsRemoved:
         {
+            // 由于万人群会多推送一条加减人消息，此处取消请求返回的系统消息
+            if (updateEvent.source == ZMUpdateEventSourceDownload && conversation.conversationType == ZMConversationTypeHugeGroup) {
+                return false;
+            }
             NSArray * userids = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"];
             // 当添加或者删除成员是，若群变动不可见，也不是群主和管理员，且加人信息里不包含自己。该系统消息不需要入库
             if (!conversation.isVisibleForMemberChange &&
