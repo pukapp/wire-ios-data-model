@@ -1389,7 +1389,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         return;
     }
     
-    NSMutableOrderedSet<ZMUser *> *keepUsers = [NSMutableOrderedSet orderedSetWithArray: self.creator.isSelfUser ? @[] :  @[self.creator]];
+    NSArray * originArr = (self.creator.isSelfUser ? @[] : (self.creator ? @[self.creator] : @[]));
+    NSMutableOrderedSet<ZMUser *> *keepUsers = [NSMutableOrderedSet orderedSetWithArray: originArr];
     NSMutableArray * priviligeUserIDs = [NSMutableArray arrayWithArray:self.manager.allObjects];
     [priviligeUserIDs addObjectsFromArray:self.orator.allObjects];
     for (NSString * userID in priviligeUserIDs) {
