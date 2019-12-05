@@ -227,19 +227,22 @@ NSString * const DeliveredKey = @"delivered";
         
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
+        // 优先通过新增conversation.messagesNonceSet，查询消息是否已存在本地，若存在，再去读取，不存在，则去新建
         BOOL isNewMessage = NO;
         if ([conversation.messagesNonceSet containsObject:nonce]) {
             clientMessage = [messageClass fetchMessageWithNonce:nonce
                                                 forConversation:conversation
                                          inManagedObjectContext:moc
                                                  prefetchResult:prefetchResult];
-            ///万人群忽略送达的状态
-            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
-                clientMessage.delivered = YES;
-            }
+            
             if (clientMessage.isZombieObject) {
                 return nil;
             }
+            ///万人群忽略送达的状态，具体什么原因等待以后修改注释
+            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
+                clientMessage.delivered = YES;
+            }
+            // 有可能什么消息没有senderClientID，具体什么原因等待以后修改注释
             if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
                 return nil;
             }
@@ -249,22 +252,21 @@ NSString * const DeliveredKey = @"delivered";
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
+            // 收到新闻公众号的消息，主动去识别链接
+            if (updateEvent.type == ZMUpdateEventTypeConversationUserServiceNoticeAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
+                ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
+            }
             // 暂时屏蔽群消息的已读回执功能
 //            if (![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier] && conversation.conversationType == ZMConversationTypeGroup) {
 //                clientMessage.expectsReadConfirmation = conversation.hasReadReceiptsEnabled;
 //            }
         }
         
+        // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
         // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
         if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
             isNewMessage = true;
         }
-        // 收到新闻公众号的消息，主动去识别链接
-        if (updateEvent.type == ZMUpdateEventTypeConversationUserServiceNoticeAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
-            ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
-        }
-        
-        // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
         [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate:isNewMessage];
         
         // It seems that if the object was inserted and immediately deleted, the isDeleted flag is not set to true.
