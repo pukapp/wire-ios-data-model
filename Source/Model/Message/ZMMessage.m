@@ -343,6 +343,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 //    [conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
+// 优化user查询效率,用于替代func"[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation]"
 - (void)updateWithSender:(ZMUser *)sender forConversation:(ZMConversation *)conversation
 {
     if (self.managedObjectContext != conversation.managedObjectContext) {

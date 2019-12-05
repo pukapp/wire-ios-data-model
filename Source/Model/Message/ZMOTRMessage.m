@@ -233,10 +233,6 @@ NSString * const DeliveredKey = @"delivered";
                                                 forConversation:conversation
                                          inManagedObjectContext:moc
                                                  prefetchResult:prefetchResult];
-            ///由于topic推送机制，在万人群发消息的时候也会给自己发送一条推送消息，所以这里判断senderClientID为空则说明是自己发送的消息，并且是万人群，则直接不做任何处理
-            if (clientMessage && !clientMessage.senderClientID && clientMessage.conversation.conversationType == ZMConversationTypeHugeGroup) {
-                return nil;
-            }
             ///万人群忽略送达的状态
             if (conversation.conversationType == ZMConversationTypeHugeGroup) {
                 clientMessage.delivered = YES;
@@ -248,17 +244,22 @@ NSString * const DeliveredKey = @"delivered";
                 return nil;
             }
         } else {
+            isNewMessage = YES;
+            
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
-            isNewMessage = YES;
+            // 暂时屏蔽群消息的已读回执功能
+//            if (![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier] && conversation.conversationType == ZMConversationTypeGroup) {
+//                clientMessage.expectsReadConfirmation = conversation.hasReadReceiptsEnabled;
+//            }
         }
         
         // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
         if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
             isNewMessage = true;
         }
-        // 收到新闻公众号的消息，主动去识别链接（后期时间冲突，改成自定义识别）
+        // 收到新闻公众号的消息，主动去识别链接
         if (updateEvent.type == ZMUpdateEventTypeConversationUserServiceNoticeAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
             ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
         }
@@ -274,8 +275,9 @@ NSString * const DeliveredKey = @"delivered";
             return nil;
         }
         
+        // 优化user查询效率,用于替代func"[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation]"
         [clientMessage updateWithSender:sender forConversation:conversation];
-        //[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
+//        [clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
         
