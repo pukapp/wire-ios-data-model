@@ -242,9 +242,8 @@ extension ZMMessage : ZMConversationMessage {
         return confirmations.filter({ $0.type == .read }).sorted(by: { a, b in  a.serverTimestamp < b.serverTimestamp })
     }
 
-    ///优先获取消息nonce，避免取nonpersistedObjectIdentifer，减少计算量
     public var objectIdentifier: String {
-        return self.nonce?.uuidString ?? nonpersistedObjectIdentifer!
+        return nonpersistedObjectIdentifer!
     }
     
     public var causedSecurityLevelDegradation : Bool {
