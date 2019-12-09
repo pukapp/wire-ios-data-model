@@ -96,6 +96,8 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 - (BOOL)shouldGenerateFirstUnread;
 ///是否需要被赋值为conversation的lastMessage,即是否被展示在conversationList上
 - (BOOL)shouldGenerateLastVisibleMessage;
+///这是改变当前群LastModified属性，由于conversation的排序条件是LastModified，所以此处需要判断是否刷新当前群
+- (BOOL)shouldUpdateLastModified;
 
 @property (nonatomic) BOOL delivered;
 

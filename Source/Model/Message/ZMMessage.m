@@ -205,6 +205,11 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     return YES;
 }
 
+- (BOOL)shouldUpdateLastModified
+{
+    return YES;
+}
+
 + (NSPredicate *)predicateForObjectsThatNeedToBeUpdatedUpstream;
 {
     return [NSPredicate predicateWithValue:NO];
@@ -1289,6 +1294,26 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 - (id<ZMSystemMessageData>)systemMessageData
 {
     return self;
+}
+
+///这是改变当前群LastModified属性，由于conversation的排序条件是LastModified，所以此处需要判断是否刷新当前群
+- (BOOL)shouldUpdateLastModified;
+{
+    switch (self.systemMessageType) {
+        case ZMSystemMessageTypeParticipantsRemoved:
+        case ZMSystemMessageTypeParticipantsAdded:
+        {
+            ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+            return [self.users containsObject:selfUser] && !self.sender.isSelfUser;
+        }
+        case ZMSystemMessageTypeNewConversation:
+            return !self.sender.isSelfUser;
+        case ZMSystemMessageTypeMissedCall:
+        case ZMSystemMessageTypeServiceMessage:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (BOOL)shouldGenerateUnreadCount;

@@ -203,7 +203,7 @@ extension ZMConversation {
         
         updateServerModified(timestamp)
         
-        if message.shouldGenerateUnreadCount() {
+        if message.shouldUpdateLastModified() {
             updateLastModified(timestamp)
         }
         
