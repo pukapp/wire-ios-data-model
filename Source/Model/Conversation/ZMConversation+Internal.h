@@ -135,7 +135,7 @@ NS_ASSUME_NONNULL_END
 + (nonnull NSPredicate *)predicateForSearchQuery:(nonnull NSString *)searchQuery team:(nullable Team *)team;
 + (nonnull NSPredicate *)userDefinedNamePredicateForSearchString:(nonnull NSString *)searchString;
 
-@property (readonly, nonatomic, nonnull) NSMutableOrderedSet *mutableLastServerSyncedActiveParticipants;
+@property (nonatomic, nonnull) NSMutableOrderedSet *mutableLastServerSyncedActiveParticipants;
 
 @property (nonatomic) BOOL internalIsArchived;
 

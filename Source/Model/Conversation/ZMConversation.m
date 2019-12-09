@@ -1401,7 +1401,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         NSArray * sevenUsers = [self.mutableLastServerSyncedActiveParticipants objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 7)]];
         [keepUsers unionSet:sevenUsers.set];
     }
-    [self.mutableLastServerSyncedActiveParticipants intersectOrderedSet:keepUsers];
+    [self.mutableLastServerSyncedActiveParticipants removeAllObjects];
+    self.mutableLastServerSyncedActiveParticipants = keepUsers;
 }
 
 
