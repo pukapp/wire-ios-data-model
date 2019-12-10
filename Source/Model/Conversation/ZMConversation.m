@@ -1402,7 +1402,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
         [keepUsers unionSet:sevenUsers.set];
     }
     [self.mutableLastServerSyncedActiveParticipants removeAllObjects];
-    self.mutableLastServerSyncedActiveParticipants = keepUsers;
+    [self.mutableLastServerSyncedActiveParticipants unionSet:keepUsers.set];
 }
 
 
