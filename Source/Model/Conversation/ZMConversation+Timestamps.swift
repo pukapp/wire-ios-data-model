@@ -239,7 +239,7 @@ extension ZMConversation {
     func updateTimestampsAfterInsertingMessage(_ message: ZMMessage) {
         guard let timestamp = message.serverTimestamp else { return }
         
-        if message.shouldGenerateUnreadCount() {
+        if message.shouldUpdateLastModified() {
             updateLastModified(timestamp)
         }
         

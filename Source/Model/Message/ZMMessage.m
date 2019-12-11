@@ -1328,9 +1328,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case ZMSystemMessageTypeNewConversation:
             return !self.sender.isSelfUser;
         case ZMSystemMessageTypeMissedCall:
-            return YES;
         case ZMSystemMessageTypeServiceMessage:
-            return NO;
+            return YES;
         default:
             return NO;
     }
