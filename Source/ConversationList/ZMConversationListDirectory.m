@@ -221,6 +221,27 @@ static NSString * const PendingKey = @"Pending";
     return directory;
 }
 
+- (NSArray<ZMConversation *> *)sharedConversationList;
+{
+    NSFetchRequest *request = [ZMConversation sortedFetchRequest];
+    request.fetchLimit = 100;
+    
+    NSError *error;
+    return [self executeFetchRequest:request error:&error];
+    NSAssert(error != nil, @"Failed to fetch");
+}
+
+- (NSArray<ZMConversation *> *)filterSharedConversationListWithSearchText:(NSString *)text;
+{
+    NSPredicate *predicate = [ZMConversation predicateInSharedConversationsForSearchQuery:text];
+    NSFetchRequest *fetchRequest = [ZMConversation sortedFetchRequestWithPredicate:predicate];
+    fetchRequest.sortDescriptors = @[[[NSSortDescriptor alloc] initWithKey:@"normalizedUserDefinedName" ascending:YES]];
+    fetchRequest.fetchLimit = 50;
+    
+    NSError *error;
+    return [self executeFetchRequest:fetchRequest error:&error];
+    NSAssert(error != nil, @"Failed to fetch");
+}
 @end
 
 

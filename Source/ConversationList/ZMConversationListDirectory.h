@@ -26,7 +26,7 @@
 @class ZMConversationList;
 @class ZMSharableConversations;
 @class NSManagedObjectContext;
-
+@class ZMConversation;
 
 @interface ZMConversationListDirectory : NSObject
 
@@ -63,4 +63,9 @@
 
 - (nonnull ZMConversationListDirectory *)conversationListDirectory;
 
+///外部分享时获取的conversation列表，只取前100个
+- (nonnull NSArray<ZMConversation *> *)sharedConversationList;
+
+///外部分享时根据关键字进行搜索conversation
+- (nonnull NSArray<ZMConversation *> *)filterSharedConversationListWithSearchText:(NSString * _Nonnull)text;
 @end

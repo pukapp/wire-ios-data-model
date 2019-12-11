@@ -25,6 +25,35 @@ extension ZMConversation {
         let selfType = ZMConversationType.init(rawValue: 1)!
         return NSPredicate(format: "\(ZMConversationConversationTypeKey) != \(ZMConversationType.invalid.rawValue) && \(ZMConversationConversationTypeKey) != \(selfType.rawValue)")
     }
+    
+    ///在外部分享文件时，根据关键字搜索conversation，需要注意-单聊的名称是根据参与者的名称来决定。与conversation的属性是无关的
+    @objc
+    public class func predicateInSharedConversations(forSearchQuery searchQuery: String) -> NSPredicate! {
+        /*新增根据userDefinedName搜索用户
+         1.userDefinedName代表设置的中文名称：秘密部落
+         2.normalizedUserDefinedName是通过userDefinedName生成的英文字符串如：mi mi bu luo
+         输入“秘”
+         userDefinedNamePredicate匹配的是否包含“秘”字符串
+         namePredicate匹配的是 英文字符串'mi mi bu luo'中五个单词，是否有任意单词以‘mi’开头
+         */
+        let userDefinedNamePredicate = NSPredicate(format: "userDefinedName MATCHES %@", ".*\(searchQuery).*")
+        let formatDict = [ZMNormalizedUserDefinedNameKey: "%K MATCHES %@"]
+        guard let namePredicate = NSPredicate(formatDictionary: formatDict, matchingSearch: searchQuery) else { return .none }
+        
+        ///单聊的话查询参与者的备注，或者name（备注搜索的话耗时太久）
+        let regExp = ".*\\b\(searchQuery).*"
+        //let friendRemarkPredicate = NSPredicate(format: "(\(ZMConversationConversationTypeKey) == \(ZMConversationType.oneOnOne.rawValue)) AND (ANY %K.reMark MATCHES %@)", ZMConversationLastServerSyncedActiveParticipantsKey, regExp)
+        let friendNamePredicate = NSPredicate(format: "(\(ZMConversationConversationTypeKey) == \(ZMConversationType.oneOnOne.rawValue)) AND (ANY %K.name MATCHES %@)", ZMConversationLastServerSyncedActiveParticipantsKey, regExp)
+        
+        let searchPredicate = NSCompoundPredicate(orPredicateWithSubpredicates:
+            [userDefinedNamePredicate,
+             namePredicate,
+             //friendRemarkPredicate,
+             friendNamePredicate])
+        
+        return searchPredicate
+    }
+    
 
     @objc
     public class func predicate(forSearchQuery searchQuery: String) -> NSPredicate! {
