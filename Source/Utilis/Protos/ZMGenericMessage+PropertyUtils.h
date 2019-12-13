@@ -52,6 +52,15 @@
 
 @end
 
+
+@interface ZMForbid (Utils)
+
++ (instancetype)forbidWithType:(NSString *)type messageID:(NSUUID *)messageID operatorName:(NSString *)name;
+
+@end
+
+
+
 @interface ZMConfirmation (Utils)
 
 + (instancetype)messageWithMessageID:(NSUUID *)messageID confirmationType:(ZMConfirmationType)confirmationType;
