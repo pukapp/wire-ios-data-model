@@ -7,6 +7,11 @@
 
 import Foundation
 
+@objc public enum MessageOperationStatus: UInt8 {
+    case on
+    case off
+}
+
 @objc public enum MessageOperationType: UInt16 {
     case illegal
     
@@ -25,11 +30,17 @@ import Foundation
     @NSManaged var message: ZMMessage?
     @NSManaged var operateUser: ZMUser?
     
-    public static func insertOperation(_ type: MessageOperationType, byOperator user: ZMUser, onMessage message: ZMMessage) -> Operation {
+    public static func insertOperation(
+        _ type: MessageOperationType,
+        status: MessageOperationStatus,
+        byOperator user: ZMUser,
+        onMessage message: ZMMessage
+        ) -> Operation {
+        
         let obj = insertNewObject(in: message.managedObjectContext!)
         obj.message = message
         obj.type = type.uniqueValue
-        obj.state = type == .illegal
+        obj.state = status == .on
         obj.operateUser = user
         return obj
     }

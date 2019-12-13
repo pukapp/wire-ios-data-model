@@ -10,7 +10,11 @@ import Foundation
 extension ZMMessage {
     
     @discardableResult
-    @objc public static func addOperation(_ operation: MessageOperationType, toMessage message: ZMConversationMessage) -> ZMClientMessage? {
+    @objc public static func addOperation(
+        _ type: MessageOperationType,
+        status: MessageOperationStatus,
+        onMessage message: ZMConversationMessage) -> ZMClientMessage? {
+        
         guard
             let message = message as? ZMMessage,
             let context = message.managedObjectContext,
@@ -18,28 +22,32 @@ extension ZMMessage {
             message.isSent
             else { return nil }
         let user: ZMUser = .selfUser(in: context)
-        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: operation.uniqueValue, messageID: messageID, operatorName: user.name!))
+        // TODO: ZMForbid operatorName: user.name!
+        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: user.name!))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
-        message.addOperation(operation, byOperator: user)
+        message.addOperation(type, status: status, byOperator: user)
         return clientMessage
     }
     
     
-    @objc public func addOperation(_ operation: MessageOperationType, byOperator user: ZMUser) {
-        Operation.insertOperation(operation, byOperator: user, onMessage: self)
-//        removeReaction(forUser:user)
-//        if let unicodeValue = unicodeValue , unicodeValue.count > 0 {
-//            for reaction in self.reactions {
-//                if reaction.unicodeValue! == unicodeValue {
-//                    reaction.mutableSetValue(forKey: ZMReactionUsersValueKey).add(user)
-//                    return
-//                }
-//            }
-//
-//            //we didn't find a reaction, need to add a new one
-//            let newReaction = Reaction.insertReaction(unicodeValue, users: [user], inMessage: self)
-//            self.mutableSetValue(forKey: "reactions").add(newReaction)
-//        }
-//        updateCategoryCache()
+    @objc public func addOperation(_ type: MessageOperationType, status: MessageOperationStatus, byOperator user: ZMUser) {
+        let opt = Operation.insertOperation(type, status: status, byOperator: user, onMessage: self)
+        mutableSetValue(forKey: "operations").add(opt)
+        updateCategoryCache()
+    }
+    
+    private func removeOperation(_ type: MessageOperationType, forUser user: ZMUser) {
+        guard let opt = operations
+            .filter({ $0.type == type.uniqueValue })
+            .first(where: { $0.operateUser?.remoteIdentifier == user.remoteIdentifier })
+            else { return }
+        operations.remove(opt)
+    }
+    
+    @objc public func clearAllOperations() {
+        guard let moc = managedObjectContext else { return }
+        let ops = operations
+        operations.removeAll()
+        ops.forEach(moc.delete)
     }
 }
