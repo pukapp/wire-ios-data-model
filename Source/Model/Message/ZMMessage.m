@@ -71,6 +71,7 @@ NSString * const ZMMessageRemovedUsersKey = @"removedUsers";
 NSString * const ZMMessageNeedsUpdatingUsersKey = @"needsUpdatingUsers";
 NSString * const ZMMessageSenderClientIDKey = @"senderClientID";
 NSString * const ZMMessageReactionKey = @"reactions";
+NSString * const ZMMessageOperationKey = @"operations";
 NSString * const ZMMessageConfirmationKey = @"confirmations";
 NSString * const ZMMessageDestructionDateKey = @"destructionDate";
 NSString * const ZMMessageIsObfuscatedKey = @"isObfuscated";
@@ -132,6 +133,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic destructionDate;
 @dynamic senderClientID;
 @dynamic reactions;
+@dynamic operations;
 @dynamic confirmations;
 @dynamic isObfuscated;
 @dynamic normalizedText;
@@ -759,6 +761,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                              ZMMessageSenderClientIDKey,
                              ZMMessageConfirmationKey,
                              ZMMessageReactionKey,
+                             ZMMessageOperationKey,
                              ZMMessageDestructionDateKey,
                              ZMMessageIsObfuscatedKey,
                              ZMMessageCachedCategoryKey,

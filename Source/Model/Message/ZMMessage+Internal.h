@@ -27,6 +27,7 @@
 
 @class ZMUser;
 @class Reaction;
+@class Operation;
 @class ZMConversation;
 @class ZMUpdateEvent;
 @class ZMMessageConfirmation;
@@ -240,6 +241,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) NSString * _Nullable normalizedText;
 
 @property (nonatomic) NSSet <Reaction *> * _Nonnull reactions;
+@property (nonatomic) NSSet <Operation *> * _Nonnull operations;
 @property (nonatomic, readonly) NSSet<ZMMessageConfirmation*> * _Nonnull confirmations;
 
 - (void)setExpirationDate;
