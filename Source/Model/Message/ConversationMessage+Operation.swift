@@ -51,3 +51,20 @@ extension ZMMessage {
         ops.forEach(moc.delete)
     }
 }
+
+
+extension ZMMessage {
+    
+    public static func operationState(of message: ZMConversationMessage, type: MessageOperationType) -> MessageOperationStatus {
+        guard let message = message as? ZMMessage else { return .off }
+        return message.operationState(of: type)
+    }
+    
+    public func operationState(of type: MessageOperationType) -> MessageOperationStatus {
+        guard let nonce = nonce else { return .off }
+        guard let opt = operations
+            .filter({ $0.type == type.uniqueValue })
+            .first(where: { $0.message?.nonce == nonce }) else { return .off }
+        return opt.state ? .on : .off
+    }
+}
