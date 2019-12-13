@@ -1052,6 +1052,43 @@ extension ZMReaction: MessageContentType {
 }
 
 @objc
+extension ZMForbid: MessageContentType {
+    
+    public static func operation(type: String, messageId: UUID, operatorName name: String) -> ZMForbid {
+        let builder = ZMForbidBuilder()
+        builder.setEmoji(type)
+        builder.setMessageId(messageId.transportString())
+        // TODO: ZMForbid operator name
+//        builder.setOperatorName(name)
+        return builder.build()
+    }
+    
+    public func setContent(on builder: ZMGenericMessageBuilder) {
+        builder.setForbid(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+    
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+    
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return defaultLegalHoldStatus
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+    
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+}
+
+@objc
 extension ZMConfirmation: MessageContentType {
     
     public static func confirm(messageId: UUID, type: ZMConfirmationType = .DELIVERED) -> ZMConfirmation {
