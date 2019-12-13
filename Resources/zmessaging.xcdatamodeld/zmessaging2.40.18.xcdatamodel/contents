@@ -209,7 +209,7 @@
         <attribute name="state" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="type" attributeType="String" syncable="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
-        <relationship name="operator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
+        <relationship name="operateUser" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
     </entity>
     <entity name="Reaction" representedClassName=".Reaction" syncable="YES">
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
