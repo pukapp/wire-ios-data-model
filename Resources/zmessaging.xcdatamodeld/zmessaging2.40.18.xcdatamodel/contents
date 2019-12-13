@@ -192,6 +192,7 @@
         <relationship name="discoveredClients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="discoveredByMessage" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="hiddenInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="hiddenMessages" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="missingRecipients" optional="YES" transient="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="messagesMissingRecipient" inverseEntity="UserClient" syncable="YES"/>
+        <relationship name="operations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Operation" inverseName="message" inverseEntity="Operation" syncable="YES"/>
         <relationship name="quote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="replies" inverseEntity="Message" syncable="YES"/>
         <relationship name="reactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reaction" inverseName="message" inverseEntity="Reaction" syncable="YES"/>
         <relationship name="recipientUsers" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
@@ -208,7 +209,7 @@
     <entity name="Operation" syncable="YES">
         <attribute name="state" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="type" attributeType="String" syncable="YES"/>
-        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="operations" inverseEntity="Message" syncable="YES"/>
         <relationship name="operateUser" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
     </entity>
     <entity name="Reaction" representedClassName=".Reaction" syncable="YES">
@@ -412,7 +413,7 @@
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="540"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="555"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
