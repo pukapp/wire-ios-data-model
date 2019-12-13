@@ -89,8 +89,8 @@ NSString *const ZMConversationOnlyCreatorInviteKey = @"isOnlyCreatorInvite";
 NSString *const ZMConversationOpenUrlJoinKey = @"isOpenUrlJoin";
 NSString *const ZMConversationAllowViewMembersKey = @"isAllowViewMembers";
 
-NSString *const ZMConversationGroupImageSmallKey = @"groupImageSmallKey";
-NSString *const ZMConversationGroupImageMediumKey = @"groupImageMediumKey";
+NSString *const ZMConversationPreviewAvatarKey = @"groupImageSmallKey";
+NSString *const ZMConversationCompleteAvatarKey = @"groupImageMediumKey";
 
 NSString *const ZMConversationAppsKey = @"apps";
 NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
@@ -159,6 +159,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @property (nonatomic) NSDate *archivedChangedTimestamp;
 @property (nonatomic) NSDate *silencedChangedTimestamp;
 
+@property (nonatomic) NSDate *previewAvatarData;
+@property (nonatomic) NSDate *completeAvatarData;
 @end
 
 /// Declaration of properties implemented (automatically) by Core Data
@@ -213,8 +215,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 
 @dynamic groupImageMediumKey;
 @dynamic groupImageSmallKey;
-@dynamic imageMediumData;
-@dynamic imageSmallProfileData;
+@synthesize previewAvatarData;
+@synthesize completeAvatarData;
 
 @dynamic apps;
 @dynamic topApps;

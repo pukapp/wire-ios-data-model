@@ -109,6 +109,8 @@ extern NSString *const ZMConversationManagerDelKey;
 extern NSString *const ZMConversationIsVisitorsVisibleKey;
 extern NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey;
 extern NSString *const ZMConversationAnnouncementKey;
+extern NSString *const ZMConversationPreviewAvatarKey;
+extern NSString *const ZMConversationCompleteAvatarKey;
 
 NS_ASSUME_NONNULL_END
 
@@ -159,6 +161,9 @@ NS_ASSUME_NONNULL_END
 @property (nonatomic) NSTimeInterval lastReadTimestampSaveDelay;
 @property (nonatomic) int64_t lastReadTimestampUpdateCounter;
 
+///增加两个不存进数据库的字段，目前仅用keyPath-obserber用来监听图片已下载完成，更新页面使用，后面考虑是否存储图片data，防止每次从pincache的缓存中取值影响效率
+@property (nonatomic, nullable) NSDate *previewAvatarData;
+@property (nonatomic, nullable) NSDate *completeAvatarData;
 /**
     Appends the given message in the conversation.
  

@@ -148,7 +148,7 @@ public class ConversationListObserverCenter : NSObject, ChangeInfoConsumer {
         guard    changes.nameChanged              || changes.connectionStateChanged  || changes.isArchivedChanged
               || changes.mutedMessageTypesChanged || changes.lastModifiedDateChanged || changes.conversationListIndicatorChanged
               || changes.clearedChanged           || changes.securityLevelChanged    || changes.teamChanged
-              || changes.messagesChanged          || changes.selfRemarkChanged       || changes.headerImgChanged
+              || changes.messagesChanged          || changes.selfRemarkChanged       || changes.previewAvatarDataChanged
               || changes.replyTypeChanged         || changes.placeTopStatusChanged
               || changes.messagesChanged          || changes.labelsChanged
         else { return }

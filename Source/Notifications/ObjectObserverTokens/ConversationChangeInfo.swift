@@ -89,6 +89,16 @@ extension ZMConversation : ObjectInSnapshot {
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
     
+    /// 群小头像更新
+    public var previewAvatarDataChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.groupImageSmallKey), #keyPath(ZMConversation.previewAvatarData))
+    }
+    
+    /// 群大头像更新
+    public var completeAvatarDataChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.groupImageMediumKey), #keyPath(ZMConversation.completeAvatarData))
+    }
+    
     /// 群公告更新
     public var announcementChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.announcement))
@@ -124,12 +134,6 @@ extension ZMConversation : ObjectInSnapshot {
     /// 新增对别人的回复类型改变
     public var replyTypeChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.autoReply))
-    }
-    
-    /// 头像改变
-    public var headerImgChanged : Bool {
-        return changedKeysContain(keys:#keyPath(ZMConversation.groupImageSmallKey)) ||
-               changedKeysContain(keys:#keyPath(ZMConversation.groupImageMediumKey))
     }
     
     /// 开启链接加入允许开启
@@ -281,7 +285,8 @@ extension ZMConversation : ObjectInSnapshot {
                 "appsChanged: \(appsChanged)",
                 "topAppsChanged: \(topAppsChanged)",
                 "messagesChanged: \(messagesChanged)",
-                "headerImgChanged: \(headerImgChanged)",
+                "previewAvatarDataChanged: \(previewAvatarDataChanged)",
+                "completeAvatarDataChanged: \(completeAvatarDataChanged)",
                 "canOpenUrlChanged: \(canOpenUrlChanged)",
                 "participantsChanged: \(participantsChanged)",
                 "nameChanged: \(nameChanged)",

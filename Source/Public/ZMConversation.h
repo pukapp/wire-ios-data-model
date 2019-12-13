@@ -149,8 +149,6 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 /// 群头像
 @property (nullable, nonatomic, copy) NSString *groupImageMediumKey;
 @property (nullable, nonatomic, copy) NSString *groupImageSmallKey;
-@property (nullable, nonatomic, copy) NSData *imageMediumData;
-@property (nullable, nonatomic, copy) NSData *imageSmallProfileData;
 //群应用
 @property (nullable, nonatomic, copy) NSString *apps;///群内添加的所有应用
 @property (nullable, nonatomic, copy) NSString *topApps;///群内置顶的应用id
