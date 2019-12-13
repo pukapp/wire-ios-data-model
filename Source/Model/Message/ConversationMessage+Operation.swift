@@ -17,10 +17,10 @@ extension ZMMessage {
             let messageID = message.nonce,
             message.isSent
             else { return nil }
-        // TODO: ZMForibid
-        let genericMessage = ZMGenericMessage.message(content: ZMReaction(emoji: "", messageID: messageID))
+        let user: ZMUser = .selfUser(in: context)
+        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: operation.uniqueValue, messageID: messageID, operatorName: user.name!))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
-        message.addOperation(operation, byOperator: .selfUser(in: context))
+        message.addOperation(operation, byOperator: user)
         return clientMessage
     }
     

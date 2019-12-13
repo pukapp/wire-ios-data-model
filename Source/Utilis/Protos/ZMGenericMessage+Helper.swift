@@ -1054,7 +1054,7 @@ extension ZMReaction: MessageContentType {
 @objc
 extension ZMForbid: MessageContentType {
     
-    public static func operation(type: String, messageId: UUID, operatorName name: String) -> ZMForbid {
+    public static func forbid(type: String, messageId: UUID, operatorName name: String) -> ZMForbid {
         let builder = ZMForbidBuilder()
         builder.setEmoji(type)
         builder.setMessageId(messageId.transportString())
