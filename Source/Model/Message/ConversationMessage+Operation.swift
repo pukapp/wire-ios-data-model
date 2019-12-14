@@ -25,7 +25,10 @@ extension ZMMessage {
         // TODO: ZMForbid operatorName: user.name!
         let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: user.name!))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
-        message.addOperation(type, status: status, byOperator: user)
+        switch status {
+        case .on: message.addOperation(type, status: status, byOperator: user)
+        case .off: message.removeOperation(type)
+        }
         return clientMessage
     }
     
@@ -34,6 +37,17 @@ extension ZMMessage {
         let opt = Operation.insertOperation(type, status: status, byOperator: user, onMessage: self)
         mutableSetValue(forKey: "operations").add(opt)
         updateCategoryCache()
+    }
+    
+    private func removeOperation(_ type: MessageOperationType) {
+        guard let nonce = nonce else { return }
+        let id = nonce.transportString()
+        guard !id.isEmpty else { return }
+        guard let opt = operations
+            .filter({ $0.type == type.uniqueValue })
+            .first(where: { $0.message?.nonce?.transportString() == id })
+            else { return }
+        operations.remove(opt)
     }
     
     private func removeOperation(_ type: MessageOperationType, forUser user: ZMUser) {
@@ -60,11 +74,27 @@ extension ZMMessage {
         return message.operationState(of: type)
     }
     
+    public static func operationUser(of message: ZMConversationMessage, type: MessageOperationType) -> ZMUser? {
+        guard let message = message as? ZMMessage else { return nil }
+        return message.operationUser(of: type)
+    }
+    
+    public func operationUser(of type: MessageOperationType) -> ZMUser? {
+        guard let opt = operation(of: type) else { return nil }
+        return opt.operateUser
+    }
+    
     public func operationState(of type: MessageOperationType) -> MessageOperationStatus {
-        guard let nonce = nonce else { return .off }
-        guard let opt = operations
-            .filter({ $0.type == type.uniqueValue })
-            .first(where: { $0.message?.nonce == nonce }) else { return .off }
+        guard let opt = operation(of: type) else { return .off }
         return opt.state ? .on : .off
+    }
+    
+    private func operation(of type: MessageOperationType) -> Operation? {
+        guard let nonce = nonce else { return nil }
+        let nonceString = nonce.transportString()
+        guard !nonceString.isEmpty else { return nil }
+        return operations
+            .filter({ $0.type == type.uniqueValue })
+            .first(where: { $0.message?.nonce?.transportString() == nonceString })
     }
 }
