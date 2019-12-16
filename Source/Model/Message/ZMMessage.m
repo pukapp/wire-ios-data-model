@@ -437,6 +437,21 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     [localMessage updateCategoryCache];
 }
 
++ (void)addOperation:(ZMForbid * _Nonnull)operation
+              sender:(ZMUser * _Nonnull)sender
+        conversation:(ZMConversation * _Nonnull)conversation
+inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
+{
+    //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
+    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
+    NSUUID *nonce = [NSUUID uuidWithTransportString:operation.messageId];
+    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
+                                               forConversation:conversation
+                                        inManagedObjectContext:moc];
+    [localMessage addOperation:MessageOperationTypeIllegal status:MessageOperationStatusOn byOperator:sender];
+    [localMessage updateCategoryCache];
+}
+
 + (void)removeMessageWithRemotelyDeletedMessage:(ZMMessageDelete *)deletedMessage inConversation:(ZMConversation *)conversation senderID:(NSUUID *)senderID inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
     NSUUID *messageID = [NSUUID uuidWithTransportString:deletedMessage.messageId];

@@ -127,6 +127,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
        conversation:(ZMConversation * _Nonnull)conversation
 inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
+
++ (void)addOperation:(ZMForbid * _Nonnull)operation
+             sender:(ZMUser * _Nonnull)sender
+       conversation:(ZMConversation * _Nonnull)conversation
+inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
+
 @end
 
 
