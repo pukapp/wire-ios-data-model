@@ -53,7 +53,7 @@ extension UTType {
     fileprivate let moc: NSManagedObjectContext
 
     public init?(with message: ZMAssetClientMessage) {
-        guard message.version < 3 else { return nil }
+        guard message.version < 3, message.managedObjectContext != nil else { return nil }
         assetClientMessage = message
         moc = message.managedObjectContext!
     }
