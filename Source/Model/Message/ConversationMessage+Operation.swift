@@ -21,12 +21,12 @@ extension ZMMessage {
             let messageID = message.nonce,
             message.isSent
             else { return nil }
-        let user: ZMUser = .selfUser(in: context)
-        // TODO: ZMForbid operatorName: user.name!
-        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: user.name!))
+        let operatorUser: ZMUser = .selfUser(in: context)
+        let operaorName = operatorUser.name ?? operatorUser.displayName
+        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: operaorName))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
         switch status {
-        case .on: message.addOperation(type, status: status, byOperator: user)
+        case .on: message.addOperation(type, status: status, byOperator: operatorUser)
         case .off: message.removeOperation(type)
         }
         return clientMessage

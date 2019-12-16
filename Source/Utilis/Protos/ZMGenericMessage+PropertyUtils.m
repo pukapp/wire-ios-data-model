@@ -80,7 +80,7 @@
     ZMForbidBuilder *builder = [ZMForbid builder];
     [builder setEmoji:type];
     [builder setMessageId:messageID.transportString];
-    // TODO: ZMForbid operatorName
+    [builder setOptName:name];
     return [builder build];
 }
 
