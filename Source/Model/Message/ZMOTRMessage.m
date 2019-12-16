@@ -211,6 +211,8 @@ NSString * const DeliveredKey = @"delivered";
         
         //[ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
         [ZMMessage addReaction:message.reaction sender:sender conversation:conversation inManagedObjectContext:moc];
+    } else if (message.hasForbid) {
+        [ZMMessage addOperation:message.forbid sender:sender conversation:conversation inManagedObjectContext:moc];
     } else if (message.hasConfirmation) {
         [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent sender: sender];
     } else if (message.hasEdited) {
