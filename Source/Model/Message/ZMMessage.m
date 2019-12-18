@@ -71,6 +71,7 @@ NSString * const ZMMessageRemovedUsersKey = @"removedUsers";
 NSString * const ZMMessageNeedsUpdatingUsersKey = @"needsUpdatingUsers";
 NSString * const ZMMessageSenderClientIDKey = @"senderClientID";
 NSString * const ZMMessageReactionKey = @"reactions";
+NSString * const ZMMessageOperationKey = @"operations";
 NSString * const ZMMessageConfirmationKey = @"confirmations";
 NSString * const ZMMessageDestructionDateKey = @"destructionDate";
 NSString * const ZMMessageIsObfuscatedKey = @"isObfuscated";
@@ -132,6 +133,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic destructionDate;
 @dynamic senderClientID;
 @dynamic reactions;
+@dynamic operations;
 @dynamic confirmations;
 @dynamic isObfuscated;
 @dynamic normalizedText;
@@ -432,6 +434,21 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                                         inManagedObjectContext:moc];
     
     [localMessage addReaction:reaction.emoji forUser:sender];
+    [localMessage updateCategoryCache];
+}
+
++ (void)addOperation:(ZMForbid * _Nonnull)operation
+              sender:(ZMUser * _Nonnull)sender
+        conversation:(ZMConversation * _Nonnull)conversation
+inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
+{
+    //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
+    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
+    NSUUID *nonce = [NSUUID uuidWithTransportString:operation.messageId];
+    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
+                                               forConversation:conversation
+                                        inManagedObjectContext:moc];
+    [localMessage addOperation:MessageOperationTypeIllegal status:MessageOperationStatusOn byOperator:sender];
     [localMessage updateCategoryCache];
 }
 
@@ -759,6 +776,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
                              ZMMessageSenderClientIDKey,
                              ZMMessageConfirmationKey,
                              ZMMessageReactionKey,
+                             ZMMessageOperationKey,
                              ZMMessageDestructionDateKey,
                              ZMMessageIsObfuscatedKey,
                              ZMMessageCachedCategoryKey,

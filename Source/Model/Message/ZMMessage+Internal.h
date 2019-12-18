@@ -27,6 +27,7 @@
 
 @class ZMUser;
 @class Reaction;
+@class Operation;
 @class ZMConversation;
 @class ZMUpdateEvent;
 @class ZMMessageConfirmation;
@@ -123,6 +124,12 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 + (void)addReaction:(ZMReaction * _Nonnull)reaction
            sender:(ZMUser * _Nonnull)sender
+       conversation:(ZMConversation * _Nonnull)conversation
+inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
+
+
++ (void)addOperation:(ZMForbid * _Nonnull)operation
+             sender:(ZMUser * _Nonnull)sender
        conversation:(ZMConversation * _Nonnull)conversation
 inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
@@ -240,6 +247,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) NSString * _Nullable normalizedText;
 
 @property (nonatomic) NSSet <Reaction *> * _Nonnull reactions;
+@property (nonatomic) NSSet <Operation *> * _Nonnull operations;
 @property (nonatomic, readonly) NSSet<ZMMessageConfirmation*> * _Nonnull confirmations;
 
 - (void)setExpirationDate;

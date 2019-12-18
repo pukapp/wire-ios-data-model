@@ -81,6 +81,7 @@
     self.hasKnock ||
     self.hasImage ||
     self.hasReaction ||
+    self.hasForbid ||
     self.hasLastRead ||
     self.hasCleared ||
     self.hasClientAction ||

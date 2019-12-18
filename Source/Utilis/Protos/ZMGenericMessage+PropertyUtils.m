@@ -70,8 +70,22 @@
     return [builder build];
 }
 
+@end
+
+
+@implementation ZMForbid (Utils)
+
++ (instancetype)forbidWithType:(NSString *)type messageID:(NSUUID *)messageID operatorName:(NSString *)name
+{
+    ZMForbidBuilder *builder = [ZMForbid builder];
+    [builder setEmoji:type];
+    [builder setMessageId:messageID.transportString];
+    [builder setOptName:name];
+    return [builder build];
+}
 
 @end
+
 
 @implementation ZMConfirmation (Utils)
 

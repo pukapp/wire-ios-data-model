@@ -52,6 +52,7 @@ extension ZMAssetClientMessage {
                               #keyPath(ZMAssetClientMessage.isDownloading),
                               #keyPath(ZMAssetClientMessage.progress),
                               #keyPath(ZMMessage.reactions),
+                              #keyPath(ZMMessage.operations),
                               #keyPath(ZMMessage.confirmations)]
         return keys.union(additionalKeys)
     }
@@ -65,6 +66,7 @@ extension ZMClientMessage {
                               #keyPath(ZMClientMessage.linkPreviewState),
                               #keyPath(ZMClientMessage.genericMessage),
                               #keyPath(ZMMessage.reactions),
+                              #keyPath(ZMMessage.operations),
                               #keyPath(ZMMessage.confirmations),
                               #keyPath(ZMClientMessage.quote),
                               MessageKey.linkPreview.rawValue,
@@ -79,7 +81,8 @@ extension ZMImageMessage {
         let keys = super.observableKeys
         let additionalKeys = [#keyPath(ZMImageMessage.mediumData),
                               #keyPath(ZMImageMessage.mediumRemoteIdentifier),
-                              #keyPath(ZMMessage.reactions)]
+                              #keyPath(ZMMessage.reactions),
+                              #keyPath(ZMMessage.operations)]
         return keys.union(additionalKeys)
     }
 }
@@ -141,6 +144,10 @@ extension ZMSystemMessage {
     public var reactionsChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMMessage.reactions)) ||
                changeInfos[MessageChangeInfo.ReactionChangeInfoKey] != nil
+    }
+    
+    public var operationsChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMMessage.operations))
     }
 
     public var confirmationsChanged : Bool {
