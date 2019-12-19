@@ -38,6 +38,12 @@ extension NSManagedObjectContext {
     /// Returns the cryptobox instance associated with this managed object context
     @objc public var zm_cryptKeyStore : UserClientKeysStore! {
         if !self.zm_isSyncContext {
+            if self.userInfo.allKeys.count == 0 {
+                fatal("Can't access key store: Currently context userinfo has been deleted")
+            }
+            if self.zm_isUserInterfaceContext {
+                fatal("Can't access key store: Currently is on ui context")
+            }
             fatal("Can't access key store: Currently not on sync context")
         }
         let keyStore = self.userInfo.object(forKey: NSManagedObjectContext.ZMUserClientKeysStoreKey)
