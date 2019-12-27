@@ -55,8 +55,7 @@
         }
             break;
             
-        case ZMUpdateEventTypeConversationServiceMessageAdd:
-        case ZMUpdateEventTypeConversationWalletNotify: {
+        case ZMUpdateEventTypeConversationServiceMessageAdd: {
             message = [self serviceGenericMessageWithUpdateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
