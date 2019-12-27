@@ -87,7 +87,7 @@
         case ZMUpdateEventTypeConversationKnock:
             return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"nonce"];
 
-        case ZMUpdateEventTypeConversationUserServiceNoticeAdd:
+        case ZMUpdateEventTypeConversationServiceMessageAdd:
         case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:

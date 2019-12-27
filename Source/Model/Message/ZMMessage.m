@@ -1037,7 +1037,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     BOOL isSelfSend = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"from"] isEqualToString:[ZMUser selfUserInContext:moc].remoteIdentifier.transportString];
     switch (type) {
         case ZMSystemMessageTypeServiceMessage:
-        case ZMUpdateEventTypeConversationServiceNotify:
+        case ZMUpdateEventTypeConversationAppMessageAdd:
         {
             return !isSelfSend;
         }
@@ -1305,7 +1305,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
              @(ZMUpdateEventTypeConversationMemberJoin) : @(ZMSystemMessageTypeParticipantsAdded),
              @(ZMUpdateEventTypeConversationMemberLeave) : @(ZMSystemMessageTypeParticipantsRemoved),
              @(ZMUpdateEventTypeConversationRename) : @(ZMSystemMessageTypeConversationNameChanged),
-             @(ZMUpdateEventTypeConversationServiceNotify) : @(ZMSystemMessageTypeServiceMessage)
+             @(ZMUpdateEventTypeConversationAppMessageAdd) : @(ZMSystemMessageTypeServiceMessage)
              };
 }
 
