@@ -161,6 +161,14 @@ NSString * const DeliveredKey = @"delivered";
                 return nil;
             }
         }
+        if ([@"4" isEqualToString:dic[@"msgType"]]) {
+            NSDictionary *data = dic[@"msgData"];
+            NSString *messageId = [data optionalStringForKey:@"messageId"];
+            if (messageId && messageId.length > 0) {
+                ZMMessage *mes = [ZMMessage fetchObjectWithRemoteIdentifier:[NSUUID uuidWithTransportString:messageId] inManagedObjectContext:moc];
+                mes.bibiCashType = ZMBiBiCashTypeGotten;
+            }
+        }
     }
 
     ZMLogWithLevelAndTag(ZMLogLevelDebug, @"event-processing", @"processing:\n%@", [message debugDescription]);
