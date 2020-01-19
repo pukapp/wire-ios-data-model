@@ -204,16 +204,16 @@ public class TextSearchQuery: NSObject {
 
             // We store the count of indexed and non-indexed messages in the conversation.
             // This will be used to ensure we only call the delegate with `hasMore = false` once.
-            self.indexedMessageCount = self.countForIndexedMessages()
-            self.notIndexedMessageCount = self.countForNonIndexedMessages()
+            //self.indexedMessageCount = self.countForIndexedMessages()
+            //self.notIndexedMessageCount = self.countForNonIndexedMessages()
             zmLog.debug("Searching for \"\(self.originalQuery)\", indexed: \(self.indexedMessageCount), not indexed: \(self.notIndexedMessageCount)")
 
-            if self.indexedMessageCount == 0 && self.notIndexedMessageCount == 0 {
-                // No need to perform a search if there are not messages.
-                zmLog.debug("Skipping search as there are no searchable messages.")
-                return self.notifyDelegate(with: [], hasMore: false)
-            }
-
+//            if self.indexedMessageCount == 0 && self.notIndexedMessageCount == 0 {
+//                // No need to perform a search if there are not messages.
+//                zmLog.debug("Skipping search as there are no searchable messages.")
+//                return self.notifyDelegate(with: [], hasMore: false)
+//            }
+    
             self.executeQueryForIndexedMessages { [weak self] in
                 self?.executeQueryForNonIndexedMessages()
             }
@@ -233,27 +233,28 @@ public class TextSearchQuery: NSObject {
     /// - parameter completion: The completion handler which will be called after all indexed messages have been queried
     private func executeQueryForIndexedMessages(callCount: Int = 0, completion: @escaping () -> Void) {
         guard !cancelled else { return }
-        guard indexedMessageCount > 0 else { return completion() }
+        //guard indexedMessageCount > 0 else { return completion() }
 
         syncMOC.performGroupedBlock { [weak self] in
             guard let `self` = self else { return }
 
             let request = ZMClientMessage.descendingFetchRequest(with: self.predicateForIndexedMessagesQueryMatch)
-            request?.fetchLimit = self.fetchConfiguration.indexedBatchSize
-            request?.fetchOffset = callCount * self.fetchConfiguration.indexedBatchSize
+//            request?.fetchLimit = self.fetchConfiguration.indexedBatchSize
+//            request?.fetchOffset = callCount * self.fetchConfiguration.indexedBatchSize
 
+            
             guard let matches = self.syncMOC.executeFetchRequestOrAssert(request) as? [ZMClientMessage] else { return completion() }
 
             // Notify the delegate
-            let nextOffset = (callCount + 1) * self.fetchConfiguration.indexedBatchSize
-            let needsMoreFetches = nextOffset < self.indexedMessageCount
-            self.notifyDelegate(with: matches, hasMore: needsMoreFetches || self.notIndexedMessageCount > 0)
+//            let nextOffset = (callCount + 1) * self.fetchConfiguration.indexedBatchSize
+//            let needsMoreFetches = nextOffset < self.indexedMessageCount
+            self.notifyDelegate(with: matches, hasMore: false)
 
-            if needsMoreFetches {
-                self.executeQueryForIndexedMessages(callCount: callCount + 1, completion: completion)
-            } else {
+//            if needsMoreFetches {
+//                self.executeQueryForIndexedMessages(callCount: callCount + 1, completion: completion)
+//            } else {
                 completion()
-            }
+           // }
         }
     }
 
