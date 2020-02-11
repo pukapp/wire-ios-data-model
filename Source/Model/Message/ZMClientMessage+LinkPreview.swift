@@ -80,15 +80,16 @@ import WireLinkPreview
     
     public func fetchLinkPreviewImageData(with queue: DispatchQueue, completionHandler: @escaping (_ imageData: Data?) -> Void) {
         guard let cache = managedObjectContext?.zm_fileAssetCache else { return }
-        let originalKey =  FileAssetCache.cacheKeyForAsset(self, format: .original)
-        let mediumKey =  FileAssetCache.cacheKeyForAsset(self, format: .medium)
+        let originalKey = FileAssetCache.cacheKeyForAsset(self, format: .original)
+        let mediumKey = FileAssetCache.cacheKeyForAsset(self, format: .medium)
         queue.async {
-            completionHandler(
-                [mediumKey, originalKey]
-                .compactMap { $0 }
-                .compactMap { cache.assetData($0) }
-                .first
-            )
+            var data: Data? = nil
+            if let key = mediumKey {
+                data = cache.assetData(key)
+            } else if let key = originalKey {
+                data = cache.assetData(key)
+            }
+            completionHandler(data)
         }
     }
     
