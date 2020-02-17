@@ -25,6 +25,7 @@ public let ZMReactionUsersValueKey      = "users"
 @objc public enum TransportReaction : UInt32 {
     case none  = 0
     case heart = 1
+    case audioPlayed = 2
 }
 
 
@@ -58,12 +59,10 @@ public let ZMReactionUsersValueKey      = "users"
     
     @objc public static func transportReaction(from unicode: String) -> TransportReaction {
         switch unicode {
-        case MessageReaction.like.unicodeValue:
-            return .heart
-        default:
-            return .none
+        case MessageReaction.like.unicodeValue:         return .heart
+        case MessageReaction.audioPlayed.unicodeValue:  return .audioPlayed
+        default: return .none
         }
-
     }
     
 }
