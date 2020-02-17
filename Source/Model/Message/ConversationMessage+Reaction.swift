@@ -32,14 +32,23 @@ import Foundation
 
 extension ZMMessage {
     
-    static func appendReaction(_ unicodeValue: String?, toMessage message: ZMConversationMessage) -> ZMClientMessage? {
-        guard let message = message as? ZMMessage, let context = message.managedObjectContext, let messageID = message.nonce else { return nil }
-        guard message.isSent else { return nil }
-        
-        let emoji = unicodeValue ?? ""
-        let genericMessage = ZMGenericMessage.message(content: ZMReaction(emoji: emoji, messageID: messageID))    
-        let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
-        message.addReaction(unicodeValue, forUser: .selfUser(in: context))
+    static func append(reaction: MessageReaction, to message: ZMConversationMessage) -> ZMClientMessage? {
+        guard
+            let message = message as? ZMMessage,
+            let context = message.managedObjectContext,
+            let messageID = message.nonce,
+            message.isSent
+            else { return nil }
+        let genericMessage = ZMGenericMessage.message(content: ZMReaction(emoji: reaction.unicodeValue, messageID: messageID))
+        let clientMessage: ZMClientMessage?
+        switch reaction {
+        case .like:
+            clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
+        case .audioPlayed:
+            let selfConversation = ZMConversation.selfConversation(in: context)
+            clientMessage = selfConversation.appendClientMessage(with: genericMessage, expires: false, hidden: true)
+        }
+        message.addReaction(reaction.unicodeValue, forUser: .selfUser(in: context))
         return clientMessage
     }
     
@@ -47,15 +56,25 @@ extension ZMMessage {
     @objc public static func addReaction(_ reaction: MessageReaction, toMessage message: ZMConversationMessage) -> ZMClientMessage? {
         // confirmation that we understand the emoji
         // the UI should never send an emoji we dont handle
-        if Reaction.transportReaction(from: reaction.unicodeValue) == .none{
+        if Reaction.transportReaction(from: reaction.unicodeValue) == .none {
             fatal("We can't append this reaction \(reaction.unicodeValue), this is a programmer error.")
         }
-        
-        return appendReaction(reaction.unicodeValue, toMessage: message)
+        return append(reaction: reaction, to: message)
     }
     
-    @objc public static func removeReaction(onMessage message:ZMConversationMessage) -> ZMClientMessage? {
-        return appendReaction(nil, toMessage: message)
+    @objc public static func removeReaction(onMessage message: ZMConversationMessage) -> ZMClientMessage? {
+        guard
+            let message = message as? ZMMessage,
+            let context = message.managedObjectContext,
+            let messageID = message.nonce,
+            message.isSent
+            else { return nil }
+
+        let emoji = ""
+        let genericMessage = ZMGenericMessage.message(content: ZMReaction(emoji: emoji, messageID: messageID))
+        let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
+        message.addReaction(emoji, forUser: .selfUser(in: context))
+        return clientMessage
     }
     
     @objc public func addReaction(_ unicodeValue: String?, forUser user:ZMUser) {
