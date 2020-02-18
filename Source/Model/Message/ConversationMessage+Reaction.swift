@@ -77,8 +77,12 @@ extension ZMMessage {
         return clientMessage
     }
     
-    @objc public func addReaction(_ unicodeValue: String?, forUser user:ZMUser) {
-        removeReaction(forUser:user)
+    private func mapToMessageReaction(unicodeValue: String?) -> MessageReaction {
+        return unicodeValue == MessageReaction.audioPlayed.unicodeValue ? .audioPlayed : .like
+    }
+    
+    @objc public func addReaction(_ unicodeValue: String?, forUser user: ZMUser) {
+        remove(reaction: mapToMessageReaction(unicodeValue: unicodeValue), forUser: user)
         if let unicodeValue = unicodeValue , unicodeValue.count > 0 {
             for reaction in self.reactions {
                 if reaction.unicodeValue! == unicodeValue {
@@ -94,10 +98,10 @@ extension ZMMessage {
         updateCategoryCache()
     }
     
-    fileprivate func removeReaction(forUser user: ZMUser) {
-        for reaction in self.reactions {
-            if reaction.users.contains(user) {
-                reaction.mutableSetValue(forKey: ZMReactionUsersValueKey).remove(user)
+    fileprivate func remove(reaction: MessageReaction, forUser user: ZMUser) {
+        for react in reactions where react.unicodeValue == reaction.unicodeValue {
+            if react.users.contains(user) {
+                react.mutableSetValue(forKey: ZMReactionUsersValueKey).remove(user)
                 break;
             }
         }

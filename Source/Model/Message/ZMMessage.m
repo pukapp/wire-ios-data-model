@@ -436,6 +436,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     
     switch (transportReaction) {
         case TransportReactionHeart:
+        case TransportReactionNone:
             localMessage = [ZMMessage fetchMessageWithNonce:nonce
                                             forConversation:conversation
                                      inManagedObjectContext:moc];
@@ -444,9 +445,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
         case TransportReactionAudioPlayed:
             localMessage = [ZMMessage fetchObjectWithRemoteIdentifier:nonce
                                                inManagedObjectContext:moc];
-            break;
-        
-        case TransportReactionNone:
             break;
     }
     
