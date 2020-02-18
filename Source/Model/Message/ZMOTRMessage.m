@@ -216,8 +216,6 @@ NSString * const DeliveredKey = @"delivered";
         if (message.reaction.emoji.length > 0 && [Reaction transportReactionFrom:message.reaction.emoji] == TransportReactionNone) {
             return nil;
         }
-        
-        //[ZMMessage addReaction:message.reaction senderID:updateEvent.senderUUID conversation:conversation inManagedObjectContext:moc];
         [ZMMessage addReaction:message.reaction sender:sender conversation:conversation inManagedObjectContext:moc];
     } else if (message.hasForbid) {
         [ZMMessage addOperation:message.forbid sender:sender conversation:conversation inManagedObjectContext:moc];

@@ -426,12 +426,29 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 + (void)addReaction:(ZMReaction *)reaction sender:(ZMUser *)sender conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
+    TransportReaction transportReaction = [Reaction transportReactionFrom:reaction.emoji];
+    
     //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
     // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
     NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
-    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
-                                               forConversation:conversation
-                                        inManagedObjectContext:moc];
+    
+    ZMMessage *localMessage;
+    
+    switch (transportReaction) {
+        case TransportReactionHeart:
+            localMessage = [ZMMessage fetchMessageWithNonce:nonce
+                                            forConversation:conversation
+                                     inManagedObjectContext:moc];
+            break;
+            
+        case TransportReactionAudioPlayed:
+            localMessage = [ZMMessage fetchObjectWithRemoteIdentifier:nonce
+                                               inManagedObjectContext:moc];
+            break;
+        
+        case TransportReactionNone:
+            break;
+    }
     
     [localMessage addReaction:reaction.emoji forUser:sender];
     [localMessage updateCategoryCache];
