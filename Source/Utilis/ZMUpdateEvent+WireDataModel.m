@@ -43,6 +43,10 @@
     if (self.type == ZMUpdateEventTypeUserContactJoin) {
         return [[self.payload optionalDictionaryForKey:@"user"] optionalUuidForKey:@"id"];
     }
+    // 群应用通知不要显示发送者姓名了
+    if (self.type == ZMUpdateEventTypeConversationAppMessageAdd) {
+        return nil;
+    }
 
     return [self.payload optionalUuidForKey:@"from"];
 }
