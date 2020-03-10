@@ -338,6 +338,29 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     return fetchResult.firstObject;
 }
 
++ (BOOL)checkObjectExistWithRemoteIdentifier:(NSUUID *)uuid inManagedObjectContext:(NSManagedObjectContext *)moc
+{
+    NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
+    Require(entity != nil);
+    
+    NSString *key = [self remoteIdentifierDataKey];
+    NSData *data = uuid.data;
+    for (NSManagedObject *mo in moc.registeredObjects) {
+        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
+            return YES;
+        }
+    }
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], uuid.data];
+    fetchRequest.fetchLimit = 1;
+    NSError *error;
+    NSUInteger count = [moc countForFetchRequest:fetchRequest error:&error];
+    if (count == NSNotFound || count == 0 || error != nil) {
+        return NO;
+    }
+    return YES;
+}
+
 + (NSSet *)fetchObjectsWithRemoteIdentifiers:(NSSet <NSUUID *> *)uuids inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
     // Executing a fetch request is quite expensive, because it will _always_ (1) round trip through

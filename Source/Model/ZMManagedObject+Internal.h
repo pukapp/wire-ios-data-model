@@ -65,7 +65,7 @@ extern NSString * _Nonnull const ZMManagedObjectLocallyModifiedKeysKey;
 
 + (nullable instancetype)fetchObjectWithRemoteIdentifier:(nonnull NSUUID *)uuid inManagedObjectContext:(nonnull NSManagedObjectContext *)moc;
 + (nullable NSSet *)fetchObjectsWithRemoteIdentifiers:(nonnull NSSet <NSUUID *> *)uuids inManagedObjectContext:(nonnull NSManagedObjectContext *)moc;
-
++ (BOOL)checkObjectExistWithRemoteIdentifier:(nonnull NSUUID *)uuid inManagedObjectContext:(nonnull NSManagedObjectContext *)moc;
 @end
 
 
