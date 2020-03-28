@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19C32e" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.18">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19B88" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.18">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -44,6 +44,8 @@
         <attribute name="archivedChangedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="autoReply" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="autoReplyFromOther" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="blocked" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="blockWarningMessageTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="clearedTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="communityID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="conversationType" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
@@ -105,12 +107,13 @@
         <attribute name="userDefinedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="voiceChannel" optional="YES" transient="YES" syncable="YES"/>
         <relationship name="allMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
+        <relationship name="blockWarningMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" syncable="YES"/>
         <relationship name="connection" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Connection" inverseName="conversation" inverseEntity="Connection" syncable="YES"/>
         <relationship name="creator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="conversationsCreated" inverseEntity="User" syncable="YES"/>
         <relationship name="hiddenMessages" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Message" inverseName="hiddenInConversation" inverseEntity="Message" syncable="YES"/>
         <relationship name="labels" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Label" inverseName="conversations" inverseEntity="Label" syncable="YES"/>
         <relationship name="lastServerSyncedActiveParticipants" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="User" inverseName="lastServerSyncedActiveConversations" inverseEntity="User" syncable="YES"/>
-        <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inConversation" inverseEntity="ServiceMessage" syncable="YES"/>
+        <relationship name="lastServiceMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ServiceMessage" syncable="YES"/>
         <relationship name="lastVisibleMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
         <relationship name="membersAliasname" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="UserAliasname" inverseName="inConverstion" inverseEntity="UserAliasname" syncable="YES"/>
         <relationship name="membersSendMsgStatuses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserDisableSendMsgStatus" inverseName="withConversation" inverseEntity="UserDisableSendMsgStatus" syncable="YES"/>
@@ -224,8 +227,6 @@
         <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="type" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="url" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="inConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="lastServiceMessage" inverseEntity="Conversation" syncable="YES"/>
-        <relationship name="inWebApp" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WebApp" inverseName="lastServiceMessages" inverseEntity="WebApp" syncable="YES"/>
         <relationship name="systemMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="serviceMessage" inverseEntity="SystemMessage" syncable="YES"/>
     </entity>
     <entity name="Session" representedClassName="ZMSession" syncable="YES">
@@ -398,14 +399,13 @@
         <attribute name="url" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="version" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="topWebApps" inverseEntity="Conversation" syncable="YES"/>
-        <relationship name="lastServiceMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ServiceMessage" inverseName="inWebApp" inverseEntity="ServiceMessage" syncable="YES"/>
     </entity>
     <elements>
         <element name="AddressBookEntry" positionX="9" positionY="153" width="128" height="90"/>
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1260"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1305"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
@@ -416,7 +416,7 @@
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Operation" positionX="-225" positionY="-108" width="128" height="120"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
-        <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="180"/>
+        <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="150"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
         <element name="SystemMessage" positionX="27" positionY="57" width="128" height="420"/>
         <element name="Team" positionX="9" positionY="153" width="128" height="195"/>
@@ -425,6 +425,6 @@
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="510"/>
         <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="135"/>
-        <element name="WebApp" positionX="-234" positionY="-117" width="128" height="255"/>
+        <element name="WebApp" positionX="-234" positionY="-117" width="128" height="240"/>
     </elements>
 </model>

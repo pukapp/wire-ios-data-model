@@ -75,7 +75,7 @@ NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_n
 NSString *const ZMConversationInfoIsVisitorsVisibleKey = @"show_invitor_list";
 NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
 NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
-
+NSString *const ZMConversationBlockedKey = @"blocked";
 @implementation ZMConversation (Transport)
 
 - (void)updateClearedFromPostPayloadEvent:(ZMUpdateEvent *)event
@@ -134,6 +134,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     // 成员变动其他群成员是否可见
     self.isVisibleForMemberChange = [transportData[ZMConversationInfoIsVisibleForMemberChangeKey] boolValue];
     self.isDisableSendMsg = !([[transportData optionalNumberForKey:ZMConversationInfoBlockTimeKey] integerValue] == 0);
+    self.blocked = !([[transportData optionalNumberForKey:ZMConversationBlockedKey] integerValue] == 0);
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];

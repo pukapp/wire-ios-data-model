@@ -42,6 +42,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.syncedMessageDestructionTimeout),
                     #keyPath(ZMConversation.language),
                     //new add
+                    #keyPath(ZMConversation.blockWarningMessageTimeStamp),
+                    #keyPath(ZMConversation.blocked),
                     #keyPath(ZMConversation.groupImageSmallKey),
                     #keyPath(ZMConversation.groupImageMediumKey),
                     #keyPath(ZMConversation.autoReply),
@@ -88,7 +90,14 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
-    
+    //是否有新的通知消息
+    public var blockWarningMessageChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.blockWarningMessageTimeStamp))
+    }
+    //群被封禁,或者被解禁
+    public var blockedChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.blocked))
+    }
     /// 群小头像更新
     public var previewAvatarDataChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.groupImageSmallKey), #keyPath(ZMConversation.previewAvatarData))

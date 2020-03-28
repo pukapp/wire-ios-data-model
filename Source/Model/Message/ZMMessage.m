@@ -1111,19 +1111,29 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         case ZMSystemMessageTypeServiceMessage:
         {
             ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
-            serviceMessage.type = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"msgType"];
-            serviceMessage.text = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"text"];
-            serviceMessage.url = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"url"];
-            serviceMessage.appid = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalDictionaryForKey:@"msgData"] optionalStringForKey:@"appid"];
-            systemMessage.serviceMessage = serviceMessage;
-            conversation.lastServiceMessage = serviceMessage;
-            NSString *convid = [updateEvent.payload optionalStringForKey:@"conversation"];
-            serviceMessage.inConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:convid] createIfNeeded:YES inContext:moc];
-            ZMWebApp *webapp = [ZMWebApp fetchExistingWebAppWith:serviceMessage.appid in:moc];
-            if (webapp) {
-                serviceMessage.inWebApp = webapp;
+            [serviceMessage configDataWith:[updateEvent.payload optionalDictionaryForKey:@"data"]];
+            if ([serviceMessage.type isEqualToString:@"20009"]) {
+                if (conversation.blockWarningMessage != nil) {
+                    ///将之前的消息从表中删除
+                    ZMSystemMessage * sysMessage = conversation.blockWarningMessage.systemMessage;
+                    [moc deleteObject:conversation.blockWarningMessage];
+                    [moc deleteObject:sysMessage];
+                }
+                conversation.blockWarningMessage = serviceMessage;
+                ///这里的时间戳是用来监听 blockWarningMessage 属性改变用的
+                conversation.blockWarningMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
+            } else {
+                if (conversation.lastServiceMessage != nil) {
+                    ///将之前的消息从表中删除
+                    ZMSystemMessage * sysMessage = conversation.lastServiceMessage.systemMessage;
+                    [moc deleteObject:conversation.lastServiceMessage];
+                    [moc deleteObject:sysMessage];
+                }
+                conversation.lastServiceMessage = serviceMessage;
+                ///这里的时间戳是用来监听 lastServiceMessage 属性改变用的
+                conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
             }
-            conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
+            systemMessage.serviceMessage = serviceMessage;
             systemMessage.isService = YES;
             systemMessage.hiddenInConversation = conversation;
             systemMessage.visibleInConversation = nil;

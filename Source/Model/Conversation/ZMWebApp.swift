@@ -38,7 +38,6 @@ public let ZMWebAppIdentifierKey = "appId"
     @NSManaged public var index: Int64
     @NSManaged public var loadModel: Int64
     @NSManaged public var conversations: Set<ZMConversation>
-    @NSManaged public var lastServiceMessages: Set<ServiceMessage>?
     
     public override static func entityName() -> String {
         return "WebApp"
