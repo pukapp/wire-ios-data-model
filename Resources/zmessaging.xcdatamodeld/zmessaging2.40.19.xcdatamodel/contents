@@ -61,6 +61,7 @@
         <attribute name="isAllowMemberAddEachOther" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isAllowViewMembers" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isDisableSendMsg" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isITaskGroup" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isMessageVisibleOnlyManagerAndCreator" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isOnlyCreatorInvite" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isOpenCreatorInviteVerify" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
@@ -405,7 +406,7 @@
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1260"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1275"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>

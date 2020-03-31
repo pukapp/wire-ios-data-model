@@ -163,6 +163,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isVisibleForMemberChange;
 //全员禁言
 @property (nonatomic) BOOL isDisableSendMsg;
+// itask群
+@property (nonatomic) BOOL isITaskGroup;
 
 @property (nonatomic) NSSet<NSString *> * _Nullable orator;
 

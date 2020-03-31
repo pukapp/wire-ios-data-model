@@ -26,6 +26,7 @@ typedef NS_ENUM(int, ZMBackendConversationType) {
     ZMConvOneToOne = 2,
     ZMConvConnection = 3,
     ZMConvTypeHugeGroup = 5, // 万人群
+    ZMConvTypeITaskGroup = 6, // iTask群
 };
 
 extern NSString *const ZMConversationInfoOTRMutedValueKey;

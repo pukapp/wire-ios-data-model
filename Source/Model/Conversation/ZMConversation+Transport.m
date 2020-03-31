@@ -103,7 +103,11 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (transportData[ConversationInfoNameKey] != [NSNull null]) {
         self.userDefinedName = [transportData stringForKey:ConversationInfoNameKey];
     }
-    
+    // 判定是否为ITask群
+    NSNumber *type = [transportData numberForKey:ConversationInfoTypeKey];
+    if (type.intValue == 6) {
+        self.isITaskGroup = true;
+    }
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
@@ -412,6 +416,8 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     int const t = [transportType intValue];
     switch (t) {
         case ZMConvTypeGroup:
+            return ZMConversationTypeGroup;
+        case ZMConvTypeITaskGroup:
             return ZMConversationTypeGroup;
         case ZMConvOneToOne:
             return ZMConversationTypeOneOnOne;

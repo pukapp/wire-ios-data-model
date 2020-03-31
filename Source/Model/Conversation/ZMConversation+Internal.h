@@ -111,7 +111,7 @@ extern NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey;
 extern NSString *const ZMConversationAnnouncementKey;
 extern NSString *const ZMConversationPreviewAvatarKey;
 extern NSString *const ZMConversationCompleteAvatarKey;
-
+extern NSString *const ZMConversationIsITaskGroupKey;
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)
