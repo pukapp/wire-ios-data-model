@@ -42,6 +42,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.syncedMessageDestructionTimeout),
                     #keyPath(ZMConversation.language),
                     //new add
+                    #keyPath(ZMConversation.showMemsum),
+                    #keyPath(ZMConversation.enabledEditMsg),
                     #keyPath(ZMConversation.blockWarningMessageTimeStamp),
                     #keyPath(ZMConversation.blocked),
                     #keyPath(ZMConversation.groupImageSmallKey),
@@ -90,7 +92,15 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
-    //是否有新的通知消息
+    //群成员是否可以编辑或者删除消息
+    public var enabledEditMsgChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.enabledEditMsg))
+    }
+    //群人数显示与否
+    public var showMemsumChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.showMemsum))
+    }
+    //当群被举报超过一定人数时，服务端会发送一条警告信息给群内成员
     public var blockWarningMessageChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.blockWarningMessageTimeStamp))
     }

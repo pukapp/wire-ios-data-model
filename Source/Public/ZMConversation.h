@@ -202,6 +202,11 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) ServiceMessage * _Nullable blockWarningMessage;
 @property (nonatomic) NSDate * _Nullable blockWarningMessageTimeStamp;
 
+// 是否显示群成员数量
+@property (nonatomic) BOOL showMemsum;
+// 是否允许编辑删除消息
+@property (nonatomic) BOOL enabledEditMsg;
+
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 

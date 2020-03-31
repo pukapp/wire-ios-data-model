@@ -77,34 +77,6 @@ NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data"
 NSString *const SecurityLevelKey = @"securityLevel";
 NSString *const ZMConversationLabelsKey = @"labels";
 
-// 新增智能回复
-// 新增自动回复状态
-NSString *const ZMConversationAutoReplyKey = @"autoReply";
-NSString *const ZMConversationAutoReplyFromOtherKey = @"autoReplyFromOther";
-
-NSString *const ZMConversationSelfRemarkKey = @"selfRemark";
-NSString *const ZMConversationIsOpenCreatorInviteVerifyKey = @"isOpenCreatorInviteVerify";
-NSString *const ZMConversationIsOpenMemberInviteVerifyKey = @"isOpenMemberInviteVerify";
-NSString *const ZMConversationOnlyCreatorInviteKey = @"isOnlyCreatorInvite";
-NSString *const ZMConversationOpenUrlJoinKey = @"isOpenUrlJoin";
-NSString *const ZMConversationAllowViewMembersKey = @"isAllowViewMembers";
-
-NSString *const ZMConversationPreviewAvatarKey = @"groupImageSmallKey";
-NSString *const ZMConversationCompleteAvatarKey = @"groupImageMediumKey";
-
-NSString *const ZMConversationAppsKey = @"apps";
-NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
-
-NSString *const ZMConversationIsPlacedTopKey = @"isPlacedTop";
-NSString *const ZMConversationIsAllowMemberAddEachOtherKey = @"isAllowMemberAddEachOther";
-NSString *const ZMConversationIsVisibleForMemberChangeKey = @"isVisibleForMemberChange";
-NSString *const ZMConversationIsDisableSendMsgKey = @"isDisableSendMsg";
-NSString *const ZMConversationManagerAddKey = @"managerAdd";
-NSString *const ZMConversationManagerDelKey = @"managerDel";
-NSString *const ZMConversationIsVisitorsVisibleKey = @"isVisitorsVisible";
-NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"isMessageVisibleOnlyManagerAndCreator";
-NSString *const ZMConversationAnnouncementKey = @"announcement";
-
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
@@ -141,6 +113,39 @@ NSTimeInterval ZMConversationDefaultLastReadTimestampSaveDelay = 3.0;
 
 const NSUInteger ZMConversationMaxEncodedTextMessageLength = 1500;
 const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTextMessageLength - 50; // Empirically we verified that the encoding adds 44 bytes
+
+/*----------------------------------*/
+///conversation新增，这里的key主要用于ZMConversationTranscoder中用来监听属性改变，发起请求
+
+NSString *const ZMConversationAutoReplyKey = @"autoReply";
+NSString *const ZMConversationAutoReplyFromOtherKey = @"autoReplyFromOther";
+
+NSString *const ZMConversationSelfRemarkKey = @"selfRemark";
+NSString *const ZMConversationIsOpenCreatorInviteVerifyKey = @"isOpenCreatorInviteVerify";
+NSString *const ZMConversationIsOpenMemberInviteVerifyKey = @"isOpenMemberInviteVerify";
+NSString *const ZMConversationOnlyCreatorInviteKey = @"isOnlyCreatorInvite";
+NSString *const ZMConversationOpenUrlJoinKey = @"isOpenUrlJoin";
+NSString *const ZMConversationAllowViewMembersKey = @"isAllowViewMembers";
+
+NSString *const ZMConversationPreviewAvatarKey = @"groupImageSmallKey";
+NSString *const ZMConversationCompleteAvatarKey = @"groupImageMediumKey";
+
+NSString *const ZMConversationAppsKey = @"apps";
+NSString *const ZMConversationTopWebAppsKey = @"topWebApps";
+
+NSString *const ZMConversationIsPlacedTopKey = @"isPlacedTop";
+NSString *const ZMConversationIsAllowMemberAddEachOtherKey = @"isAllowMemberAddEachOther";
+NSString *const ZMConversationIsVisibleForMemberChangeKey = @"isVisibleForMemberChange";
+NSString *const ZMConversationIsDisableSendMsgKey = @"isDisableSendMsg";
+NSString *const ZMConversationManagerAddKey = @"managerAdd";
+NSString *const ZMConversationManagerDelKey = @"managerDel";
+NSString *const ZMConversationIsVisitorsVisibleKey = @"isVisitorsVisible";
+NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"isMessageVisibleOnlyManagerAndCreator";
+NSString *const ZMConversationAnnouncementKey = @"announcement";
+NSString *const ShowMemsumKey = @"showMemsum";
+NSString *const EnabledEditMsgKey = @"enabledEditMsg";
+
+/*----------------------------------*/
 
 @interface ZMConversation ()
 
@@ -244,6 +249,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic blocked;
 @dynamic blockWarningMessage;
 @dynamic blockWarningMessageTimeStamp;
+@dynamic showMemsum;
+@dynamic enabledEditMsg;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;

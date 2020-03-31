@@ -47,7 +47,7 @@ NSString *const ZMConversationInfoOTRMutedReferenceKey = @"otr_muted_ref";
 NSString *const ZMConversationInfoOTRArchivedValueKey = @"otr_archived";
 NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 
-// 新增
+// 新增--此处定义的key主要是用来解析服务端返回的字段，以及发送请求时传入的字段
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
 NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
@@ -76,6 +76,9 @@ NSString *const ZMConversationInfoIsVisitorsVisibleKey = @"show_invitor_list";
 NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
 NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 NSString *const ZMConversationBlockedKey = @"blocked";
+NSString *const ZMConversationShowMemsumKey = @"show_memsum";
+NSString *const ZMConversationEnabledEditMsgKey = @"enabled_edit_msg";
+
 @implementation ZMConversation (Transport)
 
 - (void)updateClearedFromPostPayloadEvent:(ZMUpdateEvent *)event
@@ -105,6 +108,10 @@ NSString *const ZMConversationBlockedKey = @"blocked";
     }
     
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
+    /// 允许显示群成员数量
+    self.showMemsum = [transportData[ZMConversationShowMemsumKey] boolValue];
+    /// 允许群成员编辑删除消息
+    self.enabledEditMsg = [transportData[ZMConversationEnabledEditMsgKey] boolValue];
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];
     /// 开启url链接加入
@@ -127,7 +134,7 @@ NSString *const ZMConversationBlockedKey = @"blocked";
     // 消息可见性
     self.isMessageVisibleOnlyManagerAndCreator = [transportData[ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey] boolValue];
     // 群公告
-    self.announcement = [transportData optionalStringForKey:ZMConversationInfoAnnouncementKey];
+    //self.announcement = [transportData optionalStringForKey:ZMConversationInfoAnnouncementKey];
     
     // 成员是否可以互相添加好友
     self.isAllowMemberAddEachOther = [transportData[ZMConversationInfoIsAllowMemberAddEachOtherKey] boolValue];
