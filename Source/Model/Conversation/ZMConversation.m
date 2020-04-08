@@ -244,6 +244,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isVisibleForMemberChange;
 @dynamic isDisableSendMsg;
 @dynamic isITaskGroup;
+@dynamic iTaskTaskId;
+@dynamic iTaskProjectId;
 
 
 @synthesize pendingLastReadServerTimestamp;

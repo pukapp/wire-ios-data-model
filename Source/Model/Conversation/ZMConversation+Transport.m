@@ -50,6 +50,8 @@ NSString *const ZMConversationInfoOTRArchivedReferenceKey = @"otr_archived_ref";
 // 新增
 static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
 
+NSString *const ZMConversationInfoiTaskTaskIdKey = @"task_id";
+NSString *const ZMConversationInfoiTaskProjectIdKey = @"project_id";
 NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
 NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
 NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
@@ -108,6 +110,10 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
     if (type.intValue == 6) {
         self.isITaskGroup = true;
     }
+    //Itask ID
+    self.iTaskProjectId = [transportData optionalStringForKey:ZMConversationInfoiTaskTaskIdKey];
+    self.iTaskProjectId = [transportData optionalStringForKey:ZMConversationInfoiTaskProjectIdKey];
+    
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
     /// 允许查看群成员
     self.isAllowViewMembers = [transportData[ZMCOnversationInfoOTRAllowViewMembersKey] boolValue];

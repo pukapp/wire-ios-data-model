@@ -35,6 +35,8 @@ extern NSString *const ZMConversationInfoOTRMutedStatusValueKey;
 extern NSString *const ZMConversationInfoOTRArchivedValueKey;
 extern NSString *const ZMConversationInfoOTRArchivedReferenceKey;
 //new add
+extern NSString *const ZMConversationInfoiTaskTaskIdKey;
+extern NSString *const ZMConversationInfoiTaskProjectIdKey;
 extern NSString *const ZMConversationInfoOTRSelfRemarkBoolKey;
 extern NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey;
 extern NSString *const ZMConversationInfoOTRSelfVerifyKey;

@@ -165,6 +165,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic) BOOL isDisableSendMsg;
 // itask群
 @property (nonatomic) BOOL isITaskGroup;
+@property (nullable, nonatomic, copy) NSString *iTaskTaskId;
+@property (nullable, nonatomic, copy) NSString *iTaskProjectId;
 
 @property (nonatomic) NSSet<NSString *> * _Nullable orator;
 
