@@ -111,7 +111,7 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
         self.isITaskGroup = true;
     }
     //Itask ID
-    self.iTaskProjectId = [transportData optionalStringForKey:ZMConversationInfoiTaskTaskIdKey];
+    self.iTaskTaskId = [transportData optionalStringForKey:ZMConversationInfoiTaskTaskIdKey];
     self.iTaskProjectId = [transportData optionalStringForKey:ZMConversationInfoiTaskProjectIdKey];
     
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
