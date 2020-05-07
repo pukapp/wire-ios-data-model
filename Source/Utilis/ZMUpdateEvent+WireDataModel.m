@@ -92,6 +92,7 @@
             return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"nonce"];
 
         case ZMUpdateEventTypeConversationServiceMessageAdd:
+        case ZMUpdateEventTypeITaskServiceMessageAdd:
         case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
