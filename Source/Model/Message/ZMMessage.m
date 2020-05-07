@@ -1142,6 +1142,14 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             }
             break;
         }
+        case ZMSystemMessageTypeItaskDynamicMessage: {
+            NSDictionary *dictionaryInfo = [updateEvent.payload dictionaryForKey:@"data"];
+            NSData *dataInfo = [NSJSONSerialization dataWithJSONObject:dictionaryInfo options:0 error:NULL];
+            NSString *jsonStringInfo = dataInfo.base64String;
+            systemMessage.text = jsonStringInfo;
+            break;
+        }
+            
         default:
             break;
     }
@@ -1262,6 +1270,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             case ZMSystemMessageTypeServiceMessage:
             case ZMSystemMessageTypeAllowAddFriend:
             case ZMSystemMessageTypeMessageVisible:
+            case ZMSystemMessageTypeItaskDynamicMessage:
                 return NO;
         }
     }];
@@ -1320,7 +1329,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
              @(ZMUpdateEventTypeConversationMemberJoin) : @(ZMSystemMessageTypeParticipantsAdded),
              @(ZMUpdateEventTypeConversationMemberLeave) : @(ZMSystemMessageTypeParticipantsRemoved),
              @(ZMUpdateEventTypeConversationRename) : @(ZMSystemMessageTypeConversationNameChanged),
-             @(ZMUpdateEventTypeConversationAppMessageAdd) : @(ZMSystemMessageTypeServiceMessage)
+             @(ZMUpdateEventTypeConversationAppMessageAdd) : @(ZMSystemMessageTypeServiceMessage),
+             @(ZMUpdateEventTypeITaskDynamicMessageAdd) : @(ZMSystemMessageTypeItaskDynamicMessage),
              };
 }
 
