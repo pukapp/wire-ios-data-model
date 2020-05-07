@@ -39,6 +39,10 @@ extension ZMConversation {
     
     @objc(appendNewConversationSystemMessageAtTimestamp:users:)
     public func appendNewConversationSystemMessage(at timestamp: Date, users: Set<ZMUser>) {
+        // itask群，不需要生成该消息
+        if (self.isITaskGroup) {
+            return;
+        }
         let systemMessage = appendSystemMessage(type: .newConversation,
                                                 sender: creator,
                                                 users: users,
