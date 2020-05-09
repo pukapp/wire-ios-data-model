@@ -91,13 +91,13 @@
         case ZMUpdateEventTypeConversationKnock:
             return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"nonce"];
 
-        case ZMUpdateEventTypeConversationServiceMessageAdd:
+//        case ZMUpdateEventTypeConversationServiceMessageAdd:
         case ZMUpdateEventTypeITaskServiceMessageAdd:
         case ZMUpdateEventTypeConversationBgpMessageAdd:
         case ZMUpdateEventTypeConversationClientMessageAdd:
         case ZMUpdateEventTypeConversationOtrMessageAdd:
         case ZMUpdateEventTypeConversationOtrAssetAdd:
-        case ZMUpdateEventTypeConversationWalletNotify:
+//        case ZMUpdateEventTypeConversationWalletNotify:
         case ZMUpdateEventTypeConversationMemberJoinask:
         {
             ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:self];
