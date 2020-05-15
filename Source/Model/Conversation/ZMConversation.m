@@ -251,6 +251,8 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 @dynamic blockWarningMessageTimeStamp;
 @dynamic showMemsum;
 @dynamic enabledEditMsg;
+@dynamic fifth_name;
+@dynamic fifth_image;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;

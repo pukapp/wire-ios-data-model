@@ -207,6 +207,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 // 是否允许编辑删除消息
 @property (nonatomic) BOOL enabledEditMsg;
 
+@property (nullable, nonatomic, copy) NSString *fifth_image;
+@property (nullable, nonatomic, copy) NSString *fifth_name;
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 
