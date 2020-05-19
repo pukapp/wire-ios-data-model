@@ -1116,8 +1116,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                 if (conversation.blockWarningMessage != nil) {
                     ///将之前的消息从表中删除
                     ZMSystemMessage * sysMessage = conversation.blockWarningMessage.systemMessage;
-                    [moc deleteObject:conversation.blockWarningMessage];
-                    [moc deleteObject:sysMessage];
+                    if (sysMessage != NULL) {
+                        [moc deleteObject:sysMessage];
+                        [moc deleteObject:conversation.blockWarningMessage];
+                    }
                 }
                 conversation.blockWarningMessage = serviceMessage;
                 ///这里的时间戳是用来监听 blockWarningMessage 属性改变用的
@@ -1126,8 +1128,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                 if (conversation.lastServiceMessage != nil) {
                     ///将之前的消息从表中删除
                     ZMSystemMessage * sysMessage = conversation.lastServiceMessage.systemMessage;
-                    [moc deleteObject:conversation.lastServiceMessage];
-                    [moc deleteObject:sysMessage];
+                    if (sysMessage != NULL) {
+                        [moc deleteObject:sysMessage];
+                        [moc deleteObject:conversation.lastServiceMessage];
+                    }
                 }
                 conversation.lastServiceMessage = serviceMessage;
                 ///这里的时间戳是用来监听 lastServiceMessage 属性改变用的
