@@ -164,7 +164,8 @@ NSString * const DeliveredKey = @"delivered";
         if ([@"4" isEqualToString:dic[@"msgType"]]) {
             NSDictionary *data = dic[@"msgData"];
             NSString *messageId = [data optionalStringForKey:@"messageId"];
-            if (messageId && messageId.length > 0) {
+            NSString *sendUserId = [data optionalStringForKey:@"sendUserId"];
+            if (messageId && messageId.length > 0 && [ZMUser selfUserInContext:moc].remoteIdentifier.transportString.lowercaseString == sendUserId.lowercaseString) {
                 ZMMessage *mes = [ZMMessage fetchObjectWithRemoteIdentifier:[NSUUID uuidWithTransportString:messageId] inManagedObjectContext:moc];
                 mes.bibiCashType = ZMBiBiCashTypeGotten;
             }
