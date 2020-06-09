@@ -230,7 +230,7 @@ NSString * const DeliveredKey = @"delivered";
             conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
         }
-    } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasCalling || message.hasAvailability)) {
+    } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasMediasoup || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
