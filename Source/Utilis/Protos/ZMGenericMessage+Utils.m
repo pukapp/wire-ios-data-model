@@ -93,6 +93,7 @@
     self.hasConfirmation ||
     self.hasEphemeral ||
     self.hasCalling ||
+    self.hasMediasoup ||
     self.hasExternal ||
     self.hasAvailability;
 }

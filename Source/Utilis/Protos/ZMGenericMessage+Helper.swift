@@ -410,6 +410,8 @@ extension ZMGenericMessage {
             return location
         } else if hasCalling() {
             return  calling
+        } else if hasMediasoup() {
+            return  mediasoup
         } else if hasConfirmation() {
             return confirmation
         } else if hasExternal() {
@@ -1251,3 +1253,36 @@ extension ZMCalling: MessageContentType {
     
 }
 
+@objc
+extension ZMMediasoup: MessageContentType {
+    
+    public static func mediasoup(message: String) -> ZMMediasoup {
+        let builder = ZMMediasoupBuilder()
+        builder.setContent(message)
+        return builder.build()
+    }
+    
+    public func setContent(on builder: ZMGenericMessageBuilder) {
+        builder.setMediasoup(self)
+    }
+    
+    public func expectsReadConfirmation() -> Bool {
+        return false
+    }
+    
+    public func hasLegalHoldStatus() -> Bool {
+        return false
+    }
+    
+    public var legalHoldStatus: ZMLegalHoldStatus {
+        return defaultLegalHoldStatus
+    }
+    
+    public func updateExpectsReadConfirmation(_ value: Bool) -> MessageContentType? {
+        return nil
+    }
+    
+    public func updateLegalHoldStatus(_ value: ZMLegalHoldStatus) -> MessageContentType? {
+        return nil
+    }
+}
