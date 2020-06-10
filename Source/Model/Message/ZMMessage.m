@@ -1366,14 +1366,15 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 - (BOOL)shouldGenerateUnreadCount;
 {
     switch (self.systemMessageType) {
-        case ZMSystemMessageTypeParticipantsRemoved:
-        case ZMSystemMessageTypeParticipantsAdded:
-        {
-            ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-            return [self.users containsObject:selfUser] && !self.sender.isSelfUser;
-        }
-        case ZMSystemMessageTypeNewConversation:
-            return !self.sender.isSelfUser;
+            // 成员添加和移除消息不计入未读消息
+//        case ZMSystemMessageTypeParticipantsRemoved:
+//        case ZMSystemMessageTypeParticipantsAdded:
+//        {
+//            ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+//            return [self.users containsObject:selfUser] && !self.sender.isSelfUser;
+//        }
+//        case ZMSystemMessageTypeNewConversation:
+//            return !self.sender.isSelfUser;
         case ZMSystemMessageTypeMissedCall:
         case ZMSystemMessageTypeServiceMessage:
             return YES;
