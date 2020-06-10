@@ -1,6 +1,6 @@
 
 
-github "pukapp/wire-ios-transport"  "secret"
+github "pukapp/wire-ios-transport"  "iTask"
 github "pukapp/wire-ios-protos" "secret"
 github "pukapp/wire-ios-images" "secret"
 github "pukapp/wire-ios-link-preview" "secret"
