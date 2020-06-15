@@ -78,6 +78,8 @@ NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
 NSString *const ZMConversationBlockedKey = @"blocked";
 NSString *const ZMConversationShowMemsumKey = @"show_memsum";
 NSString *const ZMConversationEnabledEditMsgKey = @"enabled_edit_msg";
+NSString *const ZMConversationAssistantBotKey = @"assistant_bot";
+NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
 
 @implementation ZMConversation (Transport)
 

@@ -62,6 +62,8 @@ extern NSString *const ZMConversationInfoAnnouncementKey;
 extern NSString *const ZMConversationBlockedKey;
 extern NSString *const ZMConversationShowMemsumKey;
 extern NSString *const ZMConversationEnabledEditMsgKey;
+extern NSString *const ZMConversationAssistantBotKey;
+extern NSString *const ZMConversationAssistantBotOptKey;
 
 @interface ZMConversation (Transport)
 
