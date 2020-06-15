@@ -164,6 +164,9 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //全员禁言
 @property (nonatomic) BOOL isDisableSendMsg;
 
+//群助手id
+@property (nullable, nonatomic, copy) NSString *assistantBot;
+
 @property (nonatomic) NSSet<NSString *> * _Nullable orator;
 
 @property (nonatomic) NSSet<NSString *> * _Nullable manager;
