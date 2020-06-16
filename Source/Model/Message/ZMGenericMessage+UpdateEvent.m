@@ -55,8 +55,7 @@
         }
             break;
             
-        case ZMUpdateEventTypeConversationServiceMessageAdd:
-        case ZMUpdateEventTypeConversationWalletNotify: {
+        case ZMUpdateEventTypeConversationServiceMessageAdd: {
             message = [self serviceGenericMessageWithUpdateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
@@ -64,6 +63,11 @@
             
         case ZMUpdateEventTypeConversationMemberJoinask: {
             message = [self memberJoinAskGenericMessageWithUpdateEvent:updateEvent];
+            VerifyReturnNil(message != nil);
+        }
+            break;
+        case ZMUpdateEventTypeConversationJsonMessageAdd: {
+            message = [self jsonGenericMessageWithUpdateEvent:updateEvent];
             VerifyReturnNil(message != nil);
         }
             break;

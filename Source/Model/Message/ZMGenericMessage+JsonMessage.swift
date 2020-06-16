@@ -70,4 +70,19 @@ extension ZMGenericMessage {
         }
         return self.init(base64String: base64String, updateEvent: updateEvent)
     }
+    
+    @objc
+    static func jsonGenericMessage(withUpdateEvent updateEvent: ZMUpdateEvent) -> ZMGenericMessage? {
+        guard let dataDictionary = updateEvent.payload["data"] as? [String: Any],
+            JSONSerialization.isValidJSONObject(dataDictionary),
+            let data = try? JSONSerialization.data(withJSONObject: dataDictionary, options: JSONSerialization.WritingOptions.prettyPrinted),
+            let jsonString = String.init(data: data, encoding: String.Encoding.utf8) else {
+                return  nil
+        }
+        let tempMessage = ZMGenericMessage.message(content: ZMTextJson.text(with: jsonString), nonce: UUID())
+        guard let base64String = tempMessage.data()?.base64String() else {
+            return nil
+        }
+        return self.init(base64String: base64String, updateEvent: updateEvent)
+    }
 }
