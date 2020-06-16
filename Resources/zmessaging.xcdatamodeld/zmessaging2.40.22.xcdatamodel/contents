@@ -179,6 +179,7 @@
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
         <attribute name="isExpired" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isGet" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isNeedAssistantBotReply" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isNeedReply" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isNeedUpload" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isObfuscated" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
@@ -417,7 +418,7 @@
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="555"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="570"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Operation" positionX="-225" positionY="-108" width="128" height="120"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>

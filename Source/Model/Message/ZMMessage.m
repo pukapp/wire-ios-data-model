@@ -147,6 +147,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic isRefuse;
 @dynamic unblock;
 @dynamic recipientUsers;
+@dynamic isNeedAssistantBotReply;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {

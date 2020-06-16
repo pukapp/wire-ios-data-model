@@ -230,8 +230,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) ZMBiBiCashType bibiCashType;
 // 用户是否确认拒绝被邀请
 @property (nonatomic) BOOL isRefuse;
-//此消息是否强制不被禁言
+// 此消息是否强制不被禁言
 @property (nonatomic) BOOL unblock;
+// 是否需要群助手回复
+@property (nonatomic) BOOL isNeedAssistantBotReply;
 
 @property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
 
