@@ -369,6 +369,21 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     [conversation updateTimestampsAfterUpdatingMessage:self];
 }
 
+- (void)updateAssistantbotWithUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
+                          forConversation:(ZMConversation * _Nonnull)conversation jsonText: (NSString *_Nonnull)text {
+    if (self.managedObjectContext != conversation.managedObjectContext) {
+        conversation = [ZMConversation conversationWithRemoteID:conversation.remoteIdentifier createIfNeeded:NO inContext:self.managedObjectContext];
+    }
+    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:[text dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
+    NSString *msgType = jsonDict[@"msgType"];
+    if ([msgType isEqualToString: @"23"]) {
+        NSString *fromUserId = jsonDict[@"msgData"][@"fromUserId"];
+        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:fromUserId] createIfNeeded:NO inContext:self.managedObjectContext];
+        self.sender = user;
+    }
+    
+}
+
 + (ZMConversation *)conversationForUpdateEvent:(ZMUpdateEvent *)event inContext:(NSManagedObjectContext *)moc prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
     NSUUID *conversationUUID = event.conversationUUID;

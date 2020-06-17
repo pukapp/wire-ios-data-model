@@ -289,6 +289,9 @@ NSString * const DeliveredKey = @"delivered";
         // 优化user查询效率,用于替代func"[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation]"
         [clientMessage updateWithSender:sender forConversation:conversation];
 //        [clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
+        if (message.hasTextJson) {
+           [clientMessage updateAssistantbotWithUpdateEvent:updateEvent forConversation:conversation jsonText:message.textJson.content];
+        }
         [clientMessage unarchiveIfNeeded:conversation];
         [clientMessage updateCategoryCache];
         

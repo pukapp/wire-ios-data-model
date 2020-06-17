@@ -295,7 +295,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 - (void)removePendingDeliveryReceipts;
 - (void)updateWithUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent forConversation:(ZMConversation * _Nonnull)conversation;
 - (void)updateWithSender:(ZMUser * _Nonnull)sender forConversation:(ZMConversation * _Nonnull)conversation;
-
+- (void)updateAssistantbotWithUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
+                          forConversation:(ZMConversation * _Nonnull)conversation jsonText: (NSString *_Nonnull)text;
 /// Returns whether the data represents animated GIF
 + (BOOL)isDataAnimatedGIF:(NSData * _Nonnull)data;
 
