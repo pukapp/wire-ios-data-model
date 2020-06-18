@@ -144,6 +144,7 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
     self.isVisibleForMemberChange = [transportData[ZMConversationInfoIsVisibleForMemberChangeKey] boolValue];
     self.isDisableSendMsg = !([[transportData optionalNumberForKey:ZMConversationInfoBlockTimeKey] integerValue] == 0);
     self.blocked = !([[transportData optionalNumberForKey:ZMConversationBlockedKey] integerValue] == 0);
+    self.assistantBot = [transportData optionalStringForKey:@"assistant_bot"];
 
     if(transportData[@"assets"] != [NSNull null]) {
         NSArray *imgArr = [transportData arrayForKey:@"assets"];
