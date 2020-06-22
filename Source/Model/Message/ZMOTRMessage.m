@@ -147,25 +147,16 @@ NSString * const DeliveredKey = @"delivered";
         message = nil;
     }
     
-    // 与自己无关的币币兑换、红包消息不入库
+    // 同步其他设备上已领取红包的状态
     if (message.hasTextJson){
         NSString *jsonText = message.textJson.content;
         NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:[jsonText dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
-        if ([@"4" isEqualToString:dic[@"msgType"]] || [@"6" isEqualToString:dic[@"msgType"]]){
-            NSDictionary *data = dic[@"msgData"];
-            NSString *sender = data[@"sendUserId"];
-            NSString *receiver = data[@"receiveUserId"];
-            ZMUser *user = [ZMUser selfUserInContext:moc];
-            NSString *selfId = user.remoteIdentifier.transportString;
-            if (![selfId isEqualToString:sender]  && ![selfId isEqualToString:receiver]){
-                return nil;
-            }
-        }
         if ([@"4" isEqualToString:dic[@"msgType"]]) {
             NSDictionary *data = dic[@"msgData"];
             NSString *messageId = [data optionalStringForKey:@"messageId"];
-            NSString *sendUserId = [data optionalStringForKey:@"sendUserId"];
-            if (messageId && messageId.length > 0 && [ZMUser selfUserInContext:moc].remoteIdentifier.transportString.lowercaseString == sendUserId.lowercaseString) {
+            // 红包领取者
+            NSString *receiveUser = [data optionalStringForKey:@"receiveUserId"];
+            if (messageId && messageId.length > 0 && [[ZMUser selfUserInContext:moc].remoteIdentifier.transportString isEqualToString:receiveUser.lowercaseString]) {
                 ZMMessage *mes = [ZMMessage fetchObjectWithRemoteIdentifier:[NSUUID uuidWithTransportString:messageId] inManagedObjectContext:moc];
                 mes.bibiCashType = ZMBiBiCashTypeGotten;
             }
