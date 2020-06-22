@@ -489,8 +489,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     ZMMessage *message = [ZMMessage fetchMessageWithNonce:messageID forConversation:conversation inManagedObjectContext:moc];
 
     // We need to cascade delete the pending delivery confirmation messages for the message being deleted
-    [message removePendingDeliveryReceipts];
-    
+    // 耗时操作，暂时注释
+//    [message removePendingDeliveryReceipts];
     if (message.hasBeenDeleted) {
         ZMLogError(@"Attempt to delete the deleted message: %@, existing: %@", deletedMessage, message);
         return;
@@ -515,8 +515,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         [message removeMessageClearingSender:YES];
         [message updateCategoryCache];
     }
-    
-    [conversation updateTimestampsAfterDeletingMessage];
+    // 耗时操作，暂时注释（触发重新统计未读消息数量操作）
+//    [conversation updateTimestampsAfterDeletingMessage];
 }
 
 + (void)stopDeletionTimerForMessage:(ZMMessage *)message
