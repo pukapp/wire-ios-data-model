@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19F101" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.22">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19F101" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.23">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -20,8 +20,8 @@
         <attribute name="version" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="dataSet" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="GenericMessageData" inverseName="asset" inverseEntity="GenericMessageData" syncable="YES"/>
     </entity>
-    <entity name="ClientMessage" representedClassName="ZMClientMessage" parentEntity="Message" syncable="YES">
-        <attribute name="linkPreviewState" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+    <entity name="ClientMessage" representedClassName="ZMClientMessage" parentEntity="Message" versionHashModifier="1" syncable="YES">
+        <attribute name="linkPreviewState" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="updatedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="dataSet" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="GenericMessageData" inverseName="message" inverseEntity="GenericMessageData" syncable="YES"/>
     </entity>
@@ -170,10 +170,10 @@
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="members" inverseEntity="Team" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="membership" inverseEntity="User" syncable="YES"/>
     </entity>
-    <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" syncable="YES">
+    <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" versionHashModifier="1" syncable="YES">
         <attribute name="bibiCashType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="cachedCategory" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="delivered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="delivered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="destructionDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="expectsReadConfirmation" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
@@ -187,7 +187,7 @@
         <attribute name="isSelfSend" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="linkAttachments" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
-        <attribute name="needsLinkAttachmentsUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="needsLinkAttachmentsUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="nonce" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="nonce_data" optional="YES" attributeType="Binary" indexed="YES" versionHashModifier="add_index1" syncable="YES"/>
@@ -206,6 +206,12 @@
         <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="quote" inverseEntity="Message" syncable="YES"/>
         <relationship name="sender" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
         <relationship name="visibleInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="allMessages" inverseEntity="Conversation" syncable="YES"/>
+        <compoundIndexes>
+            <compoundIndex>
+                <index value="expirationDate"/>
+                <index value="isExpired"/>
+            </compoundIndex>
+        </compoundIndexes>
     </entity>
     <entity name="MessageConfirmation" representedClassName="ZMMessageConfirmation" syncable="YES">
         <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
