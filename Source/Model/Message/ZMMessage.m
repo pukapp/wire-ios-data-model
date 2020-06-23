@@ -711,9 +711,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 
 + (NSPredicate *)predicateForMessagesThatWillExpire;
 {
-    return [NSPredicate predicateWithFormat:@"%K == 0 && %K != NIL",
-            ZMMessageIsExpiredKey,
-            ZMMessageExpirationDateKey];
+    return [NSPredicate predicateWithFormat:@"%K > %@ && %K == 0",
+            ZMMessageExpirationDateKey,
+            [NSDate dateWithTimeIntervalSince1970:0],
+            ZMMessageIsExpiredKey];
 }
 
 
