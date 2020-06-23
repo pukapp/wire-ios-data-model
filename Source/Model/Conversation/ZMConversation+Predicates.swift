@@ -200,8 +200,10 @@ extension ZMConversation {
     @objc(predicateForConversationsExcludingArchived)
     class func predicateForConversationsExcludingArchived() -> NSPredicate {
         let notArchivedPredicate = NSPredicate(format: "\(ZMConversationIsArchivedKey) == NO")
-        let notITaskGroupPredicate = NSPredicate(format: "\(ZMConversationIsITaskGroupKey) == NO")
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [predicateForConversationsIncludingArchived(), notArchivedPredicate, notITaskGroupPredicate])
+        let normalPredicate = NSPredicate(format: "\(ZMConversationIsITaskGroupKey) == NO")
+        let favoriteItaskPredicate = NSPredicate(format: "\(ZMConversationIsITaskFavoriteKey) == YES AND \(ZMConversationIsITaskGroupKey) == YES")
+        let cp = NSCompoundPredicate(orPredicateWithSubpredicates: [normalPredicate, favoriteItaskPredicate])
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [predicateForConversationsIncludingArchived(), notArchivedPredicate, cp])
     }
 
     @objc(predicateForSharableConversations)

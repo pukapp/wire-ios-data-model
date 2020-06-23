@@ -106,6 +106,7 @@ NSString *const ZMConversationIsMessageVisibleOnlyManagerAndCreatorKey = @"isMes
 NSString *const ZMConversationAnnouncementKey = @"announcement";
 
 NSString *const ZMConversationIsITaskGroupKey = @"isITaskGroup";
+NSString *const ZMConversationIsITaskFavoriteKey = @"isITaskFavorite";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
@@ -246,6 +247,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
 @dynamic isITaskGroup;
 @dynamic iTaskTaskId;
 @dynamic iTaskProjectId;
+@dynamic isITaskFavorite;
 
 
 @synthesize pendingLastReadServerTimestamp;
