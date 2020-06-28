@@ -110,6 +110,7 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
     }
     
     self.conversationType = [self conversationTypeFromTransportData:[transportData numberForKey:ConversationInfoTypeKey]];
+
     /// 允许显示群成员数量
     self.showMemsum = [transportData[ZMConversationShowMemsumKey] boolValue];
     /// 允许群成员编辑删除消息
@@ -181,6 +182,13 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
     
     NSDictionary *members = [transportData dictionaryForKey:ConversationInfoMembersKey];
     if(members != nil) {
+        // 获取对方对自己设置的智能推送状态
+        if (self.conversationType == ZMConversationTypeOneOnOne){
+            NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
+            NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
+            self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[userInfo optionalNumberForKey:ConversationInfoAutoReplyKey]];
+        }
+        
         [self updateMembersWithPayload:members];
         [self updatePotentialGapSystemMessagesIfNeededWithUsers:self.activeParticipants];
     }
@@ -261,11 +269,18 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
 - (void)updateMembersWithPayload:(NSDictionary *)members
 {
     NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
-    NSMutableOrderedSet<ZMUser *> *users = [NSMutableOrderedSet orderedSet];
     NSSet<ZMUser *> *lastSyncedUsers = [NSSet set];
     
     if (self.mutableLastServerSyncedActiveParticipants != nil) {
-        lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants.set;
+//        lastSyncedUsers = self.mutableLastServerSyncedActiveParticipants.set;
+        // 暂时添加去除lastSyncedUsers中的自己，避免下一步的操作中自己被删除
+        NSMutableSet<ZMUser *> *activeParticipants = [self.mutableLastServerSyncedActiveParticipants.set mutableCopy];
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        if ([activeParticipants containsObject:selfUser]) {
+            [activeParticipants removeObject:selfUser];
+        }
+        lastSyncedUsers = activeParticipants;
+        
     }
     
     NSSet<NSUUID *> *participantUUIDs = [NSSet setWithArray:[usersInfos.asDictionaries mapWithBlock:^id(NSDictionary *userDict) {
@@ -287,24 +302,10 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
         }
     }
     
-
-    // 获取对方对自己设置的智能推送状态
-    if (usersInfos.count == 1){
-        NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
-        self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[userInfo optionalNumberForKey:ConversationInfoAutoReplyKey]];
-    }
-    
-    NSMutableOrderedSet<ZMUser *> *addedUsers = [users mutableCopy];
-    [addedUsers minusSet:lastSyncedUsers];
-    NSMutableOrderedSet<ZMUser *> *removedUsers = [lastSyncedUsers mutableCopy];
-    [removedUsers minusOrderedSet:users];
-
-    
     NSMutableSet<ZMUser *> *addedParticipants = [participants mutableCopy];
     [addedParticipants minusSet:lastSyncedUsers];
     NSMutableSet<ZMUser *> *removedParticipants = [lastSyncedUsers mutableCopy];
     [removedParticipants minusSet:participants];
-
     
     ZMLogDebug(@"updateMembersWithPayload (%@) added = %lu removed = %lu", self.remoteIdentifier.transportString, (unsigned long)addedParticipants.count, (unsigned long)removedParticipants.count);
     

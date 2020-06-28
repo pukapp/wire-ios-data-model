@@ -1383,6 +1383,9 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
         self.isSelfAnActiveMember = NO;
         self.isArchived = sender.isSelfUser;
     }
+    // TODO: 用于模拟bug出现的情况，上线前请删除
+    self.isSelfAnActiveMember = NO;
+    self.isArchived = true;
     
     [self.mutableLastServerSyncedActiveParticipants minusOrderedSet:otherUsers];
     ///收到了万人群删人推送，万人群的话则不需要校验设备的合法性。
@@ -1409,7 +1412,10 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     [priviligeUserIDs addObjectsFromArray:self.orator.allObjects];
     for (NSString * userID in priviligeUserIDs) {
         ZMUser * user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userID] createIfNeeded:YES inConversation:self inContext:self.managedObjectContext];
-        [keepUsers addObject:user];
+        // 不添加自己
+        if (!user.isSelfUser) {
+           [keepUsers addObject:user];
+        }
     }
     if (keepUsers.count < 7) {
         NSArray * sevenUsers = [self.mutableLastServerSyncedActiveParticipants objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 7)]];
