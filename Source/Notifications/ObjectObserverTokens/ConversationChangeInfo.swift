@@ -68,7 +68,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.hasReadReceiptsEnabled),
                     ZMConversation.externalParticipantsStateKey,
                     #keyPath(ZMConversation.legalHoldStatus),
-                    #keyPath(ZMConversation.labels)
+                    #keyPath(ZMConversation.labels),
+                    #keyPath(ZMConversation.isITaskFavorite)
             ])
     }
 
@@ -117,6 +118,11 @@ extension ZMConversation : ObjectInSnapshot {
     // 聊天置顶状态变化
     public var placeTopStatusChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isPlacedTop))
+    }
+    
+    // 任务关注状态变化
+    public var iTaskFavoriteStatusChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isITaskFavorite))
     }
     
     public var communityIDChanged : Bool {
