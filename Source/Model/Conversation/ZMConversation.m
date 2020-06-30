@@ -1384,8 +1384,8 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
         self.isArchived = sender.isSelfUser;
     }
     // TODO: 用于模拟bug出现的情况，上线前请删除
-    self.isSelfAnActiveMember = NO;
-    self.isArchived = true;
+//    self.isSelfAnActiveMember = NO;
+//    self.isArchived = true;
     
     [self.mutableLastServerSyncedActiveParticipants minusOrderedSet:otherUsers];
     ///收到了万人群删人推送，万人群的话则不需要校验设备的合法性。
