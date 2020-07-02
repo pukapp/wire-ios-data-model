@@ -12,6 +12,8 @@ import Foundation
 extension ZMClientMessage: ZMJsonTextMessageData {
 
     public var jsonMessageText: String? {
-        return genericMessage?.jsonTextData?.content
+        //mergewire
+//        return genericMessage?.jsonTextData?.content
+        return ""
     }
 }

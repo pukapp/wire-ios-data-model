@@ -24,6 +24,7 @@
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMUser+Internal.h"
 #import "ZMMessage+Internal.h"
+#import <WireDataModel/WireDataModel-Swift.h>
 
 NSString * const ZMDataPropertySuffix = @"_data";
 

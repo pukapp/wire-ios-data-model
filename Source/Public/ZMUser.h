@@ -18,7 +18,6 @@
 
 
 #import "ZMManagedObject.h"
-#import "ZMManagedObjectContextProvider.h"
 #import <WireUtilities/ZMAccentColor.h>
 
 @class ZMConversation;
@@ -54,6 +53,7 @@ typedef NS_ENUM(int16_t, ZMRobotType) {
     ZMRobotTypeService,
     ZMRobotTypeAppService = 5
 };
+@class ParticipantRole;
 
 extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
@@ -70,12 +70,11 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
 @property (nonatomic, readonly, nullable) NSString *connectionRequestMessage;
 
+@property (nonatomic, nonnull) NSSet<ParticipantRole *> *  participantRoles;
+
 /// The full name
 @property (nonatomic, readonly, nullable) NSString *name;
-/// The given name / first name e.g. "John" for "John Smith"
-@property (nonatomic, readonly, nonnull) NSString *displayName;
-/// The initials e.g. "JS" for "John Smith"
-@property (nonatomic, readonly, nullable) NSString *initials;
+
 /// The "@name" handle
 @property (nonatomic, readonly, nullable) NSString *handle;
 
@@ -156,9 +155,6 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 - (void)block;
 - (void)ignore;
 - (void)cancelConnectionRequest;
-
-- (BOOL)trusted;
-- (BOOL)untrusted;
 
 @end
 

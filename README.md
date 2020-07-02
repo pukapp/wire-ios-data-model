@@ -3,7 +3,6 @@
 
 [![Azure Pipelines Build Status](https://dev.azure.com/wireswiss/Wire%20iOS/_apis/build/status/Frameworks/wire-ios-data-model?branchName=develop)](https://dev.azure.com/wireswiss/Wire%20iOS/_build/latest?definitionId=28&branchName=develop) [![codecov](https://codecov.io/gh/wireapp/wire-ios-data-model/branch/develop/graph/badge.svg)](https://codecov.io/gh/wireapp/wire-ios-data-model)
 
-
 This repository is part of the source code of Wire. You can find more information at [wire.com](https://wire.com) or by contacting opensource@wire.com.
 
 You can find the published source code at [github.com/wireapp/wire](https://github.com/wireapp/wire).
@@ -16,6 +15,6 @@ This framework is part of Wire iOS SyncEngine. Additional documentation is avail
 
 ## How to build
 
-This framework is using Carthage to manage its dependencies. To pull the dependencies binaries, `run carthage bootstrap --platform ios`.
+This framework is using Carthage to manage its dependencies. To pull the dependencies binaries, run `carthage bootstrap --platform ios`.
 
 You can now open the Xcode project and build.

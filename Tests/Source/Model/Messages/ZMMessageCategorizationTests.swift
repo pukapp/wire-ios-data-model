@@ -66,7 +66,7 @@ class ZMMessageCategorizationTests : ZMBaseManagedObjectTest {
         let otherUser = ZMUser.insertNewObject(in: self.conversation.managedObjectContext!)
         otherUser.remoteIdentifier = UUID.create()
         
-        self.conversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [otherUser])
+        conversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
         self.conversation.messageDestructionTimeout = .local(.fiveMinutes)
         let message = self.conversation.append(text: "ramble on!")! as! ZMMessage
         
@@ -94,8 +94,7 @@ class ZMMessageCategorizationTests : ZMBaseManagedObjectTest {
         )
         article.title = "title"
         article.summary = "summary"
-        let linkPreview = article.protocolBuffer.update(withOtrKey: Data(), sha256: Data())
-        let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "foo", linkPreviews: [linkPreview]), nonce: UUID.create())
+        let genericMessage = GenericMessage(content: Text(content: "foo", mentions: [], linkPreviews: [article], replyingTo: nil), nonce: UUID.create())
         let message = self.conversation.appendClientMessage(with: genericMessage)
         message?.linkPreviewState = .processed
         

@@ -22,8 +22,7 @@ extension ZMMessage {
             message.isSent
             else { return nil }
         let operatorUser: ZMUser = .selfUser(in: context)
-        let operaorName = operatorUser.name ?? operatorUser.displayName
-        let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: operaorName))
+        let genericMessage = GenericMessage(content: Forbid(type: type.uniqueValue, messageID: messageID.transportString()))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
         switch status {
         case .on: message.addOperation(type, status: status, byOperator: operatorUser)

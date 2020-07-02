@@ -19,6 +19,8 @@
 import Foundation
 import WireCryptobox
 
+private let zmLog = ZMSLog(tag: "event-processing")
+
 @objc public enum ZMConversationLegalHoldStatus: Int16 {
     case disabled = 0
     case pendingApproval = 1
@@ -107,8 +109,7 @@ extension ZMConversation {
     /// Should be called when a message is received.
     /// If the legal hold status hint inside the received message is different than the local status,
     /// we update the local version to match the remote one.
-    @objc(updateSecurityLevelIfNeededAfterReceiving:timestamp:)
-    public func updateSecurityLevelIfNeededAfterReceiving(message: ZMGenericMessage, timestamp: Date) {
+    public func updateSecurityLevelIfNeededAfterReceiving(message: GenericMessage, timestamp: Date) {
         updateLegalHoldIfNeededWithHint(from: message, timestamp: timestamp)
     }
     
@@ -167,12 +168,12 @@ extension ZMConversation {
     }
 
     private func updateLegalHoldState(cause: SecurityChangeCause) {
-        guard !needsToVerifyLegalHold, !activeParticipants.any({ $0.clients.any(\.needsToBeUpdatedFromBackend) }) else {
+        guard !needsToVerifyLegalHold, !localParticipants.any({ $0.clients.any(\.needsToBeUpdatedFromBackend) }) else {
             // We don't update the legal hold status if we are still gathering information about which clients were added/deleted
             return
         }
         
-        let detectedParticipantsUnderLegalHold = activeParticipants.any(\.isUnderLegalHold)
+        let detectedParticipantsUnderLegalHold = localParticipants.any(\.isUnderLegalHold)
 
         switch (legalHoldStatus, detectedParticipantsUnderLegalHold) {
         case (.disabled, true):
@@ -205,8 +206,11 @@ extension ZMConversation {
     }
 
     private func increaseSecurityLevelIfNeeded(for cause: SecurityChangeCause) {
-        guard securityLevel != .secure && allUsersTrusted && allParticipantsHaveClients else {
-            return
+        guard securityLevel != .secure &&
+            allUsersTrusted &&
+            allParticipantsHaveClients &&
+            conversationType != .connection else {
+                return
         }
 
         securityLevel = .secure
@@ -232,15 +236,15 @@ extension ZMConversation {
         }
     }
 
-    /// Update the legal hold status based on the hint of a message.
-    private func updateLegalHoldIfNeededWithHint(from message: ZMGenericMessage, timestamp: Date) {
-        switch message.content?.legalHoldStatus {
-        case .ENABLED? where !legalHoldStatus.denotesEnabledComplianceDevice:
+    /// Update the legal hold status based on the hint of a message.    
+    private func updateLegalHoldIfNeededWithHint(from message: GenericMessage, timestamp: Date) {
+        switch message.legalHoldStatus {
+        case .enabled where !legalHoldStatus.denotesEnabledComplianceDevice:
             needsToVerifyLegalHold = true
             legalHoldStatus = .pendingApproval
             appendLegalHoldEnabledSystemMessageForConversationAfterReceivingMessage(at: timestamp)
             expireAllPendingMessagesBecauseOfSecurityLevelDegradation()
-        case .DISABLED? where legalHoldStatus.denotesEnabledComplianceDevice:
+        case .disabled where legalHoldStatus.denotesEnabledComplianceDevice:
             needsToVerifyLegalHold = true
             legalHoldStatus = .disabled
             appendLegalHoldDisabledSystemMessageForConversationAfterReceivingMessage(at: timestamp)
@@ -314,8 +318,7 @@ extension ZMConversation {
     /// - Parameters:
     ///   - user: the participant to add
     ///   - dateOptional: if provide a nil, current date will be used
-    @objc(addParticipantIfMissing:date:)
-    public func addParticipantIfMissing(_ user: ZMUser, date dateOptional: Date?) {
+    public func addParticipantAndSystemMessageIfMissing(_ user: ZMUser, date dateOptional: Date?) {
         ///万人群消息直接判断lastServerSyncedActiveParticipants是否包含，不执行activeParticipants的判断
         if case .hugeGroup = conversationType {
             if !self.lastServerSyncedActiveParticipants.contains(user) {
@@ -323,24 +326,29 @@ extension ZMConversation {
             }
             return
         }
+    
         let date = dateOptional ?? Date()
-        guard !activeParticipants.contains(user) else { return }
+
+        guard !localParticipants.contains(user) else { return }
+        
+        zmLog.debug("Sender: \(user.remoteIdentifier?.transportString() ?? "n/a") missing from participant list: \(localParticipants.map{ $0.remoteIdentifier} )")
         
         switch conversationType {
         case .group:
             appendSystemMessage(type: .participantsAdded, sender: user, users: Set(arrayLiteral: user), clients: nil, timestamp: date)
-            internalAddParticipants([user])
         case .oneOnOne, .connection:
             if user.connection == nil {
                 user.connection = connection ?? ZMConnection.insertNewObject(in: managedObjectContext!)
             } else if connection == nil {
                 connection = user.connection
             }
-            
             user.connection?.needsToBeUpdatedFromBackend = true
         default:
             break
         }
+        
+        // we will fetch the role once we fetch the entire convo metadata
+        self.addParticipantAndUpdateConversationState(user: user, role: nil)
         
         // A missing user indicate that we are out of sync with the BE so we'll re-sync the conversation
         needsToBeUpdatedFromBackend = true
@@ -447,7 +455,9 @@ extension ZMConversation {
     /// Expire all pending messages
     fileprivate func expireAllPendingMessagesBecauseOfSecurityLevelDegradation() {
         for message in undeliveredMessages {
-            if let clientMessage = message as? ZMClientMessage, let genericMessage = clientMessage.genericMessage, genericMessage.hasConfirmation() {
+            if let clientMessage = message as? ZMClientMessage,
+                let genericMessage = clientMessage.underlyingMessage,
+                genericMessage.hasConfirmation {
                 // Delivery receipt: just expire it
                 message.expire()
             } else {
@@ -656,10 +666,14 @@ extension ZMConversation {
 extension ZMConversation {
     
     /// Returns true if all participants are connected to the self user and all participants are trusted
-    @objc public var allUsersTrusted : Bool {
-        guard self.lastServerSyncedActiveParticipants.count > 0, self.isSelfAnActiveMember else { return false }
-        let hasOnlyTrustedUsers = self.activeParticipants.first { !$0.trusted() } == nil
-        return hasOnlyTrustedUsers && !self.containsUnconnectedOrExternalParticipant
+    @objc
+    public var allUsersTrusted : Bool {
+        guard !localParticipants.isEmpty,
+              isSelfAnActiveMember else { return false }
+        
+        let hasOnlyTrustedUsers = localParticipants.allSatisfy { ($0.isTrusted && !$0.clients.isEmpty) }
+        
+        return hasOnlyTrustedUsers && !containsUnconnectedOrExternalParticipant
     }
     
     fileprivate var containsUnconnectedOrExternalParticipant : Bool {
@@ -668,11 +682,10 @@ extension ZMConversation {
         }
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
-        return (self.lastServerSyncedActiveParticipants.array as! [ZMUser]).first {
-            if $0.isConnected {
+        return localParticipants.first {
+            if $0.isConnected || $0 == selfUser {
                 return false
-            }
-            else if $0.isWirelessUser {
+            } else if $0.isWirelessUser {
                 return false
             }
             else {
@@ -682,12 +695,12 @@ extension ZMConversation {
     }
     
     fileprivate var allParticipantsHaveClients : Bool {
-        return self.activeParticipants.first { $0.clients.count == 0 } == nil
+        return self.localParticipants.first { $0.clients.count == 0 } == nil
     }
     
     /// If true the conversation might still be trusted / ignored
     @objc public var hasUntrustedClients : Bool {
-        return self.activeParticipants.first { $0.untrusted() } != nil
+        return self.localParticipants.contains { !$0.isTrusted }
     }
 }
 
@@ -705,15 +718,6 @@ extension ZMSystemMessage {
         let fetchRequest = ZMSystemMessage.sortedFetchRequest(with: compound)!
         let result = conversation.managedObjectContext!.executeFetchRequestOrAssert(fetchRequest)!
         return result.first as? ZMSystemMessage
-    }
-}
-
-extension ZMOTRMessage {
-    
-    fileprivate var isUpdatingExistingMessage: Bool {
-        guard let genericMessage = genericMessage else { return false }
-        
-        return genericMessage.hasEdited() || genericMessage.hasReaction()
     }
 }
 

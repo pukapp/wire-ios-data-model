@@ -31,7 +31,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.displayName),
                     #keyPath(ZMConversation.estimatedUnreadCount),
                     #keyPath(ZMConversation.clearedTimeStamp),
-                    #keyPath(ZMConversation.lastServerSyncedActiveParticipants),
+                    #keyPath(ZMConversation.localParticipantRoles),
                     #keyPath(ZMConversation.isSelfAnActiveMember),
                     #keyPath(ZMConversation.relatedConnectionState),
                     #keyPath(ZMConversation.team),
@@ -72,7 +72,8 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.hasReadReceiptsEnabled),
                     ZMConversation.externalParticipantsStateKey,
                     #keyPath(ZMConversation.legalHoldStatus),
-                    #keyPath(ZMConversation.labels)
+                    #keyPath(ZMConversation.labels),
+                    #keyPath(ZMConversation.localParticipants)
             ])
     }
 
@@ -223,11 +224,20 @@ extension ZMConversation : ObjectInSnapshot {
     }
 
     public var participantsChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.lastServerSyncedActiveParticipants), #keyPath(ZMConversation.isSelfAnActiveMember))
+        return changedKeysContain(keys: #keyPath(ZMConversation.localParticipantRoles),
+                                        #keyPath(ZMConversation.isSelfAnActiveMember),
+                                        #keyPath(ZMConversation.participantRoles)
+        )
     }
 
+    public var activeParticipantsChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.isSelfAnActiveMember),
+                                        #keyPath(ZMConversation.localParticipants))
+    }
+    
     public var nameChanged : Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.displayName))
+        return changedKeysContain(keys: #keyPath(ZMConversation.displayName),
+                                        #keyPath(ZMConversation.userDefinedName)) || activeParticipantsChanged
     }
 
     public var lastModifiedDateChanged : Bool {
@@ -308,6 +318,7 @@ extension ZMConversation : ObjectInSnapshot {
                 "completeAvatarDataChanged: \(completeAvatarDataChanged)",
                 "canOpenUrlChanged: \(canOpenUrlChanged)",
                 "participantsChanged: \(participantsChanged)",
+                "activeParticipantsChanged: \(activeParticipantsChanged)",
                 "nameChanged: \(nameChanged)",
                 "unreadCountChanged: \(unreadCountChanged)",
                 "lastModifiedDateChanged: \(lastModifiedDateChanged)",
@@ -333,7 +344,8 @@ extension ZMConversation : ObjectInSnapshot {
     }
     
     static func changeInfo(for conversation: ZMConversation, changes: Changes) -> ConversationChangeInfo? {
-        guard changes.changedKeys.count > 0 || changes.originalChanges.count > 0 else { return nil }
+        guard changes.hasChangeInfo else { return nil }
+
         let changeInfo = ConversationChangeInfo(object: conversation)
         changeInfo.changeInfos = changes.originalChanges
         changeInfo.changedKeys = changes.changedKeys
@@ -381,8 +393,8 @@ extension ConversationChangeInfo {
     
     /// Users that caused the conversation to degrade
     @objc public var usersThatCausedConversationToDegrade : Set<ZMUser> {
-        let untrustedParticipants = self.conversation.activeParticipants.filter { user -> Bool in
-            return !user.trusted()
+        let untrustedParticipants = self.conversation.localParticipants.filter { user -> Bool in
+            return !user.isTrusted
         }
         return Set(untrustedParticipants)
     }

@@ -79,9 +79,11 @@ class SnapshotCenterTests : BaseZMMessageTests {
                                                            "remoteIdentifier": nil,
                                                            "mutedStatus": 0 as Optional<NSObject>]
         let expectedToManyRelationships = ["hiddenMessages": 0,
-                                           "lastServerSyncedActiveParticipants": 0,
+                                           "participantRoles": 0,
                                            "allMessages": 0,
-                                           "labels": 0]
+                                           "labels": 0,
+                                           "nonTeamRoles": 0,
+                                           "lastServerSyncedActiveParticipants": 0]
         
         expectedAttributes.forEach {
             XCTAssertEqual(snapshot.attributes[$0] ?? nil, $1)
@@ -94,6 +96,7 @@ class SnapshotCenterTests : BaseZMMessageTests {
         let conv = ZMConversation.insertNewObject(in: uiMOC)
         conv.conversationType = .group
         conv.userDefinedName = "foo"
+        conv.creator = ZMUser.insertNewObject(in: uiMOC)
         performPretendingUiMocIsSyncMoc {
             conv.lastModifiedDate = Date()
             conv.lastServerTimeStamp = Date()
@@ -101,7 +104,7 @@ class SnapshotCenterTests : BaseZMMessageTests {
             conv.lastUnreadMissedCallDate = Date()
         }
         conv.mutedMessageTypes = .all
-        conv.isSelfAnActiveMember = false
+        conv.removeParticipantAndUpdateConversationState(user: ZMUser.selfUser(in: uiMOC))
         conv.append(text: "foo")
         conv.resetLocallyModifiedKeys(conv.keysThatHaveLocalModifications)
         _ = sut.extractChangedKeysFromSnapshot(for: conv)
@@ -114,7 +117,6 @@ class SnapshotCenterTests : BaseZMMessageTests {
                                                          "internalEstimatedUnreadCount": 0 as Optional<NSObject>,
                                                          "hasUnreadUnsentMessage": 0 as Optional<NSObject>,
                                                          "archivedChangedTimestamp": nil,
-                                                         "isSelfAnActiveMember": 0 as Optional<NSObject>,
                                                          "draftMessageText": nil,
                                                          "modifiedKeys": nil,
                                                          "securityLevel": 0 as Optional<NSObject>,
@@ -136,13 +138,14 @@ class SnapshotCenterTests : BaseZMMessageTests {
                                                          "remoteIdentifier": nil,
                                                          "mutedStatus": (MutedMessageOptionValue.all.rawValue) as Optional<NSObject>]
         let expectedToManyRelationships = ["hiddenMessages": 0,
-                                           "lastServerSyncedActiveParticipants": 0,
+                                           "participantRoles": 0,
                                            "allMessages": 1,
-                                           "labels": 0]
+                                           "labels": 0,
+                                           "nonTeamRoles": 0,
+                                           "lastServerSyncedActiveParticipants": 0]
         
-        let expectedToOneRelationships = ["team": false,
-                                          "connection": false,
-                                          "creator": false]
+        let expectedToOneRelationships: [String: NSManagedObjectID] =
+            ["creator": conv.creator.objectID]
         
         expectedAttributes.forEach{
             XCTAssertEqual((snapshot.attributes[$0] ?? nil), $1, "values for \($0) don't match")
@@ -190,9 +193,37 @@ class SnapshotCenterTests : BaseZMMessageTests {
 
         // then
         XCTAssertEqual(changedKeys, Set(conv.entity.attributesByName.keys).union(["hiddenMessages",
-                                                                                  "lastServerSyncedActiveParticipants",
+                                                                                  "participantRoles",
                                                                                   "allMessages",
-                                                                                  "labels"]))
+                                                                                  "labels",
+                                                                                  "nonTeamRoles",
+                                                                                  "lastServerSyncedActiveParticipants"]))
+    }
+    
+    func testThatItUpatesTheSnapshotForParticipantRole(){
+        // given
+        let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        let role1 = Role.insertNewObject(in: uiMOC)
+        role1.name = "foo"
+        let role2 = Role.insertNewObject(in: uiMOC)
+        role2.name = "bar"
+        let pr = ParticipantRole.create(managedObjectContext: uiMOC, user: user, conversation: conversation)
+        pr.role = role1
+        uiMOC.saveOrRollback()
+        _ = sut.extractChangedKeysFromSnapshot(for: pr)
+        
+        // when
+        pr.role = role2
+        uiMOC.saveOrRollback()
+        let changedKeys = sut.extractChangedKeysFromSnapshot(for: pr)
+        
+        // then
+        guard let snapshot = sut.snapshots[pr.objectID] else { return XCTFail("did not create snapshot")}
+        
+        // then
+        XCTAssertEqual(snapshot.toOneRelationships["role"], role2.objectID)
+        XCTAssertEqual(changedKeys, Set(["role"]))
     }
 
 }

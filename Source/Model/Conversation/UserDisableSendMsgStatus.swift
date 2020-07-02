@@ -16,7 +16,7 @@
     @NSManaged public var needUpload: Bool
     
     public override func keysTrackedForLocalModifications() -> Set<String> {
-        return [ZMConversationInfoBlockTimeKey]
+        return ["block_time"]
     }
     
     public override static func entityName() -> String {
@@ -28,7 +28,7 @@
     }
     
     public override static func sortKey() -> String? {
-        return ZMConversationInfoBlockTimeKey
+        return "block_time"
     }
     
     public override static func predicateForObjectsThatNeedToBeInsertedUpstream() -> NSPredicate? {
@@ -64,7 +64,7 @@ extension UserDisableSendMsgStatus {
                 status.block_time = block_time.int64Value
                 status.block_duration = duration.int64Value
                 if !fromPushChannel {
-                    status.setLocallyModifiedKeys([ZMConversationInfoBlockTimeKey])
+                    status.setLocallyModifiedKeys(["block_time"])
                 }
                 conver.disableSendLastModifiedDate = Date()
                 exist = true

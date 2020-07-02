@@ -34,7 +34,6 @@
 @class ZMCleared;
 @class ZMUpdateEvent;
 @class ZMLocationData;
-@class ZMGenericMessage;
 @class ZMSystemMessage;
 @class Team;
 @class UserAliasname;
@@ -50,6 +49,7 @@ extern NSString *const ZMConversationAllMessagesKey;
 extern NSString *const ZMConversationHiddenMessagesKey;
 extern NSString *const ZMConversationMembersAliasnameKey;
 extern NSString *const ZMConversationLastServerSyncedActiveParticipantsKey;
+extern NSString *const ZMConversationParticipantRolesKey;
 extern NSString *const ZMConversationHasUnreadKnock;
 extern NSString *const ZMConversationUserDefinedNameKey;
 extern NSString *const ZMVisibleWindowLowerKey;
@@ -59,6 +59,7 @@ extern NSString *const ZMNormalizedUserDefinedNameKey;
 extern NSString *const ZMConversationListIndicatorKey;
 extern NSString *const ZMConversationConversationTypeKey;
 extern NSString *const ZMConversationExternalParticipantsStateKey;
+extern NSString *const ZMConversationNeedsToDownloadRolesKey;
 
 extern NSString *const ZMConversationLastReadServerTimeStampKey;
 extern NSString *const ZMConversationLastServerTimeStampKey;
@@ -113,6 +114,15 @@ extern NSString *const ZMConversationPreviewAvatarKey;
 extern NSString *const ZMConversationCompleteAvatarKey;
 extern NSString *const ShowMemsumKey;
 extern NSString *const EnabledEditMsgKey;
+
+extern NSString *const ZMConversationInfoBlockTimeKey;
+extern NSString *const ZMConversationInfoBlockDurationKey;
+extern NSString *const ZMConversationInfoOpt_idKey;
+extern NSString *const ZMConversationInfoBlockUserKey;
+extern NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey;
+extern NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey;
+extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
+extern NSString *const ZMConversationInfoManagerKey;
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)
@@ -135,10 +145,8 @@ NS_ASSUME_NONNULL_END
 + (nonnull ZMConversationList *)pendingConversationsInContext:(nonnull NSManagedObjectContext *)moc;
 + (nonnull ZMConversationList *)hugeGroupConversationsInContext:(nonnull NSManagedObjectContext *)moc;
 
-+ (nonnull NSPredicate *)predicateForSearchQuery:(nonnull NSString *)searchQuery team:(nullable Team *)team;
++ (nonnull NSPredicate *)predicateForSearchQuery:(nonnull NSString *)searchQuery team:(nullable Team *)team moc:(nonnull NSManagedObjectContext *)moc;
 + (nonnull NSPredicate *)userDefinedNamePredicateForSearchString:(nonnull NSString *)searchString;
-
-@property (readonly, nonatomic, nonnull) NSMutableOrderedSet *mutableLastServerSyncedActiveParticipants;
 
 @property (nonatomic) BOOL internalIsArchived;
 
@@ -158,6 +166,7 @@ NS_ASSUME_NONNULL_END
 @property (nonatomic, nonnull) ZMUser *creator;
 @property (nonatomic, nullable) NSDate *lastModifiedDate;
 @property (nonatomic) ZMConversationType conversationType;
+@property (nonatomic) BOOL isSelfConversation;
 @property (nonatomic, copy, nullable) NSString *normalizedUserDefinedName;
 @property (nonatomic) NSTimeInterval lastReadTimestampSaveDelay;
 @property (nonatomic) int64_t lastReadTimestampUpdateCounter;
@@ -174,44 +183,16 @@ NS_ASSUME_NONNULL_END
 
 - (void)mergeWithExistingConversationWithRemoteID:(nonnull NSUUID *)remoteID;
 
+- (ZMConversationType)internalConversationType;
 
 + (nonnull NSUUID *)selfConversationIdentifierInContext:(nonnull NSManagedObjectContext *)context;
 + (nonnull ZMConversation *)selfConversationInContext:(nonnull NSManagedObjectContext *)managedObjectContext;
-
-/// Appends a new message to the conversation.
-/// @param genericMessage the generic message that should be appended
-/// @param expires wether the message should expire or tried to be send infinitively
-/// @param hidden wether the message should be hidden in the conversation or not
-- (nullable ZMClientMessage *)appendClientMessageWithGenericMessage:(nonnull ZMGenericMessage *)genericMessage expires:(BOOL)expires hidden:(BOOL)hidden;
-
-/// Appends a new message to the conversation.
-/// @param genericMessage the generic message that should be appended
-- (nullable ZMClientMessage *)appendClientMessageWithGenericMessage:(nonnull ZMGenericMessage *)genericMessage;
-
-/// Appends a new message to the conversation.
-/// @param client message that should be appended
-- (nonnull ZMClientMessage *)appendMessage:(nonnull ZMClientMessage *)clientMessage expires:(BOOL)expires hidden:(BOOL)hidden;
 
 - (nullable ZMAssetClientMessage *)appendAssetClientMessageWithNonce:(nonnull NSUUID *)nonce imageData:(nonnull NSData *)imageData isOriginal:(BOOL)isOriginal;
 
 - (void)unarchiveIfNeeded;
 
 @end
-
-
-@interface ZMConversation (SelfConversation)
-
-/// Create and append to self conversation a ClientMessage that has generic message data built with the given data
-+ (nullable ZMClientMessage *)appendSelfConversationWithGenericMessage:(nonnull ZMGenericMessage *)genericMessage managedObjectContext:(nonnull NSManagedObjectContext *)moc;
-
-+ (nullable ZMClientMessage *)appendSelfConversationWithLastReadOfConversation:(nonnull ZMConversation *)conversation;
-+ (nullable ZMClientMessage *)appendSelfConversationWithClearedOfConversation:(nonnull ZMConversation *)conversation;
-
-+ (void)updateConversationWithZMLastReadFromSelfConversation:(nonnull ZMLastRead *)lastRead inContext:(nonnull NSManagedObjectContext *)context;
-+ (void)updateConversationWithZMClearedFromSelfConversation:(nonnull ZMCleared *)cleared inContext:(nonnull NSManagedObjectContext *)context;
-
-@end
-
 
 @interface ZMConversation (ParticipantsInternal)
 
@@ -222,6 +203,7 @@ NS_ASSUME_NONNULL_END
 @property (readonly, nonatomic, nonnull) NSOrderedSet<ZMUser *> *lastServerSyncedActiveParticipants;
 
 @end
+
 
 @interface NSUUID (ZMSelfConversation)
 

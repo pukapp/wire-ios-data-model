@@ -46,17 +46,29 @@ extension ZMUser: UserType {
     }
     
     public var activeConversations: Set<ZMConversation> {
-        if isSelfUser {
-            guard let managedObjectContext = managedObjectContext else { return Set() }
-            
-            let fetchRequest = NSFetchRequest<ZMConversation>(entityName: ZMConversation.entityName())
-            fetchRequest.predicate = ZMConversation.predicateForConversationsWhereSelfUserIsActive()
-            var result = Set(managedObjectContext.fetchOrAssert(request: fetchRequest))
-            result.remove(ZMConversation.selfConversation(in: managedObjectContext))
-            return result
-        } else {
-            return lastServerSyncedActiveConversations.set as? Set<ZMConversation> ?? Set()
+        return Set(self.participantRoles.compactMap {$0.conversation})
+    }
+    
+    public var isVerified: Bool {
+        guard let selfUser = managedObjectContext.map(ZMUser.selfUser) else {
+            return false
         }
+        return isTrusted && selfUser.isTrusted && !clients.isEmpty
+    }
+
+    // MARK: - Conversation Roles
+
+    public func canManagedGroupRole(of user: UserType, conversation: ZMConversation) -> Bool {
+        guard isGroupAdmin(in: conversation) else { return false }
+        return !user.isSelfUser && (user.isConnected || isOnSameTeam(otherUser: user))
+    }
+
+    public func isGroupAdmin(in conversation: ZMConversation) -> Bool {
+        return role(in: conversation)?.name == ZMConversation.defaultAdminRoleName
+    }
+
+    public func role(in conversation: ZMConversation) -> Role? {
+        return participantRoles.first(where: { $0.conversation == conversation })?.role
     }
 
     // MARK: Legal Hold
@@ -71,6 +83,20 @@ extension ZMUser: UserType {
     
     public var allClients: [UserClientType] {
         return Array(clients)
+    }
+
+    // MARK: - Data refresh requests
+
+    public func refreshRichProfile() {
+        needsRichProfileUpdate = true
+    }
+
+    public func refreshMembership() {
+        membership?.needsToBeUpdatedFromBackend = true
+    }
+
+    public func refreshTeamData() {
+        team?.refreshMetadata()
     }
     
 }
@@ -155,9 +181,6 @@ extension ZMUser {
     
     @NSManaged public var previewProfileAssetIdentifier: String?
     @NSManaged public var completeProfileAssetIdentifier: String?
-    
-    /// Conversation in which the user is active, according to the server
-    @NSManaged var lastServerSyncedActiveConversations: NSOrderedSet
     
     /// Conversations created by this user
     @NSManaged var conversationsCreated: Set<ZMConversation>
@@ -279,9 +302,10 @@ extension ZMUser {
     
     /// Remove user from all group conversations he is a participant of
     fileprivate func removeFromAllConversations(at timestamp: Date) {
-        let allGroupConversations: [ZMConversation] = lastServerSyncedActiveConversations.compactMap {
-            guard let conversation = $0 as? ZMConversation, conversation.conversationType == .group else { return nil}
-            return conversation
+        let allGroupConversations: [ZMConversation] = participantRoles.compactMap {
+            guard let convo = $0.conversation,
+                convo.conversationType == .group else { return nil}
+            return convo
         }
         
         allGroupConversations.forEach { conversation in
@@ -290,8 +314,7 @@ extension ZMUser {
             } else {
                 conversation.appendParticipantRemovedSystemMessage(user: self, at: timestamp)
             }
-            
-            conversation.internalRemoveParticipants([self], sender: self)
+            conversation.removeParticipantAndUpdateConversationState(user: self, initiatingUser: self)
         }
     }
 }
@@ -303,6 +326,12 @@ extension ZMUser {
     public func displayName(in conversation: ZMConversation?) -> String {
         return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? self.handle ?? ""
     }
+    // MARK: - Participant role
+    
+    @objc
+    public var conversations: Set<ZMConversation> {
+        return Set(participantRoles.compactMap{ return $0.conversation })
+    }
 }
 
 extension NSManagedObject: SafeForLoggingStringConvertible {
@@ -312,3 +341,24 @@ extension NSManagedObject: SafeForLoggingStringConvertible {
         return "\(type(of: self)) \(Unmanaged.passUnretained(self).toOpaque()): moc=\(moc) objectID=\(self.objectID)"
     }
 }
+
+extension ZMUser {
+    
+    /// Whether all user's devices are verified by the selfUser
+    @objc public var isTrusted: Bool {
+        let selfUser = managedObjectContext.map(ZMUser.selfUser)
+        let selfClient = selfUser?.selfClient()
+        let hasUntrustedClients = self.clients.contains(where: { ($0 != selfClient) && !(selfClient?.trustedClients.contains($0) ?? false) })
+        
+        return !hasUntrustedClients
+    }
+}
+
+extension ZMUser {
+    
+    /// The initials e.g. "JS" for "John Smith"
+    @objc public var initials: String? {
+        return PersonName.person(withName: self.name ?? "", schemeTagger: nil).initials
+    }
+}
+

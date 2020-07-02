@@ -21,63 +21,60 @@ import Foundation
 extension ZMAssetClientMessage {
     
     func genericMessageDataFromDataSet(for format: ZMImageFormat) -> ZMGenericMessageData? {
-        return self.dataSet.array
+        return self.dataSet.lazy
             .compactMap { $0 as? ZMGenericMessageData }
-            .filter { $0.genericMessage?.imageAssetData?.imageFormat() == format }
-            .first
+            .first(where: {$0.underlyingMessage?.imageAssetData?.imageFormat() == format} )
     }
     
-    public var mediumGenericMessage: ZMGenericMessage? {
-        return self.genericMessageDataFromDataSet(for: .medium)?.genericMessage
+    public var mediumGenericMessage: GenericMessage? {
+        return self.genericMessageDataFromDataSet(for: .medium)?.underlyingMessage
     }
     
     static func keyPathsForValuesAffectingMediumGenericMessage() -> Set<String> {
         return Set([#keyPath(ZMOTRMessage.dataSet), #keyPath(ZMOTRMessage.dataSet)+".data"])
     }
     
-    public var previewGenericMessage: ZMGenericMessage? {
-        return self.genericMessageDataFromDataSet(for: .preview)?.genericMessage
+    public var previewGenericMessage: GenericMessage? {
+        return self.genericMessageDataFromDataSet(for: .preview)?.underlyingMessage
     }
     
     static func keyPathsForValuesAffectingPreviewGenericMessage() -> Set<String> {
         return Set([#keyPath(ZMOTRMessage.dataSet), #keyPath(ZMOTRMessage.dataSet)+".data"])
     }
     
-    public override var genericMessage: ZMGenericMessage? {
-        return genericAssetMessage
-    }
-    
-    /// The generic asset message that is constructed by merging
-    /// all generic messages from the dataset that contain an asset
-    public var genericAssetMessage: ZMGenericMessage? {
+    public var underlyingMessage: GenericMessage? {
         guard !isZombieObject else { return nil }
         
-        if self.cachedGenericAssetMessage == nil {
-            self.cachedGenericAssetMessage = self.genericMessageMergedFromDataSet(filter: {
+        if cachedUnderlyingAssetMessage == nil {
+            cachedUnderlyingAssetMessage = underlyingMessageMergedFromDataSet(filter: {
                 $0.assetData != nil
             })
         }
-        return self.cachedGenericAssetMessage
+        return cachedUnderlyingAssetMessage
     }
     
-    public func add(_ genericMessage: ZMGenericMessage) {
-        _ = self.mergeWithExistingData(data: genericMessage.data())
+    public func add(_ genericMessage: GenericMessage) {
+        do {
+        _ = self.mergeWithExistingData(data: try genericMessage.serializedData())
+        } catch {
+            return
+        }
     }
     
     func mergeWithExistingData(data: Data) -> ZMGenericMessageData? {
-        self.cachedGenericAssetMessage = nil
-        
-        guard let genericMessage = ZMGenericMessageBuilder().merge(from: data).build() as? ZMGenericMessage else {
+        cachedUnderlyingAssetMessage = nil
+      
+        guard let genericMessage = try? GenericMessage(serializedData: data) else {
             return nil
         }
 
         if let imageFormat = genericMessage.imageAssetData?.imageFormat(),
-            let existingMessageData = self.genericMessageDataFromDataSet(for: imageFormat)
+            let existingMessageData = genericMessageDataFromDataSet(for: imageFormat)
         {
             existingMessageData.data = data
             return existingMessageData
         } else {
-            return self.createNewGenericMessage(with: data)
+            return createNewGenericMessage(with: data)
         }
     }
     
@@ -91,42 +88,50 @@ extension ZMAssetClientMessage {
         return messageData
     }
     
-    /// Merge all generic messages in the dataset that pass the filter
-    func genericMessageMergedFromDataSet(filter: (ZMGenericMessage)->Bool) -> ZMGenericMessage? {
-        
-        let filteredMessages = self.dataSet.array
-            .compactMap { ($0 as? ZMGenericMessageData)?.genericMessage }
+    func underlyingMessageMergedFromDataSet(filter: (GenericMessage)->Bool) -> GenericMessage? {
+        let filteredData = self.dataSet
+            .compactMap { ($0 as? ZMGenericMessageData)?.underlyingMessage }
             .filter(filter)
+            .compactMap { try? $0.serializedData() }
         
-        guard !filteredMessages.isEmpty else {
+        guard !filteredData.isEmpty else {
             return nil
         }
         
-        let builder = ZMGenericMessage.builder()!
-        filteredMessages.forEach { builder.merge(from: $0) }
-        return builder.build()
+        var message = GenericMessage()
+        filteredData.forEach {
+            try? message.merge(serializedData: $0)
+        }
+        return message
     }
     
     /// Returns the generic message for the given representation
-    func genericMessage(dataType: AssetClientMessageDataType) -> ZMGenericMessage? {
+    func genericMessage(dataType: AssetClientMessageDataType) -> GenericMessage? {
         
         if self.fileMessageData != nil {
             switch dataType {
             case .fullAsset:
-                guard let genericMessage = self.genericAssetMessage,
+                guard let genericMessage = self.underlyingMessage,
                     let assetData = genericMessage.assetData,
-                    assetData.hasUploaded()
+                    case .uploaded? = assetData.status
                     else { return nil }
                 return genericMessage
             case .placeholder:
-                return self.genericMessageMergedFromDataSet(filter: { (message) -> Bool in
+                return self.underlyingMessageMergedFromDataSet(filter: { (message) -> Bool in
                     guard let assetData = message.assetData else { return false }
-                    return assetData.hasOriginal() || assetData.hasNotUploaded()
+                    guard case .notUploaded? = assetData.status else {
+                        return assetData.hasOriginal
+                    }
+                    return true
                 })
             case .thumbnail:
-                return self.genericMessageMergedFromDataSet(filter: { (message) -> Bool in
+                return self.underlyingMessageMergedFromDataSet(filter: { (message) -> Bool in
                     guard let assetData = message.assetData else { return false }
-                    return assetData.hasPreview() && !assetData.hasUploaded()
+                    if let status = assetData.status {
+                        guard case .notUploaded = status else { return false }
+                        return assetData.hasPreview
+                    }
+                    return assetData.hasPreview
                 })
             }
         }
@@ -151,30 +156,7 @@ extension ZMAssetClientMessage {
     }
     
     override public var fileMessageData: ZMFileMessageData? {
-        let isFileMessage = self.genericAssetMessage?.assetData != nil
+        let isFileMessage = underlyingMessage?.assetData != nil
         return isFileMessage ? self : nil
-    }
-    
-    public override func update(with message: ZMGenericMessage, updateEvent: ZMUpdateEvent, initialUpdate: Bool) {
-        self.add(message)
-        self.version = 3 // We assume received assets are V3 since backend no longer supports sending V2 assets.
-        
-        if let assetData = message.assetData, assetData.hasUploaded() {
-            if assetData.uploaded.hasAssetId() {
-                self.updateTransferState(.uploaded, synchronize: false)
-            }
-        }
-        
-        if let assetData = message.assetData, assetData.hasNotUploaded(), self.transferState != .uploaded {
-            ///TODO: change ZMAssetNotUploaded to NS_CLOSED_ENUM
-            switch assetData.notUploaded {
-            case .CANCELLED:
-                self.managedObjectContext?.delete(self)
-            case .FAILED:
-                self.updateTransferState(.uploadingFailed, synchronize: false)
-            @unknown default:
-                fatalError()
-            }
-        }
     }
 }

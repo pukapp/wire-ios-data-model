@@ -57,7 +57,6 @@ static NSString *const ActiveCallConversationsKey = @"activeCallConversations";
 static NSString *const ConnectionKey = @"connection";
 static NSString *const EmailAddressKey = @"emailAddress";
 static NSString *const PhoneNumberKey = @"phoneNumber";
-static NSString *const LastServerSyncedActiveConversationsKey = @"lastServerSyncedActiveConversations";
 static NSString *const NameKey = @"name";
 static NSString *const HandleKey = @"handle";
 static NSString *const SystemMessagesKey = @"systemMessages";
@@ -98,6 +97,8 @@ static NSString *const LegalHoldRequestKey = @"legalHoldRequest";
 static NSString *const NeedsToAcknowledgeLegalHoldStatusKey = @"needsToAcknowledgeLegalHoldStatus";
 
 static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
+static NSString *const ParticipantRolesKey = @"participantRoles";
+
 @interface ZMBoxedSelfUser : NSObject
 
 @property (nonatomic, weak) ZMUser *selfUser;
@@ -212,6 +213,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
 @dynamic handle;
 @dynamic addressBookEntry;
 @dynamic managedBy;
+@dynamic participantRoles;
 
 @dynamic reMark;
 @dynamic aiAddress;
@@ -269,31 +271,15 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     return self.managedBy == nil || [self.managedBy isEqualToString:@"wire"];
 }
 
-- (NSString *)displayName;
-{
-    if (self.isServiceUser) {
-        return self.name;
-    }
-    else {
-        PersonName *personName = [self.managedObjectContext.zm_displayNameGenerator personNameFor:self];
-        return personName.givenName ?: @"";
-    }
-}
-
-- (NSString *)initials
-{
-    PersonName *personName = [self.managedObjectContext.zm_displayNameGenerator personNameFor:self];
-    return personName.initials ?: @"";
-}
-
 - (ZMConversation *)oneToOneConversation
 {
     if (self.isSelfUser) {
         return [ZMConversation selfConversationInContext:self.managedObjectContext];
     } else if (self.isTeamMember) {
-        return [ZMConversation fetchOrCreateTeamConversationInManagedObjectContext:self.managedObjectContext
-                                                                   withParticipant:self
-                                                                              team:self.team];
+        return [ZMConversation fetchOrCreateOneToOneTeamConversationWithMoc:self.managedObjectContext
+                                                        participant:self
+                                                               team:self.team
+                                                    participantRole:nil];
     } else {
         return self.connection.conversation;
     }
@@ -426,7 +412,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
                                            ActiveCallConversationsKey,
                                            ConnectionKey,
                                            ConversationsCreatedKey,
-                                           LastServerSyncedActiveConversationsKey,
+                                           ParticipantRolesKey,
                                            NormalizedEmailAddressKey,
                                            SystemMessagesKey,
                                            UserClientsKey,
@@ -451,7 +437,8 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
                                            CreatedTeamMembersKey,
                                            LegalHoldRequestKey,
                                            NeedsToAcknowledgeLegalHoldStatusKey,
-                                           NeedsToRefetchLabelsKey
+                                           NeedsToRefetchLabelsKey,
+                                           @"lastServerSyncedActiveConversations" // OBSOLETE
                                            ]];
         keys = [ignoredKeys copy];
     });
@@ -632,7 +619,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     }
 
     NSString *name = [transportData optionalStringForKey:@"name"];
-    if (name != nil || authoritative) {
+    if (!self.isAccountDeleted && (name != nil || authoritative)) {
         self.name = name;
     }
     NSString *address = [transportData optionalStringForKey:@"user_address"];
@@ -684,6 +671,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     
     if ([transportData objectForKey:@"team"] || authoritative) {
         self.teamIdentifier = [transportData optionalUuidForKey:@"team"];
+        [self createOrDeleteMembershipIfBelongingToTeam];
     }
     
     NSString *email = [transportData optionalStringForKey:@"email"];
@@ -1070,37 +1058,6 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     }
 }
 
-- (BOOL)trusted
-{
-    if (self.clients.count == 0) {
-        return false;
-    }
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    UserClient *selfClient = selfUser.selfClient;
-    __block BOOL hasOnlyTrustedClients = YES;
-    [self.clients enumerateObjectsUsingBlock:^(UserClient *client, BOOL * _Nonnull stop) {
-        if (client != selfClient && ![selfClient.trustedClients containsObject:client]) {
-            hasOnlyTrustedClients = NO;
-            *stop = YES;
-        }
-    }];
-    return hasOnlyTrustedClients;
-}
-
-- (BOOL)untrusted
-{
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    UserClient *selfClient = selfUser.selfClient;
-    __block BOOL hasUntrustedClients = NO;
-    [self.clients enumerateObjectsUsingBlock:^(UserClient *client, BOOL * _Nonnull stop) {
-        if (client != selfClient && ![selfClient.trustedClients containsObject:client]) {
-            hasUntrustedClients = YES;
-            *stop = YES;
-        }
-    }];
-    return hasUntrustedClients;
-}
-
 @end
 
 
@@ -1241,18 +1198,6 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
 - (BOOL)isSelfUserRemoteIdentifierInContext:(NSManagedObjectContext *)moc;
 {
     return [[ZMUser selfUserInContext:moc].remoteIdentifier isEqual:self];
-}
-
-@end
-
-
-@implementation ZMUser (Protobuf)
-
-- (ZMUserId *)userId
-{
-    ZMUserIdBuilder *userIdBuilder = [ZMUserId builder];
-    [userIdBuilder setUuid:[self.remoteIdentifier data]];
-    return [userIdBuilder build];
 }
 
 @end

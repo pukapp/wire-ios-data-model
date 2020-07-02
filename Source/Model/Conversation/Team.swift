@@ -30,6 +30,7 @@ public protocol TeamType: class {
     var imageData: Data? { get set }
 
     func requestImage()
+    func refreshMetadata()
 }
 
 @objcMembers
@@ -37,12 +38,15 @@ public class Team: ZMManagedObject, TeamType {
 
     @NSManaged public var conversations: Set<ZMConversation>
     @NSManaged public var members: Set<Member>
+    @NSManaged public var roles: Set<Role>
     @NSManaged public var name: String?
     @NSManaged public var pictureAssetId: String?
     @NSManaged public var pictureAssetKey: String?
     @NSManaged public var creator: ZMUser?
 
     @NSManaged public var needsToRedownloadMembers: Bool
+    @NSManaged public var needsToDownloadRoles: Bool
+
     @NSManaged private var remoteIdentifier_data: Data?
 
     public var remoteIdentifier: UUID? {
@@ -81,6 +85,10 @@ public class Team: ZMManagedObject, TeamType {
         }
 
         return nil
+    }
+
+    public func refreshMetadata() {
+        needsToBeUpdatedFromBackend = true
     }
 }
 

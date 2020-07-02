@@ -22,7 +22,7 @@ import WireUtilities
 import WireCryptobox
 @testable import WireDataModel
 
-class UserClientTests: ZMBaseManagedObjectTest {
+final class UserClientTests: ZMBaseManagedObjectTest {
         
     func clientWithTrustedClientCount(_ trustedCount: UInt, ignoredClientCount: UInt, missedClientCount: UInt) -> UserClient
     {
@@ -67,8 +67,8 @@ class UserClientTests: ZMBaseManagedObjectTest {
         let syncedClient = UserClient.insertNewObject(in: self.uiMOC)
         syncedClient.remoteIdentifier = "synced"
         
-        XCTAssertTrue(UserClient.predicateForObjectsThatNeedToBeInsertedUpstream().evaluate(with: unsyncedClient))
-        XCTAssertFalse(UserClient.predicateForObjectsThatNeedToBeInsertedUpstream().evaluate(with: syncedClient))
+        XCTAssertTrue(UserClient.predicateForObjectsThatNeedToBeInsertedUpstream()!.evaluate(with: unsyncedClient))
+        XCTAssertFalse(UserClient.predicateForObjectsThatNeedToBeInsertedUpstream()!.evaluate(with: syncedClient))
     }
     
     func testThatClientCanBeMarkedForDeletion() {
@@ -215,7 +215,10 @@ class UserClientTests: ZMBaseManagedObjectTest {
             
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
             conversation.conversationType = .group
-            conversation.mutableLastServerSyncedActiveParticipants.add(otherUser)
+           
+            conversation.addParticipantsAndUpdateConversationState(
+                users: Set([otherUser, ZMUser.selfUser(in: self.syncMOC)]),
+                role: nil)
             
             selfClient.trustClient(otherClient1)
             
@@ -243,6 +246,36 @@ class UserClientTests: ZMBaseManagedObjectTest {
                 XCTFail("Did not insert systemMessage")
             }
         }
+        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatWhenDeletingClientItTriggersUserFetchForPossibleMemberLeave() {
+        self.syncMOC.performGroupedBlockAndWait{
+            // given
+            let otherClient = UserClient.insertNewObject(in: self.syncMOC)
+            otherClient.remoteIdentifier = UUID.create().transportString()
+
+            let otherUser = ZMUser.insertNewObject(in:self.syncMOC)
+            otherUser.remoteIdentifier = UUID.create()
+            otherClient.user = otherUser
+
+            let team = self.createTeam(in: self.syncMOC)
+            _ = self.createMembership(in: self.syncMOC, user: otherUser, team: team)
+
+            otherUser.needsToBeUpdatedFromBackend = false
+
+            XCTAssertTrue(otherUser.isTeamMember)
+            XCTAssertFalse(otherUser.needsToBeUpdatedFromBackend)
+
+            // when
+            otherClient.deleteClientAndEndSession()
+
+            // then
+            XCTAssertTrue(otherClient.isZombieObject)
+            XCTAssertTrue(otherUser.clients.isEmpty)
+            XCTAssertTrue(otherUser.needsToBeUpdatedFromBackend)
+        }
+
         XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -294,7 +327,7 @@ class UserClientTests: ZMBaseManagedObjectTest {
     }
     
     func testThatItPostsANotificationToSendASessionResetMessageWhenResettingSession() {
-        var (message, conversation): (ZMGenericMessage?, ZMConversation?)
+        var (message, conversation): (GenericMessage?, ZMConversation?)
 
         let noteExpectation = expectation(description: "GenericMessageScheduleNotification should be fired")
         let token = GenericMessageScheduleNotification.addObserver(managedObjectContext:self.uiMOC)
@@ -332,14 +365,14 @@ class UserClientTests: ZMBaseManagedObjectTest {
             withExtendedLifetime(token) { () -> () in
                 XCTAssertNotNil(message)
                 XCTAssertNotNil(conversation)
-                XCTAssertEqual(message?.hasClientAction(), true)
-                XCTAssertEqual(message?.clientAction, .RESETSESSION)
+                if case .clientAction? = message?.content {} else { XCTFail() }
+                XCTAssertEqual(message?.clientAction, .resetSession)
             }
         }
     }
 
     func testThatItSendsASessionResetMessageForUserInTeamConversation() {
-        var (message, conversation): (ZMGenericMessage?, ZMConversation?)
+        var (message, conversation): (GenericMessage?, ZMConversation?)
 
         let noteExpectation = expectation(description: "GenericMessageScheduleNotification should be fired")
         let token = GenericMessageScheduleNotification.addObserver(managedObjectContext: self.uiMOC)
@@ -388,8 +421,8 @@ class UserClientTests: ZMBaseManagedObjectTest {
                 XCTAssertNotNil(message)
                 XCTAssertNotNil(conversation)
                 XCTAssertEqual(expectedConversation?.objectID, conversation?.objectID)
-                XCTAssertEqual(message?.hasClientAction(), true)
-                XCTAssertEqual(message?.clientAction, .RESETSESSION)
+                if case .clientAction? = message?.content {} else { XCTFail() }
+                XCTAssertEqual(message?.clientAction, .resetSession)
             }
         }
     }

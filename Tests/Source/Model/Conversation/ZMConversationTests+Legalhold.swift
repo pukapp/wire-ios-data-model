@@ -63,7 +63,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
@@ -88,7 +88,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
 
@@ -114,12 +114,12 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser])
+            conversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
             // WHEN
-            conversation.internalAddParticipants([otherUser])
+            conversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
 
             // THEN
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
@@ -140,12 +140,12 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
 
             // WHEN
-            conversation.internalRemoveParticipants([otherUser], sender: selfUser)
+            conversation.removeParticipantAndUpdateConversationState(user: otherUser, initiatingUser:  selfUser)
 
             // THEN
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
@@ -166,12 +166,12 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
 
             // WHEN
-            conversation.internalRemoveParticipants([otherUserB], sender: selfUser)
+            conversation.removeParticipantAndUpdateConversationState(user: otherUserB, initiatingUser:  selfUser)
 
             // THEN
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
@@ -194,7 +194,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
             conversation.legalHoldStatus = .disabled
 
             // WHEN
@@ -219,7 +219,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
             conversation.legalHoldStatus = .enabled
             
             // WHEN
@@ -245,7 +245,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
             
             // WHEN
@@ -270,7 +270,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
             
             // WHEN
@@ -295,7 +295,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
@@ -325,7 +325,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
@@ -367,7 +367,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
 
@@ -397,12 +397,12 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser, otherUserB])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser, otherUserB]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
 
             // WHEN
-            conversation.internalRemoveParticipants([otherUser], sender: selfUser)
+            conversation.removeParticipantAndUpdateConversationState(user: otherUser, initiatingUser:  selfUser)
 
             // THEN
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
@@ -426,7 +426,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             self.createClient(ofType: .permanent, class: .phone, for: otherUserB)
 
             // WHEN
-            let conversation = ZMConversation.insertGroupConversation(into: self.syncMOC, withParticipants: [otherUser, otherUserB], in: nil)!
+            let conversation = ZMConversation.insertGroupConversation(moc: self.syncMOC, participants: [otherUser, otherUserB], team: nil)!
 
             // THEN
             XCTAssertEqual(conversation.legalHoldStatus, .pendingApproval)
@@ -454,7 +454,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
@@ -485,7 +485,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
             
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
             
@@ -519,7 +519,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
 
@@ -568,7 +568,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
             conversation.needsToVerifyLegalHold = true
             
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
@@ -593,7 +593,7 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
             
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
             
             XCTAssertEqual(conversation.legalHoldStatus, .disabled)
             
@@ -610,44 +610,44 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
     // MARK: - Message Status Hints
 
     func testThatItUpdatesFromMessageHint_EnabledToDisabled() {
-        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .DISABLED, expectedStatus: .disabled, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
-            ZMText.text(with: "Legal hold is coming to town!")
+        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .disabled, expectedStatus: .disabled, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
+            Text(content: "Legal hold is coming to town!")
         })
     }
 
     func testThatItUpdatesFromMessageHint_EnabledToDisabled_Ephemeral() {
-        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .DISABLED, expectedStatus: .disabled, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
-            ZMEphemeral.ephemeral(content: ZMText.text(with: "Legal hold is coming to town!"), expiresAfter: 60)
+        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .disabled, expectedStatus: .disabled, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
+            Ephemeral(content: Text(content: "Legal hold is coming to town!"), expiresAfter: 60)
         })
     }
 
     func testThatItUpdatesFromMessageHint_DisabledToEnabled() {
-        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .ENABLED, expectedStatus: .pendingApproval, expectSystemMessage: true,expectLegalHoldVerification: true, messageContent: {
-            ZMText.text(with: "🙈🙉🙊")
+        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .enabled, expectedStatus: .pendingApproval, expectSystemMessage: true,expectLegalHoldVerification: true, messageContent: {
+            Text(content: "🙈🙉🙊")
         })
     }
 
     func testThatItUpdatesFromMessageHint_DisabledToEnabled_Ephemeral() {
-        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .ENABLED, expectedStatus: .pendingApproval, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
-            ZMEphemeral.ephemeral(content: ZMText.text(with: "🙈🙉🙊"), expiresAfter: 60)
+        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .enabled, expectedStatus: .pendingApproval, expectSystemMessage: true, expectLegalHoldVerification: true, messageContent: {
+            Ephemeral(content: Text(content: "🙈🙉🙊"), expiresAfter: 60)
         })
     }
 
     func testThatItDoesNotUpdateFromMessageHint_EnabledToEnabled() {
-        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .ENABLED, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
-            ZMText.text(with: "Hello? Can you hear me?")
+        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .enabled, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
+            Text(content: "Hello? Can you hear me?")
         })
     }
 
     func testThatItDoesNotUpdateFromMessageHint_DisabledToDisabled() {
-        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .DISABLED, expectedStatus: .disabled, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
-            ZMText.text(with: "Really not enabled.")
+        assertLegalHoldHintBehavior(initiallyEnabled: false, receivedStatus: .disabled, expectedStatus: .disabled, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
+            Text(content: "Really not enabled.")
         })
     }
 
     func testThatItDoesNotUpdateFromMessageHint_EnabledReceivingMessageWithUnknownLegalHoldStatus() {
-        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .UNKNOWN, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
-            ZMText.text(with: "I know nothing")
+        assertLegalHoldHintBehavior(initiallyEnabled: true, receivedStatus: .unknown, expectedStatus: .pendingApproval, expectSystemMessage: false, expectLegalHoldVerification: false, messageContent: {
+            Text(content: "I know nothing")
         })
     }
     
@@ -663,11 +663,11 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
     }
 
     private func assertLegalHoldHintBehavior(initiallyEnabled: Bool,
-                                             receivedStatus: ZMLegalHoldStatus,
+                                             receivedStatus: LegalHoldStatus,
                                              expectedStatus: ZMConversationLegalHoldStatus,
                                              expectSystemMessage: Bool,
                                              expectLegalHoldVerification: Bool,
-                                             messageContent: @escaping () -> MessageContentType, file: StaticString = #file, line: UInt = #line) {
+                                             messageContent: @escaping () -> MessageCapable, file: StaticString = #file, line: UInt = #line) {
         syncMOC.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.syncMOC)
             let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
@@ -684,23 +684,24 @@ class ZMConversationTests_Legalhold: ZMConversationTestsBase {
 
             let conversation = self.createConversation(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.internalAddParticipants([selfUser, otherUser])
+            conversation.addParticipantsAndUpdateConversationState(users: Set([selfUser, otherUser]), role: nil)
 
             let lastMessageBeforeHint = conversation.lastMessage as? ZMSystemMessage
             XCTAssertEqual(conversation.legalHoldStatus, initiallyEnabled ? .pendingApproval : .disabled, file: file, line: line)
 
             // WHEN
             let nonce = UUID()
-            var genericMessage = ZMGenericMessage.message(content: messageContent(), nonce: nonce)
-            genericMessage = genericMessage.setLegalHoldStatus(receivedStatus) ?? genericMessage
+            var genericMessage = GenericMessage(content: messageContent(), nonce: nonce)
+            genericMessage.setLegalHoldStatus(receivedStatus)
 
+            let genericMessageData = try? genericMessage.serializedData()
             let payload: [String: Any] = [
                 "conversation": conversation.remoteIdentifier!.transportString(),
                 "from": otherUser.remoteIdentifier!.transportString(),
                 "time": Date(),
                 "type": "conversation.otr-message-add",
                 "data": [
-                    "text": genericMessage.data()!.base64String(),
+                    "text": genericMessageData?.base64String(),
                 ]
             ]
 

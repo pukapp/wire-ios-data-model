@@ -91,10 +91,18 @@ extension ZMMessageTests_Confirmation {
         
         // insert message which expects read confirmation
         let message = insertMessage(conversation, fromSender: user, timestamp: Date()) as! ZMClientMessage
-        message.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(message.add)
+        var genericMessage = message.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
+        
+        do {
+            message.add(try genericMessage.serializedData())
+        } catch {
+            return
+        }
 
         // when
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
+        
         // then
         XCTAssertTrue(message.needsReadConfirmation)
     }
@@ -105,12 +113,21 @@ extension ZMMessageTests_Confirmation {
         let conversation = createConversation(in: uiMOC)
         conversation.conversationType = .oneOnOne
         
-        ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = false
         
         // insert message which expects read confirmation
         let message = insertMessage(conversation, fromSender: user, timestamp: Date()) as! ZMClientMessage
-        message.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(message.add)
+        var genericMessage = message.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
         
+        do {
+            message.add(try genericMessage.serializedData())
+        } catch {
+            return
+        }
+        
+        // when
+        ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = false
+
         // then
         XCTAssertFalse(message.needsReadConfirmation)
     }
@@ -176,7 +193,7 @@ extension ZMMessageTests_Confirmation {
         
         // when
         let sut = insertMessage(conversation, fromSender: remoteUser)
-        _ = conversation.append(message: ZMConfirmation.confirm(messageId: sut.nonce!, type: .DELIVERED), hidden: true)
+        _ = conversation.append(message: Confirmation(messageId: sut.nonce!, type: .delivered), hidden: true)
         
         // then
         guard let hiddenMessage = conversation.hiddenMessages.first as? ZMClientMessage else {
@@ -184,7 +201,7 @@ extension ZMMessageTests_Confirmation {
             return
         }
         
-        XCTAssertTrue(hiddenMessage.genericMessage?.hasConfirmation() == true)
+        XCTAssertTrue(hiddenMessage.underlyingMessage?.hasConfirmation == true)
         // when
         
         sut.removePendingDeliveryReceipts()
@@ -451,6 +468,9 @@ extension ZMMessageTests_Confirmation {
         }
         
         let conversation = ZMConversation.insertNewObject(in:uiMOC)
+        let sender = ZMUser.insertNewObject(in: uiMOC)
+        sender.remoteIdentifier = UUID.create()
+        conversation.addParticipantAndUpdateConversationState(user: sender, role: nil)
         conversation.remoteIdentifier = .create()
         let lastModified = Date(timeIntervalSince1970: 1234567890)
         conversation.lastModifiedDate = lastModified
@@ -467,7 +487,9 @@ extension ZMMessageTests_Confirmation {
         }
         
         // when
-        let updateEvent = createMessageDeliveryConfirmationUpdateEvent(sut.nonce!, conversationID: conversation.remoteIdentifier!)
+        let updateEvent = createMessageDeliveryConfirmationUpdateEvent(
+            sut.nonce!,
+            conversationID: conversation.remoteIdentifier!, senderID: sender.remoteIdentifier!)
         performPretendingUiMocIsSyncMoc {
             ZMOTRMessage.createOrUpdate(from: updateEvent, in: self.uiMOC, prefetchResult: nil)
         }
@@ -491,7 +513,7 @@ extension ZMMessageTests_Confirmation {
     
     func insertMessage(_ conversation: ZMConversation, fromSender: ZMUser? = nil, timestamp: Date = .init(), moc: NSManagedObjectContext? = nil, eventSource: ZMUpdateEventSource = .download) -> ZMMessage {
         let nonce = UUID.create()
-        let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "foo"), nonce: nonce)
+        let genericMessage = GenericMessage(content: Text(content: "foo"), nonce: nonce)
         let messageEvent = createUpdateEvent(
             nonce,
             conversationID: conversation.remoteIdentifier!,
@@ -519,12 +541,12 @@ extension ZMMessageTests_Confirmation {
     }
     
     func createMessageDeliveryConfirmationUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = .create(), timestamp: Date = .init()) -> ZMUpdateEvent {
-        let genericMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: nonce, type: .DELIVERED))
+        let genericMessage = GenericMessage(content: Confirmation(messageId: nonce, type: .delivered))
         return createUpdateEvent(UUID(), conversationID: conversationID, timestamp: timestamp,  genericMessage: genericMessage, senderID: senderID)
     }
     
     func createMessageReadConfirmationUpdateEvent(_ nonces: [UUID], conversationID: UUID, senderID: UUID = .create(), timestamp: Date = .init()) -> ZMUpdateEvent {
-        let genericMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messages: nonces, type: .READ))
+        let genericMessage = GenericMessage(content: Confirmation(messageIds: nonces, type: .read)!)
         return createUpdateEvent(UUID(), conversationID: conversationID, timestamp: timestamp, genericMessage: genericMessage, senderID: senderID)
     }
     

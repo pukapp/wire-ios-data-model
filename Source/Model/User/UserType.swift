@@ -30,9 +30,6 @@ public protocol UserType: NSObjectProtocol {
     
     /// The full name
     var name: String? { get }
-
-    /// The given name / first name e.g. "John" for "John Smith"
-    var displayName: String { get }
     
     /// The "@name" handle
     var handle: String? { get }
@@ -42,6 +39,9 @@ public protocol UserType: NSObjectProtocol {
 
     /// Email for the user
     var emailAddress: String? { get }
+
+    /// The phone number of the user
+    var phoneNumber: String? { get }
 
     /// Whether this is the self user
     var isSelfUser: Bool { get }
@@ -113,15 +113,15 @@ public protocol UserType: NSObjectProtocol {
     
     /// The extended metadata for this user, provided by SCIM.
     var richProfile: [UserRichProfileField] { get }
-    
-    /// Used to trigger rich profile download from backend
-    var needsRichProfileUpdate: Bool { get set }
-    
+        
     /// Conversations the user is a currently a participant of
     var activeConversations: Set<ZMConversation> { get }
     
     /// All clients belonging to the user
     var allClients: [UserClientType] { get }
+    
+    /// Whether the user verified all own devices plus others
+    var isVerified: Bool { get }
     
     func requestPreviewProfileImage()
     func requestCompleteProfileImage()
@@ -133,8 +133,24 @@ public protocol UserType: NSObjectProtocol {
     func imageData(for size: ProfileImageSize, queue: DispatchQueue, completion: @escaping (_ imageData: Data?) -> Void)
     
     /// Request a refresh of the user data from the backend.
-    /// This is useful for non-connected user, that we will otherwise never re-fetch
+    ///
+    /// This is useful for non-connected user (that we will otherwise never re-fetch)
+    /// or discovering if the user is still in team.
     func refreshData()
+
+    /// Request a refresh of the rich profile.
+    func refreshRichProfile()
+
+    /// Request a refresh of the user's membership.
+    ///
+    /// This is useful to discover if user is still in a team since clients are not notified
+    /// of team-wide events.
+    func refreshMembership()
+
+    /// Request a refresh of the team metadata.
+    ///
+    /// This is useful to discover changes such as team name and logo.
+    func refreshTeamData()
     
     /// Sends a connection request to the given user. May be a no-op, eg. if we're already connected.
     /// A ZMUserChangeNotification with the searchUser as object will be sent notifiying about the connection status change
@@ -150,22 +166,23 @@ public protocol UserType: NSObjectProtocol {
     // MARK: - Permissions
     
     /// Whether the user can create conversations.
-    var canCreateConversation: Bool { get }
+    @objc
+    func canCreateConversation(type: ZMConversationType) -> Bool
     
     /// Whether the user can create services
     var canCreateService: Bool { get }
     
-    /// Wheather the user can administate the team
+    /// Whether the user can administate the team
     var canManageTeam: Bool { get }
 
     /// Whether the user can access the private company information of the other given user.
     func canAccessCompanyInformation(of user: UserType) -> Bool
     
-    /// Wheather the user can add services to the conversation
+    /// Whether the user can add services to the conversation
     @objc(canAddServiceToConversation:)
     func canAddService(to conversation: ZMConversation) -> Bool
     
-    /// Wheather the user can remove services from the conversation
+    /// Whether the user can remove services from the conversation
     @objc(canRemoveServiceFromConversation:)
     func canRemoveService(from conversation: ZMConversation) -> Bool
 
@@ -177,9 +194,13 @@ public protocol UserType: NSObjectProtocol {
     @objc(canRemoveUserFromConversation:)
     func canRemoveUser(from conversation: ZMConversation) -> Bool
     
-    /// Wheather the user can delete the conversation
+    /// Whether the user can delete the conversation
     @objc(canDeleteConversation:)
     func canDeleteConversation(_ conversation: ZMConversation) -> Bool
+
+    /// Wheter the user can modify roles of members in the conversation.
+    @objc(canModifyOtherMemberInConversation:)
+    func canModifyOtherMember(in conversation: ZMConversation) -> Bool
     
     /// Whether the user can toggle the read receipts setting in the conversation.
     @objc(canModifyReadReceiptSettingsInConversation:)
@@ -201,4 +222,11 @@ public protocol UserType: NSObjectProtocol {
     @objc(canModifyTitleInConversation:)
     func canModifyTitle(in conversation: ZMConversation) -> Bool
 
+    /// Whether the user can leave the conversation.
+    @objc(canLeave:)
+    func canLeave(_ conversation: ZMConversation) -> Bool
+
+    /// Whether the user is group admin in the conversation.
+    @objc(isGroupAdminInConversation:)
+    func isGroupAdmin(in conversation: ZMConversation) -> Bool
 }

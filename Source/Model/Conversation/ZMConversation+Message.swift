@@ -23,6 +23,12 @@ private let log = ZMSLog(tag: "Conversations")
 @objc 
 extension ZMConversation {
     
+    @discardableResult
+    func append(buttonActionWithId id: String, referenceMessageId: UUID, nonce: UUID = UUID()) -> ZMClientMessage? {
+        let buttonAction = ButtonAction(buttonId: id, referenceMessageId: referenceMessageId)
+        return appendClientMessage(with: GenericMessage(content: buttonAction, nonce: nonce), hidden: true)
+    }
+    
     @discardableResult @objc(appendLocation:nonce:)
     public func append(location: LocationData, nonce: UUID = UUID()) -> ZMConversationMessage? {
         let locationContent = Location.with() {
@@ -34,12 +40,49 @@ extension ZMConversation {
             $0.zoom = location.zoomLevel
         }
 
-        return appendClientMessage(with: GenericMessage.message(content: locationContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
+        return appendClientMessage(with: GenericMessage(content: locationContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
     }
     
     @discardableResult
     public func appendKnock(nonce: UUID = UUID()) -> ZMConversationMessage? {
-        return appendClientMessage(with: ZMGenericMessage.message(content: ZMKnock.knock(), nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
+        return appendClientMessage(with: GenericMessage(content: Knock.with({ $0.hotKnock = false }), nonce: nonce, expiresAfter: messageDestructionTimeoutValue))
+    }
+    
+    @discardableResult @objc(appendSelfConversationWithLastReadOfConversation:)
+    public static func appendSelfConversation(withLastReadOf theConversation: ZMConversation) -> ZMClientMessage? {
+        guard let moc = theConversation.managedObjectContext,
+              let lastReadTimeStamp = theConversation.lastReadServerTimeStamp,
+              let convID = theConversation.remoteIdentifier,
+              convID != ZMConversation.selfConversationIdentifier(in: moc)
+            else { return nil }
+        
+        let nonce: UUID = UUID()
+        let lastRead = LastRead(conversationID: convID, lastReadTimestamp: lastReadTimeStamp)
+        let genericMessage = GenericMessage(content: lastRead, nonce: nonce)
+        let selfConversation = ZMConversation.selfConversation(in: moc)
+        
+        let clientMessage = selfConversation.appendClientMessage(with: genericMessage, expires: false, hidden: false)
+        return clientMessage
+    }
+    
+    /// Create and append to self conversation a ClientMessage that has generic message data built with the given data
+    @nonobjc
+    public static func appendSelfConversation(genericMessage: GenericMessage, managedObjectContext: NSManagedObjectContext) -> ZMClientMessage? {
+        let selfConversation = ZMConversation.selfConversation(in: managedObjectContext)
+        let clientMessage = selfConversation.appendClientMessage(with: genericMessage, expires: false, hidden: false)
+        return clientMessage
+    }
+    
+    @nonobjc
+    public static func appendSelfConversation(withClearedOf conversation: ZMConversation) -> ZMClientMessage? {
+        guard let convID = conversation.remoteIdentifier,
+            let cleared = conversation.clearedTimeStamp,
+            let managedObjectContext = conversation.managedObjectContext,
+            convID != ZMConversation.selfConversationIdentifier(in: managedObjectContext) else {
+                return nil
+        }
+        let message = GenericMessage(content: Cleared(timestamp: cleared, conversationID: convID), nonce: UUID())
+        return appendSelfConversation(genericMessage: message, managedObjectContext: managedObjectContext)
     }
     
     @discardableResult @objc(appendJsonText:unblock:nonce:)
@@ -47,8 +90,8 @@ extension ZMConversation {
                        nonce: UUID = UUID()) -> ZMConversationMessage? {
         
 //        guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
-        let textContent = ZMTextJson.text(with: jsonText)
-        let clientMessage = ZMGenericMessage.message(content: textContent, nonce: nonce)
+        let textContent = TextJson(content: jsonText)
+        let clientMessage = GenericMessage(content: textContent)
         let message = appendClientMessage(with: clientMessage)!
         message.unblock = unblock
         return message
@@ -72,23 +115,28 @@ extension ZMConversation {
         
         guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
         
-        let textContent = ZMText.text(with: text, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
-        let genericMessage = ZMGenericMessage.message(content: textContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
+        let text = Text(content: text, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
+        let genericMessage = GenericMessage(content: text, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: managedObjectContext!)
-        clientMessage.add(genericMessage.data())
-        clientMessage.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done
-        clientMessage.needsLinkAttachmentsUpdate = fetchLinkPreview
-        clientMessage.quote = quotedMessage as? ZMMessage
         
-        appendMessage(clientMessage, expires: true, hidden: false)
-        
-        if let managedObjectContext = managedObjectContext {
-            NotificationInContext(name: ZMConversation.clearTypingNotificationName,
-                                  context: managedObjectContext.notificationContext,
-                                  object: self).post()
+        do {
+            clientMessage.add(try genericMessage.serializedData())
+            clientMessage.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done
+            clientMessage.needsLinkAttachmentsUpdate = fetchLinkPreview
+            clientMessage.quote = quotedMessage as? ZMMessage
+            
+            append(clientMessage, expires: true, hidden: false)
+            
+            if let managedObjectContext = managedObjectContext {
+                NotificationInContext(name: ZMConversation.clearTypingNotificationName,
+                                      context: managedObjectContext.notificationContext,
+                                      object: self).post()
+            }
+            
+            return clientMessage
+        } catch {
+            return nil
         }
-        
-        return clientMessage
     }
     
     @discardableResult @objc(appendImageAtURL:nonce:)
@@ -96,7 +144,7 @@ extension ZMConversation {
         guard URL.isFileURL,
               ZMImagePreprocessor.sizeOfPrerotatedImage(at: URL) != .zero,
               let imageData = try? Data.init(contentsOf: URL, options: []) else { return nil }
-        
+
         return append(imageFromData: imageData)
     }
     
@@ -116,22 +164,33 @@ extension ZMConversation {
         guard let data = try? Data.init(contentsOf: fileMetadata.fileURL, options: .mappedIfSafe),
               let managedObjectContext = managedObjectContext else { return nil }
         
-        guard let message = ZMAssetClientMessage(with: fileMetadata,
+        return append(asset: fileMetadata.asset, nonce: nonce, expires: false) { (message) in
+            managedObjectContext.zm_fileAssetCache.storeAssetData(message, encrypted: false, data: data)
+            
+            if let thumbnailData = fileMetadata.thumbnail {
+                managedObjectContext.zm_fileAssetCache.storeAssetData(message, format: .original, encrypted: false, data: thumbnailData)
+            }
+        }
+    }
+    
+    @nonobjc
+    private func append(asset: WireProtos.Asset, nonce: UUID, expires: Bool, prepareMessage: (ZMAssetClientMessage) -> Void) -> ZMAssetClientMessage? {
+        guard let managedObjectContext = managedObjectContext,
+              let message = ZMAssetClientMessage(asset: asset,
                                                  nonce: nonce,
                                                  managedObjectContext: managedObjectContext,
-                                                 expiresAfter: messageDestructionTimeoutValue) else { return  nil}
+                                                 expiresAfter: messageDestructionTimeoutValue)
+        else { return nil }
         
         message.sender = ZMUser.selfUser(in: managedObjectContext)
         
-        appendMessage(message)
-        unarchiveIfNeeded()
-        
-        managedObjectContext.zm_fileAssetCache.storeAssetData(message, encrypted: false, data: data)
-        
-        if let thumbnailData = fileMetadata.thumbnail {
-            managedObjectContext.zm_fileAssetCache.storeAssetData(message, format: .original, encrypted: false, data: thumbnailData)
+        if expires {
+            message.setExpirationDate()
         }
         
+        appendMessage(message)
+        unarchiveIfNeeded()
+        prepareMessage(message)
         message.updateCategoryCache()
         message.prepareToSend()
         
@@ -172,8 +231,9 @@ extension ZMConversation {
     
     // MARK: - Helper methods
     
-    func append(message: MessageContentType, nonce: UUID = UUID(), hidden: Bool = false, expires: Bool = false) -> ZMClientMessage? {
-        return appendClientMessage(with: ZMGenericMessage.message(content: message, nonce: nonce), expires: expires, hidden: hidden)
+    @nonobjc
+    func append(message: MessageCapable, nonce: UUID = UUID(), hidden: Bool = false, expires: Bool = false) -> ZMClientMessage? {
+        return appendClientMessage(with: GenericMessage(content: message, nonce: nonce), expires: expires, hidden: hidden)
     }
     
 }

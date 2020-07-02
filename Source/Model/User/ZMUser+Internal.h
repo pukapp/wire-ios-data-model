@@ -134,13 +134,3 @@ extern NSString * __nonnull const ReadReceiptsEnabledKey;
 @end
 
 
-
-
-@class ZMUserId;
-
-@interface ZMUser (Protobuf)
-
-- (nonnull ZMUserId *)userId;
-
-@end
-

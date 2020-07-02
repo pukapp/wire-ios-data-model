@@ -121,16 +121,19 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     public var summary: String?
     public var assetKeys: SearchUserAssetKeys?
     public var remoteIdentifier: UUID?
+    public var teamIdentifier: UUID?
     @objc public var contact: ZMAddressBookContact?
     @objc public var user: ZMUser?
     public private(set) var hasDownloadedFullUserProfile: Bool = false
     
     fileprivate weak var contextProvider: ZMManagedObjectContextProvider?
     fileprivate var internalName: String
-    fileprivate var internalDisplayName: String?
     fileprivate var internalInitials: String?
     fileprivate var internalHandle: String?
     fileprivate var internalIsConnected: Bool = false
+    fileprivate var internalIsTeamMember: Bool = false
+    fileprivate var internalTeamCreatedBy: UUID?
+    fileprivate var internalTeamPermissions: Permissions?
     fileprivate var internalAccentColorValue: ZMAccentColor
     fileprivate var internalPendingApprovalByOtherUser: Bool = false
     fileprivate var internalConnectionRequestMessage: String?
@@ -141,22 +144,27 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         return user?.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: user?.remoteIdentifier.transportString()) ?? user?.name ?? ""
     }
 
+    public var teamCreatedBy: UUID? {
+        get {
+            return user?.membership?.createdBy?.remoteIdentifier ?? internalTeamCreatedBy
+        }
+    }
 
     public var emailAddress: String? {
         get {
             return user?.emailAddress
         }
     }
-    
+
+    public var phoneNumber: String? {
+        get {
+            return user?.phoneNumber
+        }
+    }
+
     public var name: String? {
         get {
             return user != nil ? user?.name : internalName
-        }
-    }
-    
-    public var displayName: String {
-        get {
-            return user != nil ? user!.displayName : internalDisplayName ?? ""
         }
     }
     
@@ -188,13 +196,17 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     }
     
     public var isTeamMember: Bool {
-        guard let user = user else { return false }
-        
-        return user.isTeamMember
+        if let user = user {
+            return user.isTeamMember
+        } else {
+            return internalIsTeamMember
+        }
     }
     
     public var teamRole: TeamRole {
-        guard let user = user else { return .none }
+        guard let user = user else {
+            return (internalTeamPermissions?.rawValue).flatMap(TeamRole.init(rawPermissions:)) ?? .none
+        }
         
         return user.teamRole
     }
@@ -217,6 +229,10 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     
     public var allClients: [UserClientType] {
         return user?.allClients ?? []
+    }
+    
+    public var isVerified: Bool {
+        return user?.isVerified ?? false
     }
     
     public var managedByWire: Bool {
@@ -245,7 +261,11 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     }
 
     public var oneToOneConversation: ZMConversation? {
-        return user?.oneToOneConversation
+        if isTeamMember, let uiContext = contextProvider?.managedObjectContext {
+            return materialize(in: uiContext)?.oneToOneConversation
+        } else {
+            return user?.oneToOneConversation
+        }
     }
 
     public var isBlocked: Bool {
@@ -313,16 +333,7 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
             return internalCompleteImageData
         }
     }
-    
-    public var needsRichProfileUpdate: Bool {
-        get {
-            return user?.needsRichProfileUpdate ?? false
-        }
-        set {
-            user?.needsRichProfileUpdate = newValue
-        }
-    }
-    
+
     public var richProfile: [UserRichProfileField] {
         return user?.richProfile ?? []
     }
@@ -331,8 +342,8 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         return user?.canAccessCompanyInformation(of: otherUser) ?? false
     }
 
-    public var canCreateConversation: Bool {
-        return user?.canCreateConversation ?? false
+    public func canCreateConversation(type: ZMConversationType) -> Bool {
+        return user?.canCreateConversation(type: type) ?? false
     }
     
     public var canCreateService: Bool {
@@ -366,6 +377,10 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     public func canModifyTitle(in conversation: ZMConversation) -> Bool {
         return user?.canModifyTitle(in: conversation) == true
     }
+
+    public func canModifyOtherMember(in conversation: ZMConversation) -> Bool {
+        return user?.canModifyOtherMember(in: conversation) == true
+    }
     
     public func canModifyEphemeralSettings(in conversation: ZMConversation) -> Bool {
         return user?.canModifyEphemeralSettings(in: conversation) == true
@@ -381,6 +396,14 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     
     public func canModifyAccessControlSettings(in conversation: ZMConversation) -> Bool {
         return user?.canModifyAccessControlSettings(in: conversation) == true
+    }
+
+    public func canLeave(_ conversation: ZMConversation) -> Bool {
+        return user?.canLeave(conversation) == true
+    }
+
+    public func isGroupAdmin(in conversation: ZMConversation) -> Bool {
+        return user?.isGroupAdmin(in: conversation) == true
     }
     
     public override func isEqual(_ object: Any?) -> Bool {
@@ -406,11 +429,13 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     }
     
     public static func searchUser(from payload: [String : Any], contextProvider: ZMManagedObjectContextProvider) -> ZMSearchUser? {
-        guard let uuidString = payload["id"] as? String, let remoteIdentifier = UUID(uuidString: uuidString) else { return nil }
+        guard let uuidString = payload["id"] as? String,
+            let remoteIdentifier = UUID(uuidString: uuidString),
+            let managedObjectContext = contextProvider.managedObjectContext else { return nil }
+                
+        let localUser = ZMUser(remoteID: remoteIdentifier, createIfNeeded: false, in: managedObjectContext)
         
-        let localUser = ZMUser(remoteID: remoteIdentifier, createIfNeeded: false, in: contextProvider.managedObjectContext)
-        
-        if let searchUser = contextProvider.managedObjectContext.zm_searchUserCache?.object(forKey: remoteIdentifier as NSUUID) {
+        if let searchUser = managedObjectContext.zm_searchUserCache?.object(forKey: remoteIdentifier as NSUUID) {
             searchUser.user = localUser
             return searchUser
         } else {
@@ -419,47 +444,68 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     }
     
     @objc
-    public init(contextProvider: ZMManagedObjectContextProvider, name: String, handle: String?, accentColor: ZMAccentColor, remoteIdentifier: UUID?, user existingUser: ZMUser? = nil, contact: ZMAddressBookContact? = nil) {
+    public init(contextProvider: ZMManagedObjectContextProvider,
+                name: String,
+                handle: String?,
+                accentColor: ZMAccentColor,
+                remoteIdentifier: UUID?,
+                teamIdentifier: UUID? = nil,
+                user existingUser: ZMUser? = nil,
+                contact: ZMAddressBookContact? = nil) {
                 
         let personName = PersonName.person(withName: name, schemeTagger: nil)
         
         self.internalName = name
         self.internalHandle = handle
         self.internalInitials = personName.initials
-        self.internalDisplayName = personName.givenName
         self.internalAccentColorValue = accentColor
         self.user = existingUser
         self.remoteIdentifier = existingUser?.remoteIdentifier ?? remoteIdentifier
+        self.teamIdentifier = existingUser?.teamIdentifier ?? teamIdentifier
         self.contact = contact
         self.contextProvider = contextProvider
-        self.internalIsConnected = false
         
+        let selfUser = ZMUser.selfUser(inUserSession: contextProvider)
+        self.internalIsTeamMember = teamIdentifier != nil && selfUser.teamIdentifier == teamIdentifier
+        self.internalIsConnected = internalIsTeamMember
+
         super.init()
         
         if let remoteIdentifier = self.remoteIdentifier {
-            contextProvider.managedObjectContext.zm_searchUserCache?.setObject(self, forKey: remoteIdentifier as NSUUID)
+            contextProvider.managedObjectContext?.zm_searchUserCache?.setObject(self, forKey: remoteIdentifier as NSUUID)
         }
     }
     
     @objc
     public convenience init(contextProvider: ZMManagedObjectContextProvider, user: ZMUser) {
-        self.init(contextProvider: contextProvider, name: user.name ?? "", handle: user.handle, accentColor: user.accentColorValue, remoteIdentifier: user.remoteIdentifier, user: user)
+        self.init(contextProvider: contextProvider, name: user.name ?? "", handle: user.handle, accentColor: user.accentColorValue, remoteIdentifier: user.remoteIdentifier, teamIdentifier: user.teamIdentifier, user: user)
     }
     
     @objc
     public convenience init(contextProvider: ZMManagedObjectContextProvider, contact: ZMAddressBookContact, user: ZMUser? = nil) {
-        self.init(contextProvider: contextProvider, name: contact.name, handle: user?.handle, accentColor: .undefined, remoteIdentifier: user?.remoteIdentifier, user: user, contact: contact)
+        self.init(contextProvider: contextProvider, name: contact.name, handle: user?.handle, accentColor: .undefined, remoteIdentifier: user?.remoteIdentifier, teamIdentifier: user?.teamIdentifier, user: user, contact: contact)
     }
     
     convenience init?(from payload: [String : Any], contextProvider: ZMManagedObjectContextProvider, user: ZMUser? = nil) {
         
-        guard let uuidString = payload["id"] as? String, let remoteIdentifier = UUID(uuidString: uuidString),
-              let name = payload["name"] as? String else { return nil }
+        guard
+            let uuidString = payload["id"] as? String,
+            let remoteIdentifier = UUID(uuidString: uuidString),
+            let name = payload["name"] as? String else {
+                return nil
+        }
         
+        let teamIdentifier = (payload["team"] as? String).flatMap({ UUID(uuidString: $0) })
         let handle = payload["handle"] as? String
         let accentColor = ZMUser.accentColor(fromPayloadValue: payload["accent_id"] as? NSNumber)
         
-        self.init(contextProvider: contextProvider, name: name, handle: handle, accentColor: accentColor, remoteIdentifier: remoteIdentifier, user: user)
+        self.init(contextProvider: contextProvider,
+                  name: name,
+                  handle: handle,
+                  accentColor: accentColor,
+                  remoteIdentifier: remoteIdentifier,
+                  teamIdentifier: teamIdentifier,
+                  user: user)
         
         self.providerIdentifier =  payload["provider"] as? String
         self.summary = payload["summary"] as? String
@@ -489,6 +535,18 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     public func refreshData() {
         user?.refreshData()
     }
+
+    public func refreshRichProfile() {
+        user?.refreshRichProfile()
+    }
+
+    public func refreshMembership() {
+        user?.refreshMembership()
+    }
+
+    public func refreshTeamData() {
+        user?.refreshTeamData()
+    }
     
     public func connect(message: String) {
         
@@ -502,14 +560,15 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
         if let user = user {
             user.connect(message: message)
         } else {
-            guard let remoteIdentifier = self.remoteIdentifier else { return }
+            guard let remoteIdentifier = remoteIdentifier,
+                  let syncManagedObjectContext = contextProvider?.syncManagedObjectContext,
+                  let managedObjectContext = contextProvider?.managedObjectContext else { return }
             
             let name = self.name
             let accentColorValue = self.accentColorValue
             
-            contextProvider?.syncManagedObjectContext.performGroupedBlock {
-                guard let context = self.contextProvider?.syncManagedObjectContext,
-                      let user = ZMUser(remoteID: remoteIdentifier, createIfNeeded: true, in: context) else { return }
+            syncManagedObjectContext.performGroupedBlock {
+                guard let user = ZMUser(remoteID: remoteIdentifier, createIfNeeded: true, in: syncManagedObjectContext) else { return }
                 
                 user.name = name
                 user.accentColorValue = accentColorValue
@@ -517,12 +576,13 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
                 
                 let connection = ZMConnection.insertNewSentConnection(to: user)
                 connection?.message = message
-                context.saveOrRollback()
+                syncManagedObjectContext.saveOrRollback()
                 
                 let objectId = user.objectID
-                self.contextProvider?.managedObjectContext.performGroupedBlock {
-                    self.user = self.contextProvider?.managedObjectContext.object(with: objectId) as? ZMUser
-                    self.contextProvider?.managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
+                
+                managedObjectContext.performGroupedBlock {
+                    self.user = managedObjectContext.object(with: objectId) as? ZMUser
+                    managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
                 }
             }
         }
@@ -586,7 +646,7 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
             internalCompleteImageData = imageData
         }
         
-        contextProvider?.managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
+        contextProvider?.managedObjectContext?.searchUserObserverCenter.notifyUpdatedSearchUser(self)
     }
     
     public func update(from payload: [String : Any]) {
@@ -597,6 +657,11 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     
     public func reportImageDataHasBeenDeleted() {
         self.assetKeys = nil
+    }
+    
+    public func updateWithTeamMembership(permissions: Permissions?, createdBy: UUID?) {
+        self.internalTeamPermissions = permissions
+        self.internalTeamCreatedBy = createdBy
     }
     
 }

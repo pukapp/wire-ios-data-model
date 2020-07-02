@@ -339,6 +339,131 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertFalse(user.hasTeam);
 }
 
+- (void)testThatItCreatesMembershipIfUserBelongsToSelfUserTeamOnAnExistingUser
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSUUID *teamId = NSUUID.createUUID;
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    team.remoteIdentifier = teamId;
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"team"] = teamId.transportString;
+    
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [user updateWithTransportData:payload authoritative:NO];
+    }];
+    
+    // then
+    XCTAssertNotNil(user.membership);
+    XCTAssertEqualObjects(user.membership.team, team);
+}
+
+- (void)testThatItDoesNotCreateMembershipIfUserIsDeleted
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSUUID *teamId = NSUUID.createUUID;
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    team.remoteIdentifier = teamId;
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"team"] = teamId.transportString;
+    payload[@"deleted"] = @YES;
+    
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [user updateWithTransportData:payload authoritative:NO];
+    }];
+    
+    // then
+    XCTAssertNil(user.membership);
+}
+
+- (void)testThatItDoesNotUpdateNameIfUserIsDeleted
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSUUID *teamId = NSUUID.createUUID;
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    team.remoteIdentifier = teamId;
+    user.remoteIdentifier = uuid;
+    user.name = @"bob";
+
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"team"] = teamId.transportString;
+    payload[@"deleted"] = @YES;
+    payload[@"name"] = @"default";
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [user updateWithTransportData:payload authoritative:NO];
+    }];
+
+    // then
+    XCTAssertEqual(user.name, @"bob");
+}
+
+- (void)testThatItDoesNotCreateMembershipIfUserBelongsExternalTeamOnAnExistingUser
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSUUID *teamId = NSUUID.createUUID;
+    NSUUID *externalTeamId = NSUUID.createUUID;
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    team.remoteIdentifier = teamId;
+    user.remoteIdentifier = uuid;
+    
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"team"] = externalTeamId.transportString;
+    
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [user updateWithTransportData:payload authoritative:NO];
+    }];
+    
+    // then
+    XCTAssertNil(user.membership);
+}
+
+- (void)testThatItDeletesMembershipIfUserBelongsToSelfUserTeamOnAnExistingUserWhoIsMarkedAsDeleted
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSUUID *teamId = NSUUID.createUUID;
+    Team *team = [Team insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    team.remoteIdentifier = teamId;
+    user.remoteIdentifier = uuid;
+
+    Member *membership = [Member insertNewObjectInManagedObjectContext:self.uiMOC];
+    membership.user = user;
+    membership.team = team;
+
+    XCTAssertNotNil(user.membership);
+    XCTAssertEqualObjects(user.membership.team, team);
+
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"team"] = teamId.transportString;
+    payload[@"deleted"] = [NSNumber numberWithBool:YES];
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [user updateWithTransportData:payload authoritative:NO];
+    }];
+
+    // then
+    XCTAssertTrue(user.isAccountDeleted);
+    XCTAssertTrue(user.membership.isDeleted);
+}
+
 - (void)testThatItUpdatesBasicDataOnAnExistingUser
 {
     // given
@@ -2306,14 +2431,6 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
 
 @implementation ZMUserTests (DisplayName)
 
-- (void)testThatItReturnsCorrectUserName
-{
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.name = @"User Name";
-    
-    XCTAssertEqualObjects(user.displayName, @"User");
-}
-
 - (void)testThatItReturnsCorrectUserNameForService
 {
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
@@ -2322,7 +2439,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     user.serviceIdentifier = [[NSUUID UUID] transportString];
     
     XCTAssertTrue(user.isServiceUser);
-    XCTAssertEqualObjects(user.displayName, @"User Name");
+    XCTAssertEqualObjects(user.name, @"User Name");
 }
 
 - (void)testThatItReturnsCorrectInitials
@@ -2353,32 +2470,13 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
 
 @implementation ZMUserTests (Trust)
 
-- (ZMUser *)userWithClients:(int)count trusted:(BOOL)trusted
-{
-    [self createSelfClient];
-    [self.uiMOC refreshAllObjects];
-    
-    UserClient *selfClient = [ZMUser selfUserInContext:self.uiMOC].selfClient;
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    for (int i = 0; i < count; i++) {
-        UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
-        client.user = user;
-        if (trusted) {
-            [selfClient trustClient:client];
-        } else {
-            [selfClient ignoreClient:client];
-        }
-    }
-    return user;
-}
-
 - (void)testThatItReturns_Trusted_NO_WhenThereAreNoClients
 {
     // given
     ZMUser *user = [self userWithClients:0 trusted:NO];
     
     // when
-    BOOL isTrusted = user.trusted;
+    BOOL isTrusted = user.isTrusted;
     
     //then
     XCTAssertFalse(isTrusted);
@@ -2391,7 +2489,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     ZMUser *user = [self userWithClients:1 trusted:YES];
     
     // when
-    BOOL isTrusted = user.trusted;
+    BOOL isTrusted = user.isTrusted;
     
     //then
     XCTAssertTrue(isTrusted);
@@ -2403,7 +2501,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     ZMUser *user = [self userWithClients:1 trusted:NO];
     
     // when
-    BOOL isTrusted = user.trusted;
+    BOOL isTrusted = user.isTrusted;
     
     //then
     XCTAssertFalse(isTrusted);
@@ -2416,7 +2514,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     ZMUser *user = [self userWithClients:0 trusted:YES];
     
     // when
-    BOOL isTrusted = user.untrusted;
+    BOOL isTrusted = !user.isTrusted;
     
     //then
     XCTAssertFalse(isTrusted);
@@ -2429,7 +2527,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     ZMUser *user = [self userWithClients:1 trusted:NO];
     
     // when
-    BOOL untrusted = user.untrusted;
+    BOOL untrusted = !user.isTrusted;
     
     //then
     XCTAssertTrue(untrusted);
@@ -2441,7 +2539,7 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     ZMUser *user = [self userWithClients:1 trusted:YES];
     
     // when
-    BOOL untrusted = user.untrusted;
+    BOOL untrusted = !user.isTrusted;
     
     //then
     XCTAssertFalse(untrusted);

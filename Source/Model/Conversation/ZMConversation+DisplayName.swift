@@ -30,7 +30,10 @@ public extension ZMConversation {
     /// This is equal to the meaningful display name, if it exists, otherwise a
     /// fallback placeholder name is used.
     ///
-    @objc public var displayName: String {
+
+    @objc
+    public var displayName: String {
+        let result = meaningfulDisplayName
         switch conversationType {
         case .oneOnOne, .connection: return meaningfulDisplayName ?? ZMConversation.emptyConversationEllipsis
         case .group, .hugeGroup: return meaningfulDisplayName ?? ZMConversation.emptyGroupConversationName
@@ -64,27 +67,33 @@ public extension ZMConversation {
         return name
     }
 
+    private var selfUser: ZMUser? {
+        return managedObjectContext.map(ZMUser.selfUser)
+    }
+    
+    
+    /// Get the group name from the participants
+    ///
+    /// - Returns: a group name with creator at the first and other users sorted by name
     private func groupDisplayName() -> String? {
         precondition([.group, .hugeGroup].contains(conversationType))
 
         if let userDefined = userDefinedName, !userDefined.isEmpty {
             return userDefined
         }
-
-        let selfUser = managedObjectContext.map(ZMUser.selfUser)
-
-        let activeNames: [String] = lastServerSyncedActiveParticipants.compactMap { (user) -> String? in
-            guard let user = user as? ZMUser, user != selfUser && !user.displayName.isEmpty else { return nil }
-            return user.displayName
+        
+        let activeNames: [String] = localParticipants.compactMap { (user) -> String? in
+            guard user != selfUser else { return nil }
+            return user.name
         }
         
-        return activeNames.isEmpty ? nil : activeNames.joined(separator: ", ")
+        return activeNames.isEmpty ? nil : activeNames.sorted().joined(separator: ", ")
     }
 
     private func oneOnOneDisplayName() -> String? {
         precondition(conversationType == .oneOnOne)
 
-        let other = lastServerSyncedActiveParticipants.firstObject as? ZMUser ?? connectedUser
+        let other = localParticipantsExcludingSelf.first ?? connectedUser
         if let name = other?.newName(), !name.isEmpty {
             return name
         } else {

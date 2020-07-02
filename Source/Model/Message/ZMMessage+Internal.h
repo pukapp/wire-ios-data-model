@@ -90,7 +90,6 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 // Use these for sorting:
 + (NSArray<NSSortDescriptor *> * _Nonnull)defaultSortDescriptors;
 - (NSComparisonResult)compare:(ZMMessage * _Nonnull)other;
-- (NSUUID * _Nullable)nonceFromPostPayload:(NSDictionary * _Nonnull)payload;
 - (void)updateWithPostPayload:(NSDictionary * _Nonnull)payload updatedKeys:(__unused NSSet * _Nullable)updatedKeys;
 - (void)resend;
 - (BOOL)shouldGenerateUnreadCount;
@@ -106,32 +105,7 @@ typedef NS_ENUM(int16_t, ZMBiBiCashType) {
 /// @param clearingSender Whether information about the sender should be removed or not
 - (void)removeMessageClearingSender:(BOOL)clearingSender;
 
-/// Removes the message only for clients of the selfUser
-+ (void)removeMessageWithRemotelyHiddenMessage:(ZMMessageHide * _Nonnull)hiddenMessage
-                        inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
-
-/// Removes the message for all participants of the message's conversation
-/// Clients that don't belong to the selfUser will see a system message indicating the deletion
-+ (void)removeMessageWithRemotelyDeletedMessage:(ZMMessageDelete * _Nonnull)deletedMessage
-                                 inConversation:(ZMConversation * _Nonnull)conversation
-                                       senderID:(NSUUID * _Nonnull)senderID
-                         inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
-
-
-+ (void)addReaction:(ZMReaction * _Nonnull)reaction
-           senderID:(NSUUID * _Nonnull)senderID
-       conversation:(ZMConversation * _Nonnull)conversation
-inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
-+ (void)addReaction:(ZMReaction * _Nonnull)reaction
-           sender:(ZMUser * _Nonnull)sender
-       conversation:(ZMConversation * _Nonnull)conversation
-inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
-
-
-+ (void)addOperation:(ZMForbid * _Nonnull)operation
-             sender:(ZMUser * _Nonnull)sender
-       conversation:(ZMConversation * _Nonnull)conversation
-inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
++ (void)stopDeletionTimerForMessage:(ZMMessage * _Nonnull)message;
 
 @end
 
@@ -314,19 +288,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @property (nonatomic, copy) NSString * _Nullable text;
 
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
-                               decodedGenericMessage:(ZMGenericMessage * _Nonnull)genericMessage
-                              inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
-
 @end
 
 @interface ZMJsonTextMessage (Internal)
 
 @property (nonatomic, copy) NSString * _Nullable text;
 
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
-                                         decodedGenericMessage:(ZMGenericMessage * _Nonnull)genericMessage
-                                        inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @end
 

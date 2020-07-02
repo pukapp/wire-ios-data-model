@@ -39,7 +39,8 @@ public let ZMUserClientRemoteIdentifierKey = "remoteIdentifier"
 
 private let zmLog = ZMSLog(tag: "UserClient")
 
-@objcMembers public class UserClient: ZMManagedObject, UserClientType {
+@objcMembers
+public class UserClient: ZMManagedObject, UserClientType {
     public var activationLatitude: Double {
         get {
             return activationLocationLatitude?.doubleValue ?? 0.0
@@ -167,10 +168,23 @@ private let zmLog = ZMSLog(tag: "UserClient")
         return ZMUserClientLabelKey
     }
     
-    public override static func predicateForObjectsThatNeedToBeInsertedUpstream() -> NSPredicate {
+    public override static func predicateForObjectsThatNeedToBeInsertedUpstream() -> NSPredicate? {
         return NSPredicate(format: "%K == NULL", ZMUserClientRemoteIdentifierKey)
     }
-    
+
+    public override static func predicateForObjectsThatNeedToBeUpdatedUpstream() -> NSPredicate? {
+        let baseModifiedPredicate = super.predicateForObjectsThatNeedToBeUpdatedUpstream()
+        let remoteIdentifierPresentPredicate = NSPredicate(format: "\(ZMUserClientRemoteIdentifierKey) != nil")
+        let notDeletedPredicate = NSPredicate(format: "\(ZMUserClientMarkedToDeleteKey) == NO")
+
+        let modifiedPredicate = NSCompoundPredicate(andPredicateWithSubpredicates:[
+            baseModifiedPredicate!,
+            notDeletedPredicate,
+            remoteIdentifierPresentPredicate
+            ])
+        return modifiedPredicate
+    }
+
     /// Insert a new client of the local self user.
     
     @discardableResult
@@ -180,7 +194,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
         userClient.user = selfUser
         userClient.model = model
         userClient.label = label
-        userClient.deviceClass = model.hasSuffix("iPad") ? .tablet : .phone
+        userClient.deviceClass = model.hasPrefix("iPad") ? .tablet : .phone
         
         return userClient
     }
@@ -247,13 +261,20 @@ private let zmLog = ZMSLog(tag: "UserClient")
         // reset the relationship
         self.user = nil
 
-        // increase securityLevel of affected conversations
         if let previousUser = user {
+            // increase securityLevel of affected conversations
             if isLegalHoldDevice && previousUser.isSelfUser {
                 previousUser.needsToAcknowledgeLegalHoldStatus = true
             }
 
             conversations.forEach{ $0.increaseSecurityLevelIfNeededAfterRemoving(clients: [previousUser: [self]]) }
+
+            // if they have no clients left, it's possible they left the team
+            let userMayHaveLeftTeam = previousUser.isTeamMember && previousUser.clients.isEmpty
+
+            if userMayHaveLeftTeam {
+                previousUser.needsToBeUpdatedFromBackend = true
+            }
         }
 
         // delete the object
@@ -304,7 +325,8 @@ private let zmLog = ZMSLog(tag: "UserClient")
                 guard
                     let user = (try? uiMOC.existingObject(with: userID)) as? ZMUser,
                     let conversation = self.conversation(for: user) else { return }
-                GenericMessageScheduleNotification.post(message: ZMGenericMessage.clientAction(ZMClientAction.RESETSESSION), conversation: conversation)
+                
+                GenericMessageScheduleNotification.post(message: GenericMessage(clientAction: .resetSession), conversation: conversation)
             }
         }
     }
@@ -676,7 +698,8 @@ extension UserClient {
         let conversations : Set<ZMConversation> = clients.map(\.user).reduce(into: []) {
             guard let user = $1 else { return }
             guard user.isSelfUser else {
-                return $0.formUnion(user.lastServerSyncedActiveConversations.array as! [ZMConversation])
+                return $0.formUnion(user.participantRoles
+                    .compactMap { $0.conversation})
             }
             let fetchRequest = NSFetchRequest<ZMConversation>(entityName: ZMConversation.entityName())
             fetchRequest.predicate = ZMConversation.predicateForConversationsIncludingArchived()
@@ -692,7 +715,7 @@ extension UserClient {
             if !conversation.isReadOnly {
                 let clientsInConversation = clients.filter() { client in
                     guard let user = client.user else { return false }
-                    return conversation.activeParticipants.contains(user)
+                    return conversation.localParticipants.contains(user)
                 }
                 securityChangeType.changeSecurityLevel(conversation, clients: Set(clientsInConversation), causedBy: causedBy)
             }

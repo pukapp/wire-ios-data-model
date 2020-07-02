@@ -54,13 +54,6 @@ static NSString * const LastUpdateDateInGMTKey = @"lastUpdateDateInGMT";
     return LastUpdateDateInGMTKey;
 }
 
-+ (NSArray *)connectionsInMangedObjectContext:(NSManagedObjectContext *)moc;
-{
-    NSFetchRequest *request = [self sortedFetchRequest];
-    NSArray *result = [moc executeFetchRequestOrAssert:request];
-    return result;
-}
-
 + (instancetype)insertNewSentConnectionToUser:(ZMUser *)user existingConversation:(ZMConversation *)conversation
 {
     VerifyReturnValue(user.connection == nil, user.connection);
@@ -71,11 +64,14 @@ static NSString * const LastUpdateDateInGMTKey = @"lastUpdateDateInGMT";
     connection.status = ZMConnectionStatusSent;
     if (conversation == nil) {
         connection.conversation = [ZMConversation insertNewObjectInManagedObjectContext:user.managedObjectContext];
-        [connection.conversation.mutableLastServerSyncedActiveParticipants addObject:user];
+       
+        [connection addWithUser:user];
+        
         connection.conversation.creator = [ZMUser selfUserInContext:user.managedObjectContext];
     }
     else {
         connection.conversation = conversation;
+        ///TODO: add user if not exists in participantRoles??
     }
     connection.conversation.conversationType = ZMConversationTypeConnection;
     connection.conversation.lastModifiedDate = connection.lastUpdateDate;
@@ -308,6 +304,9 @@ struct stringAndStatus {
     if(toUUID == nil) {
         ZMLogError(@"Invalid 'to'-UUID in connection: %@", transportData);
         return nil;
+    } else if ([toUUID isEqual:[ZMUser selfUserInContext:moc].remoteIdentifier]) {
+        ZMLogError(@"Invalid 'to'-UUID in connection referencing self user: %@", transportData);
+        return nil;
     }
     
     NSDate *lastUpdateDate = [transportData dateFor:@"last_update"];
@@ -337,6 +336,9 @@ struct stringAndStatus {
         if (connection.to.isInserted || status == ZMConnectionStatusPending) {
             connection.to.needsToBeUpdatedFromBackend = YES;
         }
+        
+        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:YES inContext:moc];
+        [conversation addParticipantAndUpdateConversationStateWithUser:connection.to role:nil];
     }
 
     ZMConnectionStatus const oldStatus = connection.status;

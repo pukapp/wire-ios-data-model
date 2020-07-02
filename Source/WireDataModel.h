@@ -38,7 +38,6 @@
 #import <WireDataModel/ZMConversation.h>
 #import <WireDataModel/ZMConversation+Internal.h>
 #import <WireDataModel/ZMConversation+UnreadCount.h>
-#import <WireDataModel/ZMConversation+Transport.h>
 #import <WireDataModel/ZMConversationSecurityLevel.h>
 
 #import <WireDataModel/ZMConnection+Internal.h>
@@ -49,15 +48,9 @@
 #import <WireDataModel/ZMMessage.h>
 #import <WireDataModel/ZMMessage+Internal.h>
 #import <WireDataModel/ZMOTRMessage.h>
-#import <WireDataModel/ZMClientMessage.h>
-#import <WireDataModel/ZMGenericMessage+External.h>
-#import <WireDataModel/ZMGenericMessage+UpdateEvent.h>
-#import <WireDataModel/ZMGenericMessageData.h>
+#import <WireDataModel/ZMExternalEncryptedDataWithKeys.h>
 
 #import <WireDataModel/UserClientTypes.h>
-
-#import <WireDataModel/ZMChangedIndexes.h>
-#import <WireDataModel/ZMOrderedSetState.h>
 
 #import <WireDataModel/ZMUpdateEvent+WireDataModel.h>
 #import <WireDataModel/NSFetchRequest+ZMRelationshipKeyPaths.h>
@@ -66,8 +59,7 @@
 
 #import <WireDataModel/NSString+ZMPersonName.h>
 
-#import <WireDataModel/ZMGenericMessage+Utils.h>
-#import <WireDataModel/ZMGenericMessage+PropertyUtils.h>
+#import <WireDataModel/ZMImageAssetEncryptionKeys.h>
 #import <WireDataModel/ZMMessageTimer.h>
 #import <WireDataModel/NSPredicate+ZMSearch.h>
 #import <WireDataModel/ZMTestSession.h>

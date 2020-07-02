@@ -28,11 +28,9 @@
 #import "ZMUser+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMConversation+Internal.h"
-#import "ZMConversation+Transport.h"
 
 #import "ZMConversation+UnreadCount.h"
 #import "ZMUpdateEvent+WireDataModel.h"
-#import "ZMClientMessage.h"
 
 #import <WireDataModel/WireDataModel-Swift.h>
 
@@ -91,6 +89,7 @@ NSString * const ZMMessageExpectReadConfirmationKey = @"expectsReadConfirmation"
 NSString * const ZMMessageLinkAttachmentsKey = @"linkAttachments";
 NSString * const ZMMessageNeedsLinkAttachmentsUpdateKey = @"needsLinkAttachmentsUpdate";
 NSString * const ZMMessageDiscoveredClientsKey = @"discoveredClients";
+NSString * const ZMMessageButtonStatesKey = @"buttonStates";
 
 NSString * const ZMMessageJsonTextKey = @"jsonText";
 
@@ -411,114 +410,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     }
 }
 
-+ (void)removeMessageWithRemotelyHiddenMessage:(ZMMessageHide *)hiddenMessage inManagedObjectContext:(NSManagedObjectContext *)moc;
-{
-    NSUUID *conversationID = [NSUUID uuidWithTransportString:hiddenMessage.conversationId];
-    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:moc];
-    
-    NSUUID *messageID = [NSUUID uuidWithTransportString:hiddenMessage.messageId];
-    ZMMessage *message = [ZMMessage fetchMessageWithNonce:messageID forConversation:conversation inManagedObjectContext:moc];
-    
-    // To avoid reinserting when receiving an edit we delete the message locally
-    if (message != nil) {
-        [message removeMessageClearingSender:YES];
-        [moc deleteObject:message];
-    }
-}
-
-+ (void)addReaction:(ZMReaction *)reaction senderID:(NSUUID *)senderID conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc;
-{
-//    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
-    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
-    ZMUser *user = [ZMUser userWithRemoteID:senderID createIfNeeded:YES inConversation:conversation inContext:moc];
-    NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
-    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
-                                               forConversation:conversation
-                                        inManagedObjectContext:moc];
-    
-    [localMessage addReaction:reaction.emoji forUser:user];
-    [localMessage updateCategoryCache];
-}
-
-+ (void)addReaction:(ZMReaction *)reaction sender:(ZMUser *)sender conversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc;
-{
-    TransportReaction transportReaction = [Reaction transportReactionFrom:reaction.emoji];
-    
-    //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
-    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
-    NSUUID *nonce = [NSUUID uuidWithTransportString:reaction.messageId];
-    
-    ZMMessage *localMessage;
-    
-    switch (transportReaction) {
-        case TransportReactionHeart:
-        case TransportReactionNone:
-            localMessage = [ZMMessage fetchMessageWithNonce:nonce
-                                            forConversation:conversation
-                                     inManagedObjectContext:moc];
-            break;
-            
-        case TransportReactionAudioPlayed:
-            localMessage = [ZMMessage fetchObjectWithRemoteIdentifier:nonce
-                                               inManagedObjectContext:moc];
-            break;
-    }
-    
-    [localMessage addReaction:reaction.emoji forUser:sender];
-    [localMessage updateCategoryCache];
-}
-
-+ (void)addOperation:(ZMForbid * _Nonnull)operation
-              sender:(ZMUser * _Nonnull)sender
-        conversation:(ZMConversation * _Nonnull)conversation
-inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
-{
-    //    ZMUser *user = [ZMUser fetchObjectWithRemoteIdentifier:senderID inManagedObjectContext:moc];
-    // 修复通过消息sendID获取user为nil导致crash的问题，即在本地数据库中查不到该user
-    NSUUID *nonce = [NSUUID uuidWithTransportString:operation.messageId];
-    ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
-                                               forConversation:conversation
-                                        inManagedObjectContext:moc];
-    [localMessage addOperation:MessageOperationTypeIllegal status:MessageOperationStatusOn byOperator:sender];
-    [localMessage updateCategoryCache];
-}
-
-+ (void)removeMessageWithRemotelyDeletedMessage:(ZMMessageDelete *)deletedMessage inConversation:(ZMConversation *)conversation senderID:(NSUUID *)senderID inManagedObjectContext:(NSManagedObjectContext *)moc;
-{
-    NSUUID *messageID = [NSUUID uuidWithTransportString:deletedMessage.messageId];
-    ZMMessage *message = [ZMMessage fetchMessageWithNonce:messageID forConversation:conversation inManagedObjectContext:moc];
-
-    // We need to cascade delete the pending delivery confirmation messages for the message being deleted
-    // 耗时操作，暂时注释
-//    [message removePendingDeliveryReceipts];
-    if (message.hasBeenDeleted) {
-        ZMLogError(@"Attempt to delete the deleted message: %@, existing: %@", deletedMessage, message);
-        return;
-    }
-    
-    // Only the sender of the original message can delete it
-    if (![senderID isEqual:message.sender.remoteIdentifier] && !message.isEphemeral) {
-        return;
-    }
-
-    ZMUser *selfUser = [ZMUser selfUserInContext:moc];
-
-    // Only clients other than self should see the system message
-    if (nil != message && ![senderID isEqual:selfUser.remoteIdentifier] && !message.isEphemeral) {
-        [conversation appendDeletedForEveryoneSystemMessageAt:message.serverTimestamp sender:message.sender];
-    }
-    // If we receive a delete for an ephemeral message that was not originally sent by the selfUser, we need to stop the deletion timer
-    if (nil != message && message.isEphemeral && ![message.sender.remoteIdentifier isEqual:selfUser.remoteIdentifier]) {
-        [message removeMessageClearingSender:YES];
-        [self stopDeletionTimerForMessage:message];
-    } else {
-        [message removeMessageClearingSender:YES];
-        [message updateCategoryCache];
-    }
-    // 耗时操作，暂时注释（触发重新统计未读消息数量操作）
-//    [conversation updateTimestampsAfterDeletingMessage];
-}
-
 + (void)stopDeletionTimerForMessage:(ZMMessage *)message
 {
     NSManagedObjectContext *uiMOC = message.managedObjectContext;
@@ -534,73 +425,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         }
         [uiMOC.zm_messageDeletionTimer stopTimerForMessage:uiMessage];
     }];
-}
-
-- (void)removePendingDeliveryReceipts
-{
-    // Pending receipt can exist only in new inserted messages since it is deleted locally after it is sent to the backend
-    NSFetchRequest *requestForInsertedMessages = [ZMClientMessage sortedFetchRequestWithPredicate:[ZMClientMessage predicateForObjectsThatNeedToBeInsertedUpstream]];
-    NSArray *possibleMatches = [self.managedObjectContext executeFetchRequestOrAssert:requestForInsertedMessages];
-    
-    NSArray *confirmationReceipts = [possibleMatches filterWithBlock:^BOOL(ZMClientMessage *candidateConfirmationReceipt) {
-        if (candidateConfirmationReceipt.genericMessage.hasConfirmation &&
-            candidateConfirmationReceipt.genericMessage.confirmation.hasFirstMessageId &&
-            [candidateConfirmationReceipt.genericMessage.confirmation.firstMessageId isEqual:self.nonce.transportString]) {
-            return YES;
-        }
-        return NO;
-    }];
-    
-    // TODO: Re-enable
-//    NSAssert(confirmationReceipts.count <= 1, @"More than one confirmation receipt");
-    
-    for (ZMClientMessage *confirmationReceipt in confirmationReceipts) {
-        [self.managedObjectContext deleteObject:confirmationReceipt];
-    }
-}
-
-- (NSUUID *)nonceFromPostPayload:(NSDictionary *)payload
-{
-    ZMUpdateEventType eventType = [ZMUpdateEvent updateEventTypeForEventTypeString:[payload optionalStringForKey:@"type"]];
-    switch (eventType) {
-            
-        case ZMUpdateEventTypeConversationMessageAdd:
-        case ZMUpdateEventTypeConversationKnock:
-            return [[payload dictionaryForKey:@"data"] uuidForKey:@"nonce"];
-
-        case ZMUpdateEventTypeConversationBgpMessageAdd:
-        {
-            NSString *base64Content = [[payload dictionaryForKey:@"data"] stringForKey: @"text"];
-            ZMGenericMessage *message;
-            @try {
-                message = [ZMGenericMessage messageWithBase64String:base64Content];
-            }
-            @catch(NSException *e) {
-                ZMLogError(@"Cannot create message from protobuffer: %@ event payload: %@", e, payload);
-                return nil;
-            }
-            return [NSUUID uuidWithTransportString:message.messageId];
-        }
-
-        case ZMUpdateEventTypeConversationClientMessageAdd:
-        case ZMUpdateEventTypeConversationOtrMessageAdd:
-        {
-            //if event is otr message then payload should be already decrypted and should contain generic message data
-            NSString *base64Content = [payload stringForKey:@"data"];
-            ZMGenericMessage *message;
-            @try {
-                message = [ZMGenericMessage messageWithBase64String:base64Content];
-            }
-            @catch(NSException *e) {
-                ZMLogError(@"Cannot create message from protobuffer: %@ event payload: %@", e, payload);
-                return nil;
-            }
-            return [NSUUID uuidWithTransportString:message.messageId];
-        }
-            
-        default:
-            return nil;
-    }
 }
 
 - (void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(__unused NSSet *)updatedKeys
@@ -826,7 +650,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                              ZMMessageExpectReadConfirmationKey,
                              ZMMessageLinkAttachmentsKey,
                              ZMMessageNeedsLinkAttachmentsUpdateKey,
-                             ZMMessageDiscoveredClientsKey
+                             ZMMessageDiscoveredClientsKey,
+                             ZMMessageButtonStatesKey
                              ];
         ignoredKeys = [keys setByAddingObjectsFromArray:newKeys];
     });

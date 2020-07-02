@@ -27,30 +27,6 @@
 @implementation ZMConversationGapsAndWindowTests
 
 
-- (void)testThatItInsertsANewConversation
-{
-    // given
-    ZMUser *user1 = [self createUser];
-    ZMUser *user2 = [self createUser];
-    ZMUser *user3 = [self createUser];
-    
-    // when
-    ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.uiMOC withParticipants:@[
-                                                                                                                user1, user2, user3
-                                                                                                                ]];
-    
-    // then
-    NSArray *conversations = [ZMConversation conversationsIncludingArchivedInContext:self.uiMOC];
-    
-    XCTAssertEqual(conversations.count, 1u);
-    ZMConversation *fetchedConversation = conversations[0];
-    XCTAssertEqual(fetchedConversation.conversationType, ZMConversationTypeGroup);
-    XCTAssertEqualObjects(conversation.objectID, fetchedConversation.objectID);
-    
-    NSOrderedSet *expectedParticipants = [NSOrderedSet orderedSetWithObjects:user1, user2, user3, nil];
-    XCTAssertEqualObjects(expectedParticipants, conversation.lastServerSyncedActiveParticipants);
-    
-}
 
 - (void)testThatItInsertsANewConversationInUserSession
 {
@@ -60,11 +36,16 @@
     ZMUser *user1 = [self createUser];
     ZMUser *user2 = [self createUser];
     ZMUser *user3 = [self createUser];
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
     
     // when
-    ZMConversation *conversation = [ZMConversation insertGroupConversationIntoUserSession:session
-                                                                         withParticipants:@[user1, user2, user3]
-                                                                                   inTeam:nil];
+    ZMConversation *conversation = [ZMConversation insertGroupConversationWithSession:session
+                                                                         participants:@[user1, user2, user3]
+                                                                                 name:NULL
+                                                                                 team:NULL
+                                                                          allowGuests:YES
+                                                                         readReceipts:NO
+                                                                     participantsRole:nil];
     
     // then
     NSFetchRequest *fetchRequest = [ZMConversation sortedFetchRequest];
@@ -75,42 +56,11 @@
     XCTAssertEqual(fetchedConversation.conversationType, ZMConversationTypeGroup);
     XCTAssertEqualObjects(conversation.objectID, fetchedConversation.objectID);
     
-    NSOrderedSet *expectedParticipants = [NSOrderedSet orderedSetWithObjects:user1, user2, user3, nil];
-    XCTAssertEqualObjects(expectedParticipants, conversation.lastServerSyncedActiveParticipants);
+    NSSet *expectedParticipants = [NSSet setWithObjects:user1, user2, user3, selfUser, nil];
+    XCTAssertEqualObjects(expectedParticipants, conversation.localParticipants);
     
 }
 
-- (void)testThatItInsertsANewConversationInUIContext
-{
-    // given
-    
-    ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMUser *user3 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    // when
-    ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.uiMOC withParticipants:@[
-                                                                                                                user1, user2, user3
-                                                                                                                ]];
-    
-    NSError *error;
-    XCTAssertTrue([self.uiMOC save:&error], @"Error: %@", error);
-    
-    
-    // then
-    XCTAssertNotNil(conversation);
-    
-    NSFetchRequest *fetchRequest = [ZMConversation sortedFetchRequest];
-    NSArray *conversations = [self.uiMOC executeFetchRequestOrAssert:fetchRequest];
-    
-    XCTAssertEqual(conversations.count, 1u);
-    ZMConversation *fetchedConversation = conversations[0];
-    XCTAssertEqualObjects(conversation.objectID, fetchedConversation.objectID);
-    
-    NSOrderedSet *expectedParticipants = [NSOrderedSet orderedSetWithObjects:user1, user2, user3, nil];
-    XCTAssertEqualObjects(expectedParticipants, conversation.lastServerSyncedActiveParticipants);
-    
-}
 
 - (void)testThatItReturnsTheListOfAllConversationsInTheUserSession;
 {

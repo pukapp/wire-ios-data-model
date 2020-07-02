@@ -22,7 +22,6 @@
 #import "ZMConversation+Internal.h"
 #import "ZMMessage+Internal.h"
 #import "ZMUser+Internal.h"
-#import "ZMGenericMessage+UpdateEvent.h"
 
 @implementation ZMUpdateEvent (WireDataModel)
 
@@ -81,31 +80,6 @@
         return [[self.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"recipient"];
     }
     return nil;
-}
-
-- (NSUUID *)messageNonce;
-{
-    switch (self.type) {
-        case ZMUpdateEventTypeConversationMessageAdd:
-        case ZMUpdateEventTypeConversationAssetAdd:
-        case ZMUpdateEventTypeConversationKnock:
-            return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"nonce"];
-
-        case ZMUpdateEventTypeConversationServiceMessageAdd:
-        case ZMUpdateEventTypeConversationBgpMessageAdd:
-        case ZMUpdateEventTypeConversationClientMessageAdd:
-        case ZMUpdateEventTypeConversationOtrMessageAdd:
-        case ZMUpdateEventTypeConversationOtrAssetAdd:
-        case ZMUpdateEventTypeConversationMemberJoinask:
-        case ZMUpdateEventTypeConversationJsonMessageAdd:
-        {
-            ZMGenericMessage *message = [ZMGenericMessage genericMessageFromUpdateEvent:self];
-            return [NSUUID uuidWithTransportString:message.messageId];
-        }
-        default:
-            return nil;
-            break;
-    }
 }
 
 - (NSMutableSet *)usersFromUserIDsInManagedObjectContext:(NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;

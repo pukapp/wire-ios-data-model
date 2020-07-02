@@ -21,8 +21,6 @@
 
 #import "ZMManagedObject.h"
 #import "ZMMessage.h"
-#import "ZMManagedObjectContextProvider.h"
-
 
 @class ZMUser;
 @class ZMMessage;
@@ -35,6 +33,8 @@
 @class LinkMetadata;
 @class Team;
 @class Label;
+@class ParticipantRole;
+@class Role;
 
 @class UserAliasname;
 @class ZMWebApp;
@@ -92,6 +92,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 @property (readonly, nonatomic) ZMConversationType conversationType;
 @property (readonly, nonatomic, nullable) NSDate *lastModifiedDate;
+
 @property (nonatomic, nullable) NSDate *disableSendLastModifiedDate;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *messages;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *messagesFilterService;
@@ -101,6 +102,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 //群禁言
 @property (readonly, nonatomic, nonnull) NSSet<UserDisableSendMsgStatus *> *membersSendMsgStatuses;
 @property (nonatomic) ServiceMessage * _Nullable lastServiceMessage;
+
 @property (readonly, nonatomic, nonnull) NSSet<ZMMessage *> *allMessages;
 @property (readonly, nonatomic, nonnull) NSArray<ZMUser *> *sortedActiveParticipants;
 @property (readonly, nonatomic, nonnull) ZMUser *creator;
@@ -112,6 +114,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic, readonly) BOOL hasDraftMessage;
 @property (nonatomic, nullable) Team *team;
 @property (nonatomic, nonnull) NSSet<Label *> *labels;
+@property (nonatomic, nonnull) NSSet<ParticipantRole *> *participantRoles;
+@property (nonatomic, nonnull) NSSet<Role *> *nonTeamRoles;
 
 /// This will return @c nil if the last added by self user message has not yet been sync'd to this device, or if the conversation has no self editable message.
 @property (nonatomic, readonly, nullable) ZMMessage *lastEditableMessage;

@@ -83,7 +83,7 @@ class ZMOTRMessage_SecurityDegradationTests : BaseZMClientMessageTests {
             convo.securityLevel = .secure
             self.syncMOC.saveOrRollback()
             
-            let confirmation = convo.append(message: ZMConfirmation.confirm(messageId: message.nonce!, type: .DELIVERED), hidden: true)!
+            let confirmation = convo.append(message: Confirmation(messageId: message.nonce!, type: .delivered), hidden: true)!
 
             // WHEN
             let newClient = UserClient.insertNewObject(in: self.syncMOC)
@@ -269,7 +269,7 @@ extension ZMOTRMessage_SecurityDegradationTests {
         user1.remoteIdentifier = UUID.create()
         let user2 = ZMUser.insertNewObject(in: moc)
         user2.remoteIdentifier = UUID.create()
-        let convo = ZMConversation.insertGroupConversation(into: moc, withParticipants: [user1, user2])!
+        let convo = ZMConversation.insertGroupConversation(moc: moc, participants: [user1, user2], team: nil, participantsRole: nil)!
         return convo
     }
     

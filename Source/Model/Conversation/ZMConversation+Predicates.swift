@@ -26,6 +26,32 @@ extension ZMConversation {
         return NSPredicate(format: "\(ZMConversationConversationTypeKey) != \(ZMConversationType.invalid.rawValue) && \(ZMConversationConversationTypeKey) != \(selfType.rawValue)")
     }
     
+    @objc
+    public class func predicate(forSearchQuery searchQuery: String, selfUser: ZMUser) -> NSPredicate! {
+        
+        let convoNameMatching = NSPredicate(formatDictionary: [ZMNormalizedUserDefinedNameKey: "%K MATCHES %@"], matchingSearch: searchQuery)!
+        
+        let selfUserIsMember = NSPredicate(format: "%K == NULL OR (ANY %K.user == %@)", ZMConversationClearedTimeStampKey, ZMConversationParticipantRolesKey, selfUser)
+        
+        let groupOnly = NSPredicate(format: "(\(ZMConversationConversationTypeKey) == \(ZMConversationType.group.rawValue))")
+        
+        let notTeamOneToOne = NSCompoundPredicate(notPredicateWithSubpredicate: predicateForTeamOneToOneConversation())
+
+        let userNamesMatching = predicateForConversationWithUsers(
+            matchingQuery: searchQuery,
+            selfUser: selfUser
+        )
+        let queryMatching = NSCompoundPredicate(
+            orPredicateWithSubpredicates: [userNamesMatching, convoNameMatching])
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [
+            queryMatching,
+            selfUserIsMember,
+            groupOnly,
+            notTeamOneToOne
+            ])
+    }
+    
     ///在外部分享文件时，根据关键字搜索conversation，需要注意-单聊的名称是根据参与者的名称来决定。与conversation的属性是无关的
     @objc
     public class func predicateInSharedConversations(forSearchQuery searchQuery: String) -> NSPredicate! {
@@ -99,8 +125,22 @@ extension ZMConversation {
             ])
     }
     
-    class func predicateForConversationsWhereSelfUserIsActive() -> NSPredicate {
-        return .init(format: "%K == YES", ZMConversationIsSelfAnActiveMemberKey)
+    private class func predicateForConversationWithUsers(matchingQuery query: String,
+                                                         selfUser: ZMUser) -> NSPredicate {
+        let roleNameMatchingRegexes = query.words.map { ".*\\b\(NSRegularExpression.escapedPattern(for: $0).lowercased()).*" }
+        
+        let roleNameMatchingConditions = roleNameMatchingRegexes.map { _ in
+            "$role.user.normalizedName MATCHES %@"
+            }.joined(separator: " OR ")
+
+        
+        return NSPredicate(
+            format: "SUBQUERY(%K, $role, $role.user != %@ AND (\(roleNameMatchingConditions))).@count > 0",
+            argumentArray: [
+                ZMConversationParticipantRolesKey,
+                selfUser
+                ] + roleNameMatchingRegexes
+        )
     }
 
     @objc(predicateForConversationsInTeam:)
@@ -178,7 +218,7 @@ extension ZMConversation {
         let isTeamConversation = NSPredicate(format: "team != NULL")
         let isGroupConversation = NSPredicate(format: "\(ZMConversationConversationTypeKey) == \(ZMConversationType.group.rawValue)")
         let hasNoUserDefinedName = NSPredicate(format: "\(ZMConversationUserDefinedNameKey) == NULL")
-        let hasOnlyOneParticipant = NSPredicate(format: "\(ZMConversationLastServerSyncedActiveParticipantsKey).@count == 1")
+        let hasOnlyOneParticipant = NSPredicate(format: "\(ZMConversationParticipantRolesKey).@count == 2")
         
         return NSCompoundPredicate(andPredicateWithSubpredicates: [isTeamConversation, isGroupConversation, hasNoUserDefinedName, hasOnlyOneParticipant])
     }
@@ -229,4 +269,20 @@ extension ZMConversation {
         return NSCompoundPredicate(andPredicateWithSubpredicates: [basePredicate, predicate1, predicate2])
     }
     
+}
+
+extension String {
+    
+    var words: [String] {
+        var words: [String] = []
+        enumerateSubstrings(in: self.startIndex..., options: .byWords) { substring, _, _, _ in
+            words.append(String(substring!))
+        }
+        
+        if words.isEmpty {
+            words = [trimmingCharacters(in: .whitespacesAndNewlines)]
+        }
+        
+        return words
+    }
 }

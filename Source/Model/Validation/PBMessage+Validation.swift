@@ -86,74 +86,43 @@ extension String {
 
 // MARK: Generic Message
 
-extension ZMGenericMessage {
-    @objc public func validatingFields() -> ZMGenericMessage? {
-        // Validate the message itself
-        guard UUID.isValid(object: messageId) else { return nil }
 
-////        // Validate the mentions in the textjson
-        if self.hasTextJson() {
-            guard self.textJson!.validatingFields() != nil else { return nil }
+extension GenericMessage {
+    public func validatingFields() -> GenericMessage? {
+        guard UUID.isValid(object: messageID), let content = self.content else { return nil }
+        
+        switch content {
+        case .text:
+            guard text.validatingFields() != nil else { return nil }
+        case .textJson:
+            guard textJson.validatingFields() != nil else { return nil }
+        case .lastRead:
+            guard lastRead.validatingFields() != nil else { return nil }
+        case .cleared:
+            guard cleared.validatingFields() != nil else { return nil }
+        case .hidden:
+            guard hidden.validatingFields() != nil else { return nil }
+        case .deleted:
+            guard deleted.validatingFields() != nil else { return nil }
+        case .edited:
+            guard edited.validatingFields() != nil else { return nil }
+        case .confirmation:
+            guard confirmation.validatingFields() != nil else { return nil }
+        case .reaction:
+            guard reaction.validatingFields() != nil else { return nil }
+        case .asset:
+            guard asset.validatingFields() != nil else { return nil }
+        default:
+            break
         }
-        // Validate the mentions in the text
-        if self.hasText() {
-            guard self.text!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the last read
-        if self.hasLastRead() {
-            guard self.lastRead!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the cleared
-        if self.hasCleared() {
-            guard self.cleared!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the hide
-        if self.hasHidden() {
-            guard self.hidden!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the delete
-        if self.hasDeleted() {
-            guard self.deleted!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the edit
-        if self.hasEdited() {
-            guard self.edited!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the confirmation
-        if self.hasConfirmation() {
-            guard self.confirmation!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the reaction
-        if self.hasReaction() {
-            guard self.reaction!.validatingFields() != nil else { return nil }
-        }
-
-        // Validate the asset
-        if self.hasAsset() {
-            guard self.asset!.validatingFields() != nil else { return nil }
-        }
-
         return self
-    }
-}
-
-extension ZMGenericMessageBuilder {
-    @objc public func buildAndValidate() -> ZMGenericMessage? {
-        return self.build()?.validatingFields()
     }
 }
 
 // MARK: - Text
 
-extension ZMTextJson {
-    @objc public func validatingFields() -> ZMTextJson? {
+extension TextJson {
+    public func validatingFields() -> TextJson? {
         // TODO:  后续添加验证json合法性
         return self
     }
@@ -161,161 +130,122 @@ extension ZMTextJson {
 
 // MARK: - Text
 
-extension ZMText {
-    @objc public func validatingFields() -> ZMText? {
-
-        if let mentions = self.mentions {
-            let validMentions = mentions.compactMap { $0.validatingFields() }
-            guard validMentions.count == mentions.count else { return nil }
-        }
-
+extension Text {
+    public func validatingFields() -> Text? {
+        let validMentions = mentions.compactMap { $0.validatingFields() }
+        guard validMentions.count == mentions.count else { return nil }
         return self
-
     }
 }
 
 // MARK: Quotes
 
-extension ZMQuote {
-    @objc public func validatingFields() -> ZMQuote? {
-        guard UUID.isValid(object: quotedMessageId) else { return nil }
-        return self
+extension Quote {
+    public func validatingFields() -> Quote? {
+        return UUID.isValid(object: quotedMessageID) ? self : nil
     }
 }
 
 // MARK: Mention
 
-extension ZMMention {
-    @objc public func validatingFields() -> ZMMention? {
-        guard UUID.isValid(object: userId) else { return nil }
-        return self
+extension WireProtos.Mention {
+    public func validatingFields() -> WireProtos.Mention? {
+        return UUID.isValid(object: userID) ? self : nil
     }
 }
 
 // MARK: Last Read
 
-extension ZMLastRead {
-    @objc public func validatingFields() -> ZMLastRead? {
-        guard UUID.isValid(object: conversationId) else { return nil }
-        return self
+extension LastRead {
+    public func validatingFields() -> LastRead? {
+        return UUID.isValid(object: conversationID) ? self : nil
     }
 }
 
 // MARK: Cleared
 
-extension ZMCleared {
-    @objc public func validatingFields() -> ZMCleared? {
-        guard UUID.isValid(object: conversationId) else { return nil }
-        return self
+extension Cleared {
+    public func validatingFields() -> Cleared? {
+        return UUID.isValid(object: conversationID) ? self : nil
     }
 }
 
 // MARK: Message Hide
 
-extension ZMMessageHide {
-    @objc public func validatingFields() -> ZMMessageHide? {
-        guard UUID.isValid(object: conversationId) else { return nil }
-        guard UUID.isValid(object: messageId) else { return nil }
+extension MessageHide {
+    public func validatingFields() -> MessageHide? {
+        guard UUID.isValid(object: conversationID) else { return nil }
+        guard UUID.isValid(object: messageID) else { return nil }
         return self
     }
 }
 
 // MARK: Message Delete
 
-extension ZMMessageDelete {
-    @objc public func validatingFields() -> ZMMessageDelete? {
-        guard UUID.isValid(object: messageId) else { return nil }
-        return self
+extension MessageDelete {
+    public func validatingFields() -> MessageDelete? {
+        return UUID.isValid(object: messageID) ? self : nil
     }
 }
 
 // MARK: Message Edit
 
-extension ZMMessageEdit {
-    @objc public func validatingFields() -> ZMMessageEdit? {
-        guard UUID.isValid(object: replacingMessageId) else { return nil }
-        return self
+extension MessageEdit {
+    public func validatingFields() -> MessageEdit? {
+        return UUID.isValid(object: replacingMessageID) ? self : nil
     }
 }
 
 // MARK: Message Confirmation
 
-extension ZMConfirmation {
-    @objc public func validatingFields() -> ZMConfirmation? {
-        guard UUID.isValid(object: firstMessageId) else { return nil }
-
-        if self.moreMessageIds != nil {
+extension Confirmation {
+    public func validatingFields() -> Confirmation? {
+        guard UUID.isValid(object: firstMessageID) else { return nil }
+        
+        if !moreMessageIds.isEmpty {
             guard UUID.isValid(array: moreMessageIds) else { return nil }
         }
-
+        
         return self
     }
 }
 
 // MARK: Reaction
 
-extension ZMReaction {
-    @objc public func validatingFields() -> ZMReaction? {
-        guard UUID.isValid(object: messageId) else { return nil }
-        return self
+extension WireProtos.Reaction {
+    public func validatingFields() -> WireProtos.Reaction? {
+        return UUID.isValid(object: messageID) ? self : nil
     }
 }
 
 // MARK: User ID
 
-extension ZMUserId {
-    @objc public func validatingFields() -> ZMUserId? {
-        guard UUID.isValid(bytes: uuid) else { return nil }
-        return self
+extension WireProtos.UserId {
+    public func validatingFields() -> WireProtos.UserId? {
+        return UUID.isValid(bytes: uuid) ? self : nil
     }
 }
 
 // MARK: - Asset
 
-extension ZMAsset {
-
-    @objc public func validatingFields() -> ZMAsset? {
-
-        if self.hasPreview() && self.preview!.hasRemote() {
-            guard self.preview.remote.validatingFields() != nil else { return nil }
+extension WireProtos.Asset {
+    public func validatingFields() -> WireProtos.Asset? {
+        if hasPreview && preview.hasRemote {
+            guard preview.remote.validatingFields() != nil else { return nil }
         }
 
-        if self.hasUploaded() {
-            guard self.uploaded.validatingFields() != nil else { return nil }
+        if case .uploaded? = status {
+            guard uploaded.validatingFields() != nil else { return nil }
         }
-
+        
         return self
-
     }
-
 }
 
-extension ZMAssetRemoteData {
-
-    @objc public func validatingFields() -> ZMAssetRemoteData? {
-
-        // Validate the asset ID
-
-        if let assetID = assetId, assetID.isEmpty == false {
-
-            guard assetID.isValidAssetID else {
-                return nil
-            }
-
-        }
-
-        // Check if the token is in the bearer token format
-
-        if let assetToken = assetToken, assetToken.isEmpty == false {
-
-            guard assetToken.isValidBearerToken else {
-                return nil
-            }
-
-        }
-
+extension WireProtos.Asset.RemoteData {
+    public func validatingFields() -> WireProtos.Asset.RemoteData? {
+        guard assetID.isValidAssetID else { return nil }
+        guard assetToken.isValidBearerToken else { return nil }
         return self
-
     }
-
 }

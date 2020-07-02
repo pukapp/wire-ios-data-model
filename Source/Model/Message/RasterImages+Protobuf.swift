@@ -16,38 +16,35 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-///使用关联属性来对值进行存储，避免每次都进行计算
-private var AssociateHasRasterImageKey: String = "AssociateHasRasterImageKey"
-
-public extension ZMAssetOriginal {
+public extension WireProtos.Asset.Original {
     var hasRasterImage: Bool {
-        get {
-            if let hasRasterImage = objc_getAssociatedObject(self, &AssociateHasRasterImageKey) as? Bool {
-                return hasRasterImage
-            } else {
-                let hasRasterImage = hasImage() && UTType(mimeType: mimeType)?.isSVG == false
-                objc_setAssociatedObject(self, &AssociateHasRasterImageKey, hasRasterImage, .OBJC_ASSOCIATION_RETAIN)
-                return hasRasterImage
-            }
-        }
+        guard case .image? = self.metaData,
+            UTType(mimeType: mimeType)?.isSVG == false else { return false }
+        return true
     }
 }
 
-fileprivate extension ZMImageAsset {
+fileprivate extension ImageAsset {
     var isRaster: Bool {
         return UTType(mimeType: mimeType)?.isSVG == false
     }
 }
 
-public extension ZMGenericMessage {
+public extension GenericMessage {
     var hasRasterImage: Bool {
-        return hasImage() && image.isRaster
+        guard let content = content else { return false }
+        switch content {
+        case .image(let data):
+            return data.isRaster
+        case .ephemeral(let data):
+            switch data.content {
+            case .image(let image)?:
+                return image.isRaster
+            default:
+                return false
+            }
+        default:
+            return false
+        }
     }
 }
-
-public extension ZMEphemeral {
-    var hasRasterImage: Bool {
-        return hasImage() && image.isRaster
-    }
-}
-

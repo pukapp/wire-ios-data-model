@@ -20,14 +20,13 @@
 import XCTest
 @testable import WireDataModel
 
-class ClientMessageTests_OTR: BaseZMClientMessageTests {
-}
+final class ClientMessageTests_OTR: BaseZMClientMessageTests {}
 
 // MARK: - Payload creation
 extension ClientMessageTests_OTR {
 
     func testThatCreatesEncryptedDataAndAddsItToGenericMessageAsBlob() {
-        self.syncMOC.performGroupedBlockAndWait { 
+        self.syncMOC.performGroupedBlockAndWait {
             let otherUser = ZMUser.insertNewObject(in:self.syncMOC)
             otherUser.remoteIdentifier = UUID.create()
             let firstClient = self.createClient(for: otherUser, createSessionWithSelfUser: true, onMOC: self.syncMOC)
@@ -36,18 +35,13 @@ extension ClientMessageTests_OTR {
             let selfClient = ZMUser.selfUser(in: self.syncMOC).selfClient()
             let notSelfClients = selfClients.filter { $0 != selfClient }
             
-            let nonce = UUID.create()
-            let builder = ZMGenericMessage.builder()!
-            let textBuilder = ZMText.builder()!
-            textBuilder.setContent(self.textMessageRequiringExternalMessage(2))
-            builder.setText(textBuilder.build()!)
-            builder.setMessageId(nonce.transportString())
-            let textMessage = builder.build()!
+            let nonce = UUID.create()            
+            let textMessage = GenericMessage(content: Text(content: self.textMessageRequiringExternalMessage(2)), nonce: nonce)
             
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
             conversation.conversationType = .group
             conversation.remoteIdentifier = UUID.create()
-            conversation.internalAddParticipants([otherUser])
+            conversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
             XCTAssertTrue(self.syncMOC.saveOrRollback())
             
             // when
@@ -55,12 +49,13 @@ extension ClientMessageTests_OTR {
             else { return XCTFail() }
             
             // then
-            guard let createdMessage = ZMNewOtrMessage.builder()!.merge(from: dataAndStrategy.data).build()! as? ZMNewOtrMessage
-            else { return XCTFail() }
-            
-            XCTAssertEqual(createdMessage.hasBlob(), true)
-            let clientIds = createdMessage.recipients.flatMap { userEntry -> [ZMClientId] in
-                return (userEntry.clients).map { clientEntry -> ZMClientId in
+            let createdMessage = NewOtrMessage.with {
+                try? $0.merge(serializedData: dataAndStrategy.data)
+            }
+           
+            XCTAssertEqual(createdMessage.hasBlob, true)
+            let clientIds = createdMessage.recipients.flatMap { userEntry -> [ClientId] in
+                return (userEntry.clients).map { clientEntry -> ClientId in
                     return clientEntry.client
                 }
             }
@@ -71,6 +66,8 @@ extension ClientMessageTests_OTR {
             notSelfClients.forEach{
                 XCTAssertTrue(clientSet.contains($0.clientId))
             }
+            
+            XCTAssertEqual(createdMessage.reportMissing.count, createdMessage.recipients.count)
         }
     }
     
@@ -87,14 +84,16 @@ extension ClientMessageTests_OTR {
                 return
             }
             
-            //then
-            guard let createdMessage = ZMNewOtrMessage.builder()!.merge(from: dataAndStrategy.data).build()! as? ZMNewOtrMessage else { return XCTFail() }
-            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId().isEqual($0.user) }) else { return XCTFail() }
+            // then
+            let createdMessage = NewOtrMessage.with {
+                try? $0.merge(serializedData: dataAndStrategy.data)
+            }
+            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId == $0.user }) else { return XCTFail() }
             
             XCTAssertEqual(userEntry.clients.count, 1)
             XCTAssertEqual(userEntry.clients.first?.text, ZMFailedToCreateEncryptedMessagePayloadString.data(using: .utf8))
             XCTAssertFalse(self.syncUser3Client1.failedToEstablishSession)
-        }
+            }
     }
     
     func testThatCorruptedClientsReceiveBogusPayloadWhenSentAsExternal() {
@@ -112,8 +111,10 @@ extension ClientMessageTests_OTR {
             }
             
             //then
-            guard let createdMessage = ZMNewOtrMessage.builder()!.merge(from: dataAndStrategy.data).build()! as? ZMNewOtrMessage else { return XCTFail() }
-            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId().isEqual($0.user) }) else { return XCTFail() }
+            let createdMessage = NewOtrMessage.with {
+                try? $0.merge(serializedData: dataAndStrategy.data)
+            }
+            guard let userEntry = createdMessage.recipients.first(where: { self.syncUser3.userId == $0.user }) else { return XCTFail() }
             
             XCTAssertEqual(userEntry.clients.count, 1)
             XCTAssertEqual(userEntry.clients.first?.text, ZMFailedToCreateEncryptedMessagePayloadString.data(using: .utf8))
@@ -310,7 +311,7 @@ extension ClientMessageTests_OTR {
             connection.to = self.syncUser1
             connection.status = .accepted
             conversation.connection = connection
-            conversation.mutableLastServerSyncedActiveParticipants.add(self.syncUser1)
+            conversation.addParticipantAndUpdateConversationState(user: self.syncUser1, role: nil)
             
             self.syncMOC.saveOrRollback()
                         
@@ -318,7 +319,7 @@ extension ClientMessageTests_OTR {
             
             textMessage.sender = self.syncUser1
             textMessage.senderClientID = senderID
-            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: textMessage.nonce!, type: .DELIVERED), hidden: true)
+            let confirmationMessage = conversation.append(message: Confirmation(messageId: textMessage.nonce!, type: .delivered), hidden: true)
             
             //when
             guard let payloadAndStrategy = confirmationMessage?.encryptedMessagePayloadData()
@@ -331,19 +332,14 @@ extension ClientMessageTests_OTR {
             default:
                 XCTFail()
             }
-            guard let messageMetadata = ZMNewOtrMessageBuilder().merge(from: payloadAndStrategy.data).build()! as? ZMNewOtrMessage else {
-                XCTFail()
-                return
+            let messageMetadata = NewOtrMessage.with {
+                try? $0.merge(serializedData: payloadAndStrategy.data)
             }
             
-            if let recipients = messageMetadata.recipients {
-                let payloadClients = recipients.compactMap { user -> [String] in
-                    return user.clients?.map({ String(format: "%llx", $0.client.client) }) ?? []
-                }.flatMap { $0 }
-                XCTAssertEqual(payloadClients.sorted(), self.syncUser1.clients.map { $0.remoteIdentifier! }.sorted())
-            } else {
-                XCTFail("Metadata does not contain recipients")
-            }
+            let payloadClients = messageMetadata.recipients.compactMap { user -> [String] in
+                return user.clients.map({ String(format: "%llx", $0.client.client) })
+            }.flatMap { $0 }
+            XCTAssertEqual(payloadClients.sorted(), self.syncUser1.clients.map { $0.remoteIdentifier! }.sorted())
         }
     }
     
@@ -359,7 +355,8 @@ extension ClientMessageTests_OTR {
             connection.to = self.syncUser1
             connection.status = .accepted
             conversation.connection = connection
-            conversation.mutableLastServerSyncedActiveParticipants.add(self.syncUser1)
+            conversation.addParticipantAndUpdateConversationState(user: self.syncUser1, role: nil)
+
             
             self.syncMOC.saveOrRollback()
                                     
@@ -367,7 +364,7 @@ extension ClientMessageTests_OTR {
             
             textMessage.sender = self.syncUser1
             textMessage.senderClientID = senderID
-            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: textMessage.nonce!, type: .DELIVERED), hidden: true)
+            let confirmationMessage = conversation.append(message: Confirmation(messageId: textMessage.nonce!, type: .delivered), hidden: true)
             
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -387,14 +384,18 @@ extension ClientMessageTests_OTR {
             connection.status = .accepted
             conversation.connection = connection
             
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "yo"), nonce: UUID.create())
+            let genericMessage = GenericMessage(content: Text(content: "yo"), nonce: UUID.create())
             let clientmessage = ZMClientMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
-            clientmessage.add(genericMessage.data())
+            do {
+                clientmessage.add(try genericMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
             clientmessage.visibleInConversation = conversation
             
             self.syncMOC.saveOrRollback()
             
-            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: clientmessage.nonce!, type: .DELIVERED), hidden: true)
+            let confirmationMessage = conversation.append(message: Confirmation(messageId: clientmessage.nonce!, type: .delivered), hidden: true)
 
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -408,16 +409,20 @@ extension ClientMessageTests_OTR {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID.create()
-            conversation.mutableLastServerSyncedActiveParticipants.add(self.syncUser1)
+            conversation.addParticipantAndUpdateConversationState(user: self.syncUser1, role: nil)
             
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "yo"), nonce: UUID.create())
+            let genericMessage = GenericMessage(content: Text(content: "yo"), nonce: UUID.create())
             let clientmessage = ZMClientMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
-            clientmessage.add(genericMessage.data())
+            do {
+                clientmessage.add(try genericMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
             clientmessage.visibleInConversation = conversation
             
             self.syncMOC.saveOrRollback()
             
-            let confirmationMessage = conversation.append(message: ZMConfirmation.confirm(messageId: clientmessage.nonce!, type: .DELIVERED), hidden: true)
+            let confirmationMessage = conversation.append(message: Confirmation(messageId: clientmessage.nonce!, type: .delivered), hidden: true)
 
             //when
             guard let _ = confirmationMessage?.encryptedMessagePayloadData()
@@ -443,7 +448,7 @@ extension ClientMessageTests_OTR {
         let identifier = client.sessionIdentifier
         
         // THEN
-        XCTAssertEqual(identifier, EncryptionSessionIdentifier(rawValue: "\(user.remoteIdentifier!)_\(client.remoteIdentifier!)"))
+        XCTAssertEqual(identifier, EncryptionSessionIdentifier(userId: user.remoteIdentifier.uuidString, clientId: client.remoteIdentifier!))
     }
 }
 
@@ -453,7 +458,7 @@ extension ClientMessageTests_OTR {
     /// Returns a string large enough to have to be encoded in an external message
     fileprivate var stringLargeEnoughToRequireExternal: String {
         var text = "Hello"
-        while (text.data(using: String.Encoding.utf8)!.count < Int(ZMClientMessageByteSizeExternalThreshold)) {
+        while (text.data(using: String.Encoding.utf8)!.count < Int(ZMClientMessage.byteSizeExternalThreshold)) {
             text.append(text)
         }
         return text
@@ -461,26 +466,18 @@ extension ClientMessageTests_OTR {
     
     /// Asserts that the message metadata is as expected
     fileprivate func assertMessageMetadata(_ payload: Data!, file: StaticString = #file, line: UInt = #line) {
-        guard let messageMetadata = ZMNewOtrMessageBuilder().merge(from: payload).build()! as? ZMNewOtrMessage else {
-            XCTFail(file: file, line: line)
-            return
+        let messageMetadata = NewOtrMessage.with {
+            try? $0.merge(serializedData: payload)
         }
-        if let sender = messageMetadata.sender {
-            XCTAssertEqual(sender.client, self.selfClient1.clientId.client, file: file, line: line)
-        } else {
-            XCTFail("Metadata does not contain sender", file: file, line: line)
-        }
-        if let recipients = messageMetadata.recipients  {
-            self.assertRecipients(recipients, file: file, line: line)
-        } else {
-            XCTFail("Metadata does not contain recipients", file: file, line: line)
-        }
+        
+        XCTAssertEqual(messageMetadata.sender.client, self.selfClient1.clientId.client, file: file, line: line)
+        assertRecipients(messageMetadata.recipients, file: file, line: line)
     }
     
     /// Returns a string that is big enough to require external message payload
     fileprivate func textMessageRequiringExternalMessage(_ numberOfClients: UInt) -> String {
         var string = "Exponential growth!"
-        while string.data(using: String.Encoding.utf8)!.count < Int(ZMClientMessageByteSizeExternalThreshold / numberOfClients) {
+        while string.data(using: String.Encoding.utf8)!.count < Int(ZMClientMessage.byteSizeExternalThreshold / numberOfClients) {
             string = string + string
         }
         return string

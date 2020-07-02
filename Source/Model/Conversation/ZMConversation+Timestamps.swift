@@ -87,7 +87,7 @@ extension ZMConversation {
     }
     
     @objc
-    func updateCleared(_ timestamp: Date, synchronize: Bool = false) {
+    public func updateCleared(_ timestamp: Date, synchronize: Bool = false) {
         guard let managedObjectContext = managedObjectContext else { return }
         
         if timestamp > clearedTimeStamp {
@@ -122,16 +122,15 @@ extension ZMConversation {
         return false
     }
     
-    @objc(updateMutedStatusWithPayload:)
     func updateMuted(with payload: [String: Any]) {
-        guard let referenceDateAsString = payload[ZMConversationInfoOTRMutedReferenceKey] as? String,
+        guard let referenceDateAsString = payload[PayloadKeys.OTRMutedReferenceKey] as? String,
               let referenceDate = NSDate(transport: referenceDateAsString),
               updateMuted(referenceDate as Date, synchronize: false) else {
             return
         }
         
-        let mutedStatus = payload[ZMConversationInfoOTRMutedStatusValueKey] as? Int32
-        let mutedLegacyFlag = payload[ZMConversationInfoOTRMutedValueKey] as? Int
+        let mutedStatus = payload[PayloadKeys.OTRMutedStatusValueKey] as? Int32
+        let mutedLegacyFlag = payload[PayloadKeys.OTRMutedValueKey] as? Int
         
         if let legacyFlag = mutedLegacyFlag {
             // In case both flags are set we want to respect the legacy one and only read the second bit from the new status.
@@ -270,20 +269,21 @@ extension ZMConversation {
     
     @objc(markMessagesAsReadUntil:)
     public func markMessagesAsRead(until message: ZMConversationMessage) {
+        guard let messageTimestamp = message.serverTimestampIncludingChildMessages else { return }
+        
         if let currentTimestamp = lastReadServerTimeStamp,
-           let messageTimestamp = message.serverTimestamp,
-           currentTimestamp.compare(messageTimestamp) == .orderedDescending {
+            currentTimestamp.compare(messageTimestamp) == .orderedDescending {
             // Current last read timestamp is newer than message we are marking as read
             return
         }
+        
         // Any unsent unread message is cleared when entering a conversation
         if hasUnreadUnsentMessage {
             ///TODO:Secret: unread和unsent需要分开，不应该每次点进这个会话，就把unsent的状态改变了
             hasUnreadUnsentMessage = false
         }
         
-        guard let messageTimestamp = message.serverTimestampIncludingChildMessages,
-              let unreadTimestamp = message.isSent ? messageTimestamp : unreadMessagesIncludingInvisible(until: messageTimestamp).last?.serverTimestamp else { return }
+        guard let unreadTimestamp = message.isSent ? messageTimestamp : unreadMessagesIncludingInvisible(until: messageTimestamp).last?.serverTimestamp else { return }
         
         enqueueUpdateLastRead(unreadTimestamp)
     }

@@ -67,6 +67,7 @@
                                                                  handle:@"a"
                                                             accentColor:ZMAccentColorStrongLimeGreen
                                                        remoteIdentifier:remoteIDA
+                                                         teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
     
@@ -77,6 +78,7 @@
                                                                  handle:@"b"
                                                             accentColor:ZMAccentColorSoftPink
                                                        remoteIdentifier:remoteIDA
+                                                         teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
     
@@ -89,6 +91,7 @@
                                                                  handle:@"b"
                                                             accentColor:ZMAccentColorStrongLimeGreen
                                                        remoteIdentifier:remoteIDB
+                                                         teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
     
@@ -131,12 +134,13 @@
                                                                       handle:handle
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:remoteID
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
 
     
     // then
-    XCTAssertEqualObjects(searchUser.displayName, @"John");
+    XCTAssertEqualObjects(searchUser.name, @"John Doe");
     XCTAssertEqual(searchUser.accentColorValue, ZMAccentColorStrongLimeGreen);
     XCTAssertEqual(searchUser.isConnected, NO);
     XCTAssertNil(searchUser.completeImageData);
@@ -168,13 +172,14 @@
                                                                       handle:@"not_my_handle"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:[NSUUID createUUID]
+                                                              teamIdentifier:nil
                                                                         user:user
                                                                      contact:nil];
 
     // then
     XCTAssertEqualObjects(searchUser.name, user.name);
     XCTAssertEqualObjects(searchUser.handle, user.handle);
-    XCTAssertEqualObjects(searchUser.displayName, user.displayName);
+    XCTAssertEqualObjects(searchUser.name, user.name);
     XCTAssertEqual(searchUser.accentColorValue, user.accentColorValue);
     XCTAssertEqual(searchUser.isConnected, user.isConnected);
     XCTAssertEqualObjects(searchUser.completeImageData, user.completeImageData);
@@ -195,6 +200,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:NSUUID.createUUID
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
     
@@ -223,6 +229,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:nil
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
     
@@ -248,6 +255,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:NSUUID.createUUID
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
     NSString *connectionMessage = @"very unique connection message";
@@ -269,6 +277,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:NSUUID.createUUID
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
 
@@ -286,6 +295,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:nil
+                                                              teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
     
@@ -308,6 +318,7 @@
                                                                       handle:@""
                                                                  accentColor:ZMAccentColorUndefined
                                                             remoteIdentifier:nil
+                                                              teamIdentifier:nil
                                                                         user:user
                                                                      contact:nil];
     
@@ -345,6 +356,7 @@
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorUndefined
                                                             remoteIdentifier:[NSUUID createUUID]
+                                                              teamIdentifier:nil
                                                                         user:user
                                                                      contact:nil];
     
