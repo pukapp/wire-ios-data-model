@@ -1,9 +1,6 @@
-
-
-
 github "pukapp/wire-ios-transport"  "mergewire"
 github "pukapp/wire-ios-protos" "mergewire"
 github "pukapp/wire-ios-images" "mergewire"
 github "pukapp/wire-ios-link-preview" "mergewire"
 github "wireapp/PINCache" "2.3-swift3.1"
-github "wireapp/wire-ios-cryptobox" ~> 22.0
+github "pukapp/wire-ios-cryptobox" "mergewire"
