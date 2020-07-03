@@ -78,15 +78,6 @@ NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data"
 NSString *const SecurityLevelKey = @"securityLevel";
 NSString *const ZMConversationLabelsKey = @"labels";
 
-NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
-NSString *const ZMConversationInfoBlockDurationKey = @"block_duration";
-NSString *const ZMConversationInfoOpt_idKey = @"opt_id";
-NSString *const ZMConversationInfoBlockUserKey = @"block_user";
-NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
-NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
-NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
-NSString *const ZMConversationInfoManagerKey = @"manager";
-
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
@@ -156,6 +147,42 @@ NSString *const ShowMemsumKey = @"showMemsum";
 NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 
 /*----------------------------------*/
+
+//transport
+
+// 新增--此处定义的key主要是用来解析服务端返回的字段，以及发送请求时传入的字段
+static NSString *const ConversationInfoAutoReplyKey = @"auto_reply";
+
+NSString *const ZMConversationInfoPlaceTopKey = @"place_top";
+NSString *const ZMConversationInfoOTRSelfRemarkBoolKey = @"alias_name";
+NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey = @"alias_name_ref";
+NSString *const ZMConversationInfoOTRSelfVerifyKey = @"confirm";
+NSString *const ZMConversationInfoMemberInviteVerfyKey = @"memberjoin_confirm";
+NSString *const ZMConversationInfoOTRCreatorChangeKey = @"new_creator";
+NSString *const ZMConversationInfoBlockTimeKey = @"block_time";
+NSString *const ZMConversationInfoBlockDurationKey = @"block_duration";
+NSString *const ZMConversationInfoOpt_idKey = @"opt_id";
+NSString *const ZMConversationInfoBlockUserKey = @"block_user";
+NSString *const ZMConversationInfoOratorKey = @"orator";
+NSString *const ZMConversationInfoManagerKey = @"manager";
+NSString *const ZMConversationInfoManagerAddKey = @"man_add";
+NSString *const ZMConversationInfoManagerDelKey = @"man_del";
+NSString *const ZMConversationInfoOTRCanAddKey = @"addright";
+NSString *const ZMCOnversationInfoOTROpenUrlJoinKey = @"url_invite";
+NSString *const ZMCOnversationInfoOTRAllowViewMembersKey = @"viewmem";
+NSString *const ZMConversationInfoAppsKey = @"apps";
+NSString *const ZMConversationInfoTopAppsKey = @"top_apps";
+NSString *const ZMConversationInfoTopWebAppsKey = @"top_apps_detail";
+NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey = @"add_friend";
+NSString *const ZMConversationInfoIsVisibleForMemberChangeKey = @"view_chg_mem_notify";
+NSString *const ZMConversationInfoIsVisitorsVisibleKey = @"show_invitor_list";
+NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey = @"msg_only_to_manager";
+NSString *const ZMConversationInfoAnnouncementKey = @"advisory";
+NSString *const ZMConversationBlockedKey = @"blocked";
+NSString *const ZMConversationShowMemsumKey = @"show_memsum";
+NSString *const ZMConversationEnabledEditMsgKey = @"enabled_edit_msg";
+NSString *const ZMConversationAssistantBotKey = @"assistant_bot";
+NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
 
 @interface ZMConversation ()
 

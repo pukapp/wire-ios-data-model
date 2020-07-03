@@ -115,14 +115,40 @@ extern NSString *const ZMConversationCompleteAvatarKey;
 extern NSString *const ShowMemsumKey;
 extern NSString *const EnabledEditMsgKey;
 
+
+//new add transport
+extern NSString *const ZMConversationInfoOTRSelfRemarkBoolKey;
+extern NSString *const ZMConversationInfoOTRSelfRemarkReferenceKey;
+extern NSString *const ZMConversationInfoOTRSelfVerifyKey;
+extern NSString *const ZMConversationInfoMemberInviteVerfyKey;
+extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
 extern NSString *const ZMConversationInfoBlockTimeKey;
 extern NSString *const ZMConversationInfoBlockDurationKey;
 extern NSString *const ZMConversationInfoOpt_idKey;
 extern NSString *const ZMConversationInfoBlockUserKey;
-extern NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey;
-extern NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey;
-extern NSString *const ZMConversationInfoOTRCreatorChangeKey;
+extern NSString *const ZMConversationInfoOratorKey;
 extern NSString *const ZMConversationInfoManagerKey;
+extern NSString *const ZMConversationInfoManagerAddKey;
+extern NSString *const ZMConversationInfoManagerDelKey;
+extern NSString *const ZMConversationInfoOTRCanAddKey;
+extern NSString *const ZMCOnversationInfoOTROpenUrlJoinKey;
+extern NSString *const ZMCOnversationInfoOTRAllowViewMembersKey;
+extern NSString *const ZMConversationInfoAppsKey;
+extern NSString *const ZMConversationInfoTopAppsKey;
+extern NSString *const ZMConversationInfoTopWebAppsKey;
+extern NSString *const ZMConversationInfoIsAllowMemberAddEachOtherKey;
+extern NSString *const ZMConversationInfoIsVisibleForMemberChangeKey;
+extern NSString *const ZMConversationInfoPlaceTopKey;
+extern NSString *const ZMConversationInfoIsVisitorsVisibleKey;
+extern NSString *const ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey;
+extern NSString *const ZMConversationInfoAnnouncementKey;
+extern NSString *const ZMConversationBlockedKey;
+extern NSString *const ZMConversationShowMemsumKey;
+extern NSString *const ZMConversationEnabledEditMsgKey;
+extern NSString *const ZMConversationAssistantBotKey;
+extern NSString *const ZMConversationAssistantBotOptKey;
+
+
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)
