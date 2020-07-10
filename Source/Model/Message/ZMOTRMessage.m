@@ -229,24 +229,24 @@ NSString * const DeliveredKey = @"delivered";
         ZMOTRMessage *clientMessage;
         // 优先通过新增conversation.messagesNonceSet，查询消息是否已存在本地，若存在，再去读取，不存在，则去新建
         BOOL isNewMessage = NO;
-        if ([conversation.messagesNonceSet containsObject:nonce]) {
-            clientMessage = [messageClass fetchMessageWithNonce:nonce
-                                                forConversation:conversation
-                                         inManagedObjectContext:moc
-                                                 prefetchResult:prefetchResult];
-            
-            if (clientMessage.isZombieObject) {
-                return nil;
-            }
-            ///万人群忽略送达的状态，具体什么原因等待以后修改注释
-            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
-                clientMessage.delivered = YES;
-            }
-            // 有可能什么消息没有senderClientID，具体什么原因等待以后修改注释
-            if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
-                return nil;
-            }
-        } else {
+//        if ([conversation.messagesNonceSet containsObject:nonce]) {
+//            clientMessage = [messageClass fetchMessageWithNonce:nonce
+//                                                forConversation:conversation
+//                                         inManagedObjectContext:moc
+//                                                 prefetchResult:prefetchResult];
+//
+//            if (clientMessage.isZombieObject) {
+//                return nil;
+//            }
+//            ///万人群忽略送达的状态，具体什么原因等待以后修改注释
+//            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
+//                clientMessage.delivered = YES;
+//            }
+//            // 有可能什么消息没有senderClientID，具体什么原因等待以后修改注释
+//            if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
+//                return nil;
+//            }
+//        } else {
             isNewMessage = YES;
             
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
@@ -260,7 +260,7 @@ NSString * const DeliveredKey = @"delivered";
 //            if (![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier] && conversation.conversationType == ZMConversationTypeGroup) {
 //                clientMessage.expectsReadConfirmation = conversation.hasReadReceiptsEnabled;
 //            }
-        }
+//        }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
         // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的

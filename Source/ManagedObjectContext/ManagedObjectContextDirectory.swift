@@ -107,9 +107,9 @@ extension ManagedObjectContextDirectory {
         // this will be done async, not to block the UI thread, but
         // enqueued on the syncMOC anyway, so it will execute before
         // any other block of code has a chance to use it
-        moc.performGroupedBlock {
-            moc.applyPersistedDataPatchesForCurrentVersion()
-        }
+//        moc.performGroupedBlock {
+//            moc.applyPersistedDataPatchesForCurrentVersion()
+//        }
         return moc
     }
  
