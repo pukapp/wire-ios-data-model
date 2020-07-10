@@ -705,6 +705,18 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     
     NSArray* fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
     VerifyString([fetchResult count] <= 1, "More than one message with the same nonce in the same conversation");
+    if ([fetchResult count] > 1) {
+        ZMLogInfo(@"fetchMessage:More than one message with the same nonce in the same conversation");
+      
+        for (NSUInteger i = 0; i < [fetchResult count]; i++) {
+            if (i > 0) {
+                NSManagedObject *object = fetchResult[i];
+                [moc deleteObject:object];
+            }
+        }
+    }
+    
+    
     return fetchResult.firstObject;
 }
 
