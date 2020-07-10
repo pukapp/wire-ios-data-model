@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14490.99" systemVersion="19F101" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.23">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19F101" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.23">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -170,10 +170,10 @@
         <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="members" inverseEntity="Team" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="membership" inverseEntity="User" syncable="YES"/>
     </entity>
-    <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" versionHashModifier="1" syncable="YES">
+    <entity name="Message" representedClassName="ZMMessage" isAbstract="YES" versionHashModifier="2" syncable="YES">
         <attribute name="bibiCashType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="cachedCategory" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="delivered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
+        <attribute name="delivered" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="destructionDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="expectsReadConfirmation" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" versionHashModifier="add index" syncable="YES"/>
@@ -424,7 +424,7 @@
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="570"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="568"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
         <element name="Operation" positionX="-225" positionY="-108" width="128" height="120"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
