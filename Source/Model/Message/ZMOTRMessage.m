@@ -227,9 +227,20 @@ NSString * const DeliveredKey = @"delivered";
         
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
-        // 优先通过新增conversation.messagesNonceSet，查询消息是否已存在本地，若存在，再去读取，不存在，则去新建
+        // 优先通过新增conversation.messagesNonceSet，查询消息是否已存在本地，若存在，返回空，不存在，则去新建
         BOOL isNewMessage = NO;
-//        if ([conversation.messagesNonceSet containsObject:nonce]) {
+        if ([conversation.messagesNonceSet containsObject:nonce]) {
+            // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
+            if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
+                clientMessage = [messageClass fetchMessageWithNonce:nonce
+                                                    forConversation:conversation
+                                             inManagedObjectContext:moc
+                                                     prefetchResult:prefetchResult];
+                isNewMessage = true;
+            } else {
+               return nil;
+            }
+            
 //            clientMessage = [messageClass fetchMessageWithNonce:nonce
 //                                                forConversation:conversation
 //                                         inManagedObjectContext:moc
@@ -246,7 +257,7 @@ NSString * const DeliveredKey = @"delivered";
 //            if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
 //                return nil;
 //            }
-//        } else {
+        } else {
             isNewMessage = YES;
             
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
@@ -260,13 +271,9 @@ NSString * const DeliveredKey = @"delivered";
 //            if (![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier] && conversation.conversationType == ZMConversationTypeGroup) {
 //                clientMessage.expectsReadConfirmation = conversation.hasReadReceiptsEnabled;
 //            }
-//        }
+        }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
-        // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
-        if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-            isNewMessage = true;
-        }
         [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate:isNewMessage];
         
         // It seems that if the object was inserted and immediately deleted, the isDeleted flag is not set to true.
