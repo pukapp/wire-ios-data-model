@@ -185,8 +185,12 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
         // 获取对方对自己设置的智能推送状态
         if (self.conversationType == ZMConversationTypeOneOnOne){
             NSArray *usersInfos = [members arrayForKey:ConversationInfoOthersKey];
-            NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
-            self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[userInfo optionalNumberForKey:ConversationInfoAutoReplyKey]];
+            // 服务端有几率返回空的other
+            if (usersInfos.count > 1) {
+                NSDictionary *userInfo = (NSDictionary *)usersInfos[0];
+                self.autoReplyFromOther = [self autoReplyTypeFromTransportData:[userInfo optionalNumberForKey:ConversationInfoAutoReplyKey]];
+            }
+            
         }
         
         [self updateMembersWithPayload:members];
