@@ -18,7 +18,7 @@
 
 import Foundation
 
-extension ZMClientMessage {
+extension ZMMessage {
     
     /// Apply a message edit update
     ///

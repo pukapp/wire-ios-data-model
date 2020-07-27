@@ -33,11 +33,6 @@ extern NSString * _Nonnull const ZMClientMessageLinkPreviewKey;
 
 @interface ZMClientMessage : ZMOTRMessage
 
-/// Link Preview state
-@property (nonatomic) NSDate * _Nullable updatedTimestamp;
-
-- (void)addData:(NSData * _Nonnull)data;
-
 - (BOOL)hasDownloadedImage;
 
 @end

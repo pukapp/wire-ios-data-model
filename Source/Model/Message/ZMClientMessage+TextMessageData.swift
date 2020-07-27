@@ -27,8 +27,6 @@ fileprivate extension NSRange {
 @objc
 extension ZMClientMessage: ZMTextMessageData {
     
-    @NSManaged public var quote: ZMMessage?
-    
     public var isQuotingSelf: Bool{
         return quote?.sender?.isSelfUser ?? false
     }

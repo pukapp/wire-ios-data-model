@@ -27,11 +27,13 @@ protocol ContentHashing {
 }
 
 @objc
-extension ZMOTRMessage: ContentHashing {
+extension ZMMessage: ContentHashing {
     
     var hashOfContent: Data? {
-        assertionFailure("Subclasses should override this method")
-        return nil
+        guard let date = self.serverTimestamp else {
+            return nil
+        }
+        return self.genericMessage?.hashOfContent(with: date)
     }
     
 }

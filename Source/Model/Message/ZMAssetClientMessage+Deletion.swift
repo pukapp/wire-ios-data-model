@@ -27,7 +27,7 @@ public extension Notification.Name {
 
 extension ZMAssetClientMessage {
 
-    func deleteContent() {
+    public override func deleteContent() {
         self.managedObjectContext?.zm_fileAssetCache.deleteAssetData(self)
         
         if let url = temporaryDirectoryURL,

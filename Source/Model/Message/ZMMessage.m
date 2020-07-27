@@ -41,6 +41,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
 
 static NSTimeInterval ZMDefaultMessageExpirationTime = 30;
 
+static NSString * const ClientMessageDataSetKey = @"dataSet";
 NSString * const ZMMessageEventIDDataKey = @"eventID_data";
 NSString * const ZMMessageIsExpiredKey = @"isExpired";
 NSString * const ZMMessageMissingRecipientsKey = @"missingRecipients";
@@ -101,7 +102,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 - (void)updateWithUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation;
 
-@property (nonatomic) NSSet *missingRecipients;
 
 @end;
 
@@ -127,6 +127,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 @implementation ZMMessage
 
+@synthesize genericMessage = _genericMessage;
+
 @dynamic missingRecipients;
 @dynamic isExpired;
 @dynamic expirationDate;
@@ -148,6 +150,9 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic unblock;
 @dynamic recipientUsers;
 @dynamic isNeedAssistantBotReply;
+@dynamic dataSet;
+@dynamic quote;
+@dynamic updatedTimestamp;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
@@ -310,6 +315,124 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     [self setTransientUUID:nonce forKey:@"nonce"];
 }
 
+- (ZMGenericMessage *)genericMessage
+{
+    if (_genericMessage == nil) {
+        _genericMessage = [self genericMessageFromDataSet] ?: (ZMGenericMessage *)[NSNull null];
+    }
+    if (_genericMessage == (ZMGenericMessage *)[NSNull null]) {
+        return nil;
+    }
+    return _genericMessage;
+}
+
+
+- (ZMGenericMessageData *)mergeWithExistingData:(NSData *)data
+{
+    _genericMessage = nil;
+    ZMGenericMessageData *existingMessageData = [self.dataSet firstObject];
+    
+    if (existingMessageData != nil) {
+        existingMessageData.data = data;
+        return existingMessageData;
+    }
+    else {
+        ZMGenericMessageData *messageData = [NSEntityDescription insertNewObjectForEntityForName:[ZMGenericMessageData entityName] inManagedObjectContext:self.managedObjectContext];
+        messageData.data = data;
+        messageData.message = self;
+        return messageData;
+    }
+}
+
+- (void)addData:(NSData *)data
+{
+    if (data == nil) {
+        return;
+    }
+    
+    ZMGenericMessageData *messageData = [self mergeWithExistingData:data];
+    [self setGenericMessage:self.genericMessageFromDataSet];
+    
+    if (self.nonce == nil) {
+        self.nonce = [NSUUID uuidWithTransportString:messageData.genericMessage.messageId];
+    }
+    
+    [self updateCategoryCache];
+    [self setLocallyModifiedKeys:[NSSet setWithObject:ClientMessageDataSetKey]];
+}
+
+- (ZMGenericMessage *)genericMessageFromDataSet
+{
+    NSArray <ZMGenericMessage *> *filteredMessages = [[self.dataSet.array mapWithBlock:^ZMGenericMessage *(ZMGenericMessageData *data) {
+        return data.genericMessage;
+    }] filterWithBlock:^BOOL(ZMGenericMessage *message) {
+        return [message knownMessage] && message.imageAssetData == nil;
+    }];
+
+    if (0 == filteredMessages.count) {
+        return nil;
+    }
+    
+    ZMGenericMessageBuilder *builder = ZMGenericMessage.builder;
+    for (ZMGenericMessage *message in filteredMessages) {
+        [builder mergeFrom:message];
+    }
+    
+    return builder.build;
+}
+
+
+- (void)setGenericMessage:(ZMGenericMessage *)genericMessage
+{
+    if ([genericMessage knownMessage] && genericMessage.imageAssetData == nil) {
+        _genericMessage = genericMessage;
+    }
+}
+
++ (NSSet *)keyPathsForValuesAffectingGenericMessage
+{
+    return [NSSet setWithObjects:ClientMessageDataSetKey, [ClientMessageDataSetKey stringByAppendingString:@".data"], nil];
+}
+
+- (NSData *)hashOfContent
+{
+    if (self.serverTimestamp == nil) {
+        return nil;
+    }
+    
+    return [self.genericMessage hashOfContentWith:self.serverTimestamp];
+}
+
+- (void)deleteContent
+{
+    _genericMessage = nil;
+    for (ZMGenericMessageData *messageData in self.dataSet) {
+        [messageData.managedObjectContext deleteObject:messageData];
+    }
+    self.dataSet = [NSOrderedSet orderedSet];
+    self.normalizedText = nil;
+    self.genericMessage = nil;
+    self.quote = nil;
+}
+
+- (void)awakeFromFetch
+{
+    [super awakeFromFetch];
+    _genericMessage = nil;
+}
+
+- (void)awakeFromSnapshotEvents:(NSSnapshotEventType)flags
+{
+    [super awakeFromSnapshotEvents:flags];
+    _genericMessage = nil;
+}
+
+- (void)didTurnIntoFault
+{
+    [super didTurnIntoFault];
+    _genericMessage = nil;
+}
+
 + (NSArray *)defaultSortDescriptors;
 {
     static NSArray *sd;
@@ -399,6 +522,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 
 - (void)removeMessageClearingSender:(BOOL)clearingSender
 {
+    [self deleteContent];
     self.hiddenInConversation = self.conversation;
     self.visibleInConversation = nil;
     self.replies = [[NSSet alloc] init];
@@ -743,7 +867,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 }
 
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *__unused)updateEvent
++ (ZMMessage *)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *__unused)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *__unused)moc
                                       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult
 {
@@ -927,12 +1051,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     return NO;
 }
 
-- (void)removeMessageClearingSender:(BOOL)clearingSender
-{
-    self.text = nil;
-    [super removeMessageClearingSender:clearingSender];
-}
-
 - (void)fetchLinkPreviewImageDataWithQueue:(dispatch_queue_t)queue completionHandler:(void (^)(NSData *))completionHandler
 {
     NOT_USED(queue);
@@ -985,12 +1103,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 - (id<ZMJsonTextMessageData>)jsonTextMessageData
 {
     return self;
-}
-
-- (void)removeMessageClearingSender:(BOOL)clearingSender
-{
-    self.text = nil;
-    [super removeMessageClearingSender:clearingSender];
 }
 
 - (ZMDeliveryState)deliveryState
@@ -1142,26 +1254,27 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
             [serviceMessage configDataWith:[updateEvent.payload optionalDictionaryForKey:@"data"]];
             if ([serviceMessage.type isEqualToString:@"20009"]) {
-                if (conversation.blockWarningMessage != nil) {
-                    ///将之前的消息从表中删除
-                    ZMSystemMessage * sysMessage = conversation.blockWarningMessage.systemMessage;
-                    if (sysMessage != NULL) {
-                        [moc deleteObject:sysMessage];
-                        [moc deleteObject:conversation.blockWarningMessage];
-                    }
-                }
+                //暂时不删除不使用的systemmessage  后期补丁统一删除不使用的消息
+//                if (conversation.blockWarningMessage != nil) {
+//                    ///将之前的消息从表中删除
+//                    ZMSystemMessage * sysMessage = conversation.blockWarningMessage.systemMessage;
+//                    if (sysMessage != NULL) {
+//                        [moc deleteObject:sysMessage];
+//                        [moc deleteObject:conversation.blockWarningMessage];
+//                    }
+//                }
                 conversation.blockWarningMessage = serviceMessage;
                 ///这里的时间戳是用来监听 blockWarningMessage 属性改变用的
                 conversation.blockWarningMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
             } else {
-                if (conversation.lastServiceMessage != nil) {
-                    ///将之前的消息从表中删除
-                    ZMSystemMessage * sysMessage = conversation.lastServiceMessage.systemMessage;
-                    if (sysMessage != NULL) {
-                        [moc deleteObject:sysMessage];
-                        [moc deleteObject:conversation.lastServiceMessage];
-                    }
-                }
+//                if (conversation.lastServiceMessage != nil) {
+//                    ///将之前的消息从表中删除
+//                    ZMSystemMessage * sysMessage = conversation.lastServiceMessage.systemMessage;
+//                    if (sysMessage != NULL) {
+//                        [moc deleteObject:sysMessage];
+//                        [moc deleteObject:conversation.lastServiceMessage];
+//                    }
+//                }
                 conversation.lastServiceMessage = serviceMessage;
                 ///这里的时间戳是用来监听 lastServiceMessage 属性改变用的
                 conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
@@ -1492,13 +1605,6 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         }
     }
     return NO;
-}
-
-- (void)obfuscate;
-{
-    ZMLogDebug(@"obfuscating message %@", self.nonce.transportString);
-    self.isObfuscated = YES;
-    self.destructionDate = nil;
 }
 
 - (void)deleteEphemeral;

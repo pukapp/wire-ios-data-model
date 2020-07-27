@@ -38,7 +38,6 @@
 #import "ZMGenericMessage+External.h"
 #import <WireDataModel/WireDataModel-Swift.h>
 
-static NSString * const ClientMessageDataSetKey = @"dataSet";
 static NSString * const ClientMessageGenericMessageKey = @"genericMessage";
 static NSString * const ClientMessageUpdateTimestamp = @"updatedTimestamp";
 
@@ -49,6 +48,8 @@ NSString * const ZMFailedToCreateEncryptedMessagePayloadString = @"💣";
 // "If payload is smaller then 256KB then OM can be sent directly"
 // Just to be sure we set the limit lower, to 128KB (base 10)
 NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
+
+static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
 
 @interface ZMClientMessage()
 
@@ -61,10 +62,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 @end
 
 @implementation ZMClientMessage
-
-@dynamic updatedTimestamp;
-
-@synthesize genericMessage = _genericMessage;
 
 + (NSString *)entityName;
 {
@@ -81,110 +78,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     return self.updatedTimestamp;
 }
 
-- (NSData *)hashOfContent
-{
-    if (self.serverTimestamp == nil) {
-        return nil;
-    }
-    
-    return [self.genericMessage hashOfContentWith:self.serverTimestamp];
-}
-
-- (void)addData:(NSData *)data
-{
-    if (data == nil) {
-        return;
-    }
-    
-    ZMGenericMessageData *messageData = [self mergeWithExistingData:data];
-    [self setGenericMessage:self.genericMessageFromDataSet];
-    
-    if (self.nonce == nil) {
-        self.nonce = [NSUUID uuidWithTransportString:messageData.genericMessage.messageId];
-    }
-    
-    [self updateCategoryCache];
-    [self setLocallyModifiedKeys:[NSSet setWithObject:ClientMessageDataSetKey]];
-}
-
-- (ZMGenericMessage *)genericMessage
-{
-    if (_genericMessage == nil) {
-        _genericMessage = [self genericMessageFromDataSet] ?: (ZMGenericMessage *)[NSNull null];
-    }
-    if (_genericMessage == (ZMGenericMessage *)[NSNull null]) {
-        return nil;
-    }
-    return _genericMessage;
-}
-
-- (ZMGenericMessageData *)mergeWithExistingData:(NSData *)data
-{
-    _genericMessage = nil;
-    ZMGenericMessageData *existingMessageData = [self.dataSet firstObject];
-    
-    if (existingMessageData != nil) {
-        existingMessageData.data = data;        
-        return existingMessageData;
-    }
-    else {
-        ZMGenericMessageData *messageData = [NSEntityDescription insertNewObjectForEntityForName:[ZMGenericMessageData entityName] inManagedObjectContext:self.managedObjectContext];
-        messageData.data = data;
-        messageData.message = self;
-        return messageData;
-    }
-}
-
-- (void)setGenericMessage:(ZMGenericMessage *)genericMessage
-{
-    if ([genericMessage knownMessage] && genericMessage.imageAssetData == nil) {
-        _genericMessage = genericMessage;
-    }
-}
-
-- (void)awakeFromFetch
-{
-    [super awakeFromFetch];
-    _genericMessage = nil;
-}
-
-- (void)awakeFromSnapshotEvents:(NSSnapshotEventType)flags
-{
-    [super awakeFromSnapshotEvents:flags];
-    _genericMessage = nil;
-}
-
-- (void)didTurnIntoFault
-{
-    [super didTurnIntoFault];
-    _genericMessage = nil;
-}
-
-- (ZMGenericMessage *)genericMessageFromDataSet
-{
-    NSArray <ZMGenericMessage *> *filteredMessages = [[self.dataSet.array mapWithBlock:^ZMGenericMessage *(ZMGenericMessageData *data) {
-        return data.genericMessage;
-    }] filterWithBlock:^BOOL(ZMGenericMessage *message) {
-        return [message knownMessage] && message.imageAssetData == nil;
-    }];
-
-    if (0 == filteredMessages.count) {
-        return nil;
-    }
-    
-    ZMGenericMessageBuilder *builder = ZMGenericMessage.builder;
-    for (ZMGenericMessage *message in filteredMessages) {
-        [builder mergeFrom:message];
-    }
-    
-    return builder.build;
-}
-
-+ (NSSet *)keyPathsForValuesAffectingGenericMessage
-{
-    return [NSSet setWithObjects:ClientMessageDataSetKey, [ClientMessageDataSetKey stringByAppendingString:@".data"], nil];
-}
-
 - (void)updateWithGenericMessage:(ZMGenericMessage *)message updateEvent:(ZMUpdateEvent *)updateEvent initialUpdate:(BOOL)initialUpdate
 { 
     if (initialUpdate) {
@@ -193,24 +86,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     } else {
         [self applyLinkPreviewUpdate:message from:updateEvent];
     }
-}
-
-- (void)deleteContent
-{
-    _genericMessage = nil;
-    for (ZMGenericMessageData *messageData in self.dataSet) {
-        [messageData.managedObjectContext deleteObject:messageData];
-    }
-    self.dataSet = [NSOrderedSet orderedSet];
-    self.normalizedText = nil;
-    self.genericMessage = nil;
-    self.quote = nil;
-}
-
-- (void)removeMessageClearingSender:(BOOL)clearingSender
-{
-    [self deleteContent];
-    [super removeMessageClearingSender:clearingSender];
 }
 
 - (void)expire
@@ -297,9 +172,9 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
 + (NSPredicate *)predicateForObjectsThatNeedToBeInsertedUpstream
 {
-    NSPredicate *encryptedNotSynced = [NSPredicate predicateWithFormat:@"%K == FALSE", DeliveredKey];
-    NSPredicate *notExpired = [NSPredicate predicateWithFormat:@"%K == 0", ZMMessageIsExpiredKey];
-    return [NSCompoundPredicate andPredicateWithSubpredicates:@[encryptedNotSynced, notExpired]];
+    // we only handler messages sended whthin 10 minutes
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:([[NSDate date] timeIntervalSince1970] - 2*60)];
+    return [NSPredicate predicateWithFormat:@"%K > %@", ZMMessageServerTimestampKey, date];
 }
 
 - (void)markAsSent
@@ -341,7 +216,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
 @end
 
-@implementation ZMClientMessage (Ephemeral)
+@implementation ZMMessage (Ephemeral)
 
 - (BOOL)isEphemeral
 {
@@ -358,7 +233,9 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
 - (void)obfuscate;
 {
-    [super obfuscate];
+    ZMLogDebug(@"obfuscating message %@", self.nonce.transportString);
+    self.isObfuscated = YES;
+    self.destructionDate = nil;
     if (self.genericMessage.knockData == nil) {
         ZMGenericMessage *obfuscatedMessage = [self.genericMessage obfuscatedMessage];
         [self deleteContent];

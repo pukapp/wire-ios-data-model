@@ -21,8 +21,7 @@
 #import "ZMManagedObject.h"
 
 @class ZMGenericMessage;
-@class ZMClientMessage;
-@class ZMAssetClientMessage;
+@class ZMMessage;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -35,8 +34,8 @@ NS_ASSUME_NONNULL_END
 
 @property (nonatomic, nonnull) NSData *data;
 @property (nonatomic, readonly, nullable) ZMGenericMessage *genericMessage;
-@property (nonatomic, nullable) ZMClientMessage *message;
-@property (nonatomic, nullable) ZMAssetClientMessage *asset;
+@property (nonatomic, nullable) ZMMessage *message;
+@property (nonatomic, nullable) ZMMessage *asset;
 
 + (NSString * _Nonnull)entityName;
 

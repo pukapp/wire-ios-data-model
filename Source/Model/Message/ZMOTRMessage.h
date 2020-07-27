@@ -28,10 +28,9 @@ extern NSString * const DeliveredKey;
 
 @interface ZMOTRMessage : ZMMessage
 
-@property (nonatomic) NSOrderedSet *dataSet;
-@property (nonatomic, readonly) NSSet *missingRecipients;
+
 @property (nonatomic, readonly, nullable) NSString *dataSetDebugInformation;
-@property (nonatomic, readonly, nullable) ZMGenericMessage *genericMessage;
+
 
 - (void)missesRecipient:(UserClient *)recipient;
 - (void)missesRecipients:(NSSet<UserClient *> *)recipients;
@@ -40,7 +39,7 @@ extern NSString * const DeliveredKey;
 
 - (void)updateWithGenericMessage:(ZMGenericMessage * )message updateEvent:(ZMUpdateEvent *)updateEvent initialUpdate:(BOOL)initialUpdate;
 
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
++ (ZMMessage * _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
                                         inManagedObjectContext:(NSManagedObjectContext *)moc
                                                 prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 

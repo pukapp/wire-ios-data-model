@@ -34,6 +34,7 @@
 @class ZMReaction;
 @class ZMClientMessage;
 @class ServiceMessage;
+@class ZMGenericMessageData;
 
 @protocol UserClientType;
 
@@ -239,18 +240,25 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 @property (nonatomic) NSString * _Nullable senderClientID;
 @property (nonatomic) NSUUID * _Nullable nonce;
-@property (nonatomic, readonly) NSDate * _Nullable destructionDate;
+@property (nonatomic) NSDate * _Nullable destructionDate;
 
 @property (nonatomic, readonly) BOOL isUnreadMessage;
-@property (nonatomic, readonly) BOOL isExpired;
+@property (nonatomic) BOOL isExpired;
 @property (nonatomic, readonly) NSDate * _Nullable expirationDate;
-@property (nonatomic, readonly) BOOL isObfuscated;
+@property (nonatomic) BOOL isObfuscated;
 @property (nonatomic, readonly) BOOL needsReadConfirmation;
 @property (nonatomic) NSString * _Nullable normalizedText;
 
 @property (nonatomic) NSSet <Reaction *> * _Nonnull reactions;
 @property (nonatomic) NSSet <Operation *> * _Nonnull operations;
 @property (nonatomic, readonly) NSSet<ZMMessageConfirmation*> * _Nonnull confirmations;
+
+@property (nonatomic) NSSet * _Nullable missingRecipients;
+@property (nonatomic, nullable) ZMGenericMessage *genericMessage;
+@property (nonatomic) NSOrderedSet * _Nonnull dataSet;
+@property (nonatomic) ZMMessage * _Nullable quote;
+/// Link Preview state
+@property (nonatomic) NSDate * _Nullable updatedTimestamp;
 
 - (void)setExpirationDate;
 - (void)removeExpirationDate;
@@ -288,7 +296,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 /// which should be used to avoid premature fetchRequests. If the class needs messages or conversations to be prefetched
 /// and passed into this method it should conform to `ZMObjectStrategy` and return them in
 /// `-messageNoncesToPrefetchToProcessEvents:` or `-conversationRemoteIdentifiersToPrefetchToProcessEvents`
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
++ (ZMMessage * _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                       prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 
@@ -306,6 +314,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 /// Predicate to select messages whose link attachments need to be updated.
 + (NSPredicate * _Nonnull)predicateForMessagesThatNeedToUpdateLinkAttachments;
 
+- (ZMGenericMessage * _Nullable)genericMessageFromDataSet;
+- (void)deleteContent;
+- (ZMGenericMessageData * _Nullable)mergeWithExistingData:(NSData * _Nonnull)data;
+- (void)addData:(NSData * _Nonnull)data;
 @end
 
 

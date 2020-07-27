@@ -44,7 +44,12 @@ extension ZMAssetClientMessage {
     }
     
     public override var genericMessage: ZMGenericMessage? {
-        return genericAssetMessage
+        get {
+            return genericAssetMessage
+        }
+        set {
+            super.genericMessage = newValue
+        }
     }
     
     /// The generic asset message that is constructed by merging
