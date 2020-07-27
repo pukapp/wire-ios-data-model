@@ -253,7 +253,7 @@ extension ZMConversation {
 
     /// Creates system message that says that you started using this device, if you were not registered on this device
     @objc public func appendStartedUsingThisDeviceMessage() {
-        guard ZMSystemMessage.fetchStartedUsingOnThisDeviceMessage(conversation: self) == nil else { return }
+        guard ZMMessage.fetchStartedUsingOnThisDeviceMessage(conversation: self) == nil else { return }
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext!)
         guard let selfClient = selfUser.selfClient() else { return }
         self.appendSystemMessage(type: .usingNewDevice,
@@ -692,19 +692,19 @@ extension ZMConversation {
 }
 
 // MARK: - System messages
-extension ZMSystemMessage {
+extension ZMMessage {
 
     /// Fetch the first system message in the conversation about "started to use this device"
-    fileprivate static func fetchStartedUsingOnThisDeviceMessage(conversation: ZMConversation) -> ZMSystemMessage? {
+    fileprivate static func fetchStartedUsingOnThisDeviceMessage(conversation: ZMConversation) -> ZMMessage? {
         guard let selfClient = ZMUser.selfUser(in: conversation.managedObjectContext!).selfClient() else { return nil }
         let conversationPredicate = NSPredicate(format: "%K == %@ OR %K == %@", ZMMessageConversationKey, conversation, ZMMessageHiddenInConversationKey, conversation)
         let newClientPredicate = NSPredicate(format: "%K == %d", ZMMessageSystemMessageTypeKey, ZMSystemMessageType.newClient.rawValue)
         let containsSelfClient = NSPredicate(format: "ANY %K == %@", ZMMessageSystemMessageClientsKey, selfClient)
         let compound = NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, newClientPredicate, containsSelfClient])
         
-        let fetchRequest = ZMSystemMessage.sortedFetchRequest(with: compound)!
+        let fetchRequest = ZMMessage.sortedFetchRequest(with: compound)!
         let result = conversation.managedObjectContext!.executeFetchRequestOrAssert(fetchRequest)!
-        return result.first as? ZMSystemMessage
+        return result.first as? ZMMessage
     }
 }
 
