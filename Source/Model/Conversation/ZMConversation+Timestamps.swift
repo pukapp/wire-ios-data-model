@@ -414,17 +414,35 @@ extension ZMConversation {
     internal func unreadMessagesIncludingInvisible(until timestamp: Date = Date.distantFuture) -> [ZMMessage] {
         guard let managedObjectContext = managedObjectContext else { return [] }
         
-        let lastReadServerTimestamp = lastReadServerTimeStamp ?? Date.distantPast
+        let lastReadServerTimestamp = lastReadServerTimeStamp
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
-        fetchRequest.predicate = NSPredicate(format: "(%K == %@ OR %K == %@) AND %K != %@ AND %K > %@ AND %K <= %@",
-                                             ZMMessageConversationKey, self,
-                                             ZMMessageHiddenInConversationKey, self,
-                                             ZMMessageSenderKey, selfUser,
-                                             ZMMessageServerTimestampKey, lastReadServerTimestamp as NSDate,
-                                             ZMMessageServerTimestampKey, timestamp as NSDate)
-        fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
+        fetchRequest.predicate = NSPredicate(format: "%K == %@",
+                                             ZMMessageConversationKey, self)
         
-        return managedObjectContext.fetchOrAssert(request: fetchRequest).filter({ $0.shouldGenerateUnreadCount() })
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: ZMMessageServerTimestampKey, ascending: false)]
+        
+        fetchRequest.fetchLimit = 100
+        
+        func fetch(request: NSFetchRequest<ZMMessage>) -> [ZMMessage] {
+            let messages = managedObjectContext.fetchOrAssert(request: request)
+            guard let lastTimestamp = lastReadServerTimestamp else {return messages}
+            if lastTimestamp < messages.last?.serverTimestamp {
+                request.fetchLimit = request.fetchLimit + 1000
+                return fetch(request: request)
+            }
+            return messages
+        }
+        
+        let messages = fetch(request: fetchRequest)
+        
+        return messages.filter({$0.serverTimestamp > lastReadServerTimestamp}).filter({$0.sender != selfUser}).filter({ $0.shouldGenerateUnreadCount() })
+    }
+}
+
+extension ZMMessage {
+    func isInConversation(conversation: ZMConversation) -> Bool {
+        guard let conv = self.conversation else {return false}
+        return conv == conversation
     }
 }
