@@ -84,7 +84,7 @@ public extension ZMConversation {
     private func oneOnOneDisplayName() -> String? {
         precondition(conversationType == .oneOnOne)
 
-        let other = lastServerSyncedActiveParticipants.firstObject as? ZMUser ?? connectedUser
+        let other = connectedUser
         if let name = other?.newName(), !name.isEmpty {
             return name
         } else {
