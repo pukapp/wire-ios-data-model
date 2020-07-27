@@ -115,7 +115,7 @@ static NSString * const PendingKey = @"Pending";
     // Since this is extremely likely to trigger the "lastServerSyncedActiveParticipants" and "connection" relationships, we make sure these gets prefetched:
     NSMutableArray *keyPaths = [NSMutableArray arrayWithArray:allConversationsRequest.relationshipKeyPathsForPrefetching];
     [keyPaths addObject:ZMConversationLastServerSyncedActiveParticipantsKey];
-    [keyPaths addObject:ZMConversationConnectionKey];
+//    [keyPaths addObject:ZMConversationConnectionKey];
     allConversationsRequest.relationshipKeyPathsForPrefetching = keyPaths;
     
     NSError *error;
