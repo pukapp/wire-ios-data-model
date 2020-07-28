@@ -282,10 +282,9 @@ extension ZMConversation {
             hasUnreadUnsentMessage = false
         }
         
-        guard let messageTimestamp = message.serverTimestampIncludingChildMessages,
-              let unreadTimestamp = message.isSent ? messageTimestamp : unreadMessagesIncludingInvisible(until: messageTimestamp).last?.serverTimestamp else { return }
-        
-        enqueueUpdateLastRead(unreadTimestamp)
+        //获取childMessage 时间较长(可忽略childMessage)
+        guard let messageTimestamp = message.serverTimestamp else { return }
+        enqueueUpdateLastRead(messageTimestamp)
     }
     
     /// Update the last read timestamp.
@@ -323,8 +322,8 @@ extension ZMConversation {
     @objc
     public func savePendingLastRead() {
         guard let timestamp = pendingLastReadServerTimestamp else { return }
-        confirmUnreadMessagesAsRead(until: timestamp)
         updateLastRead(timestamp, synchronize: false)
+        confirmUnreadMessagesAsRead(until: timestamp)
         pendingLastReadServerTimestamp = nil
         lastReadTimestampUpdateCounter = 0
         managedObjectContext?.enqueueDelayedSave()
@@ -383,18 +382,18 @@ extension ZMConversation {
     }
     
     /// Returns the first unread message in a converation. If the first unread message is child message of system message the parent message will be returned.
-    @objc
-    public var firstUnreadMessage: ZMConversationMessage? {
-        let replaceChildWithParent: (ZMMessage) -> ZMMessage = { message in
-            if let systemMessage = message as? ZMSystemMessage, let parentMessage = systemMessage.parentMessage as? ZMMessage {
-                return parentMessage
-            } else {
-                return message
-            }
-        }
-        
-        return unreadMessagesIncludingInvisible().lazy.map(replaceChildWithParent).filter({ $0.visibleInConversation != nil }).first(where: { $0.shouldGenerateUnreadCount() })
-    }
+//    @objc
+//    public var firstUnreadMessage: ZMConversationMessage? {
+//        let replaceChildWithParent: (ZMMessage) -> ZMMessage = { message in
+//            if let systemMessage = message as? ZMSystemMessage, let parentMessage = systemMessage.parentMessage as? ZMMessage {
+//                return parentMessage
+//            } else {
+//                return message
+//            }
+//        }
+//
+//        return unreadMessagesIncludingInvisible().lazy.map(replaceChildWithParent).filter({ $0.visibleInConversation != nil }).first(where: { $0.shouldGenerateUnreadCount() })
+//    }
     
     // Returns first unread message mentioning the self user
     public var firstUnreadMessageMentioningSelf: ZMConversationMessage? {
@@ -427,8 +426,11 @@ extension ZMConversation {
         func fetch(request: NSFetchRequest<ZMMessage>) -> [ZMMessage] {
             let messages = managedObjectContext.fetchOrAssert(request: request)
             guard let lastTimestamp = lastReadServerTimestamp else {return messages}
+            if request.fetchLimit == 10000 {
+                return messages
+            }
             if lastTimestamp < messages.last?.serverTimestamp {
-                request.fetchLimit = request.fetchLimit + 1000
+                request.fetchLimit = request.fetchLimit * 10
                 return fetch(request: request)
             }
             return messages
