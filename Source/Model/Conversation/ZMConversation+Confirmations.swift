@@ -28,7 +28,7 @@ extension ZMConversation {
     @discardableResult
     func confirmUnreadMessagesAsRead(until timestamp: Date) -> [ZMClientMessage] {
         
-        guard self.conversationType != .oneOnOne else {return []}
+        guard self.conversationType == .oneOnOne else {return []}
         
         let unreadMessagesNeedingConfirmation = unreadMessages(until: timestamp).filter({ $0.needsReadConfirmation })
         var confirmationMessages: [ZMClientMessage] = []
