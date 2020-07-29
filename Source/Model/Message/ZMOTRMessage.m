@@ -227,6 +227,9 @@ NSString * const DeliveredKey = @"delivered";
                                                     forConversation:conversation
                                              inManagedObjectContext:moc
                                                      prefetchResult:prefetchResult];
+                if (clientMessage.isZombieObject) {
+                    return nil;
+                }
                 isNewMessage = true;
             } else {
                return nil;
@@ -278,6 +281,7 @@ NSString * const DeliveredKey = @"delivered";
         // 优化user查询效率,用于替代func"[clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation]"
         [clientMessage updateWithSender:sender forConversation:conversation];
 //        [clientMessage updateWithUpdateEvent:updateEvent forConversation:conversation];
+        // 群机器人消息更换发送者
         if (message.hasTextJson) {
            [clientMessage updateAssistantbotWithUpdateEvent:updateEvent forConversation:conversation jsonText:message.textJson.content];
         }
