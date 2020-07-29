@@ -329,23 +329,23 @@ NSString *const ZMConversationAssistantBotOptKey = @"assistant_bot_opt";
     if (self.conversationType == ZMConvTypeHugeGroup) {
         return; //万人群消息不做添加和删除成员的比较判断，因为万人群每次拉群的成员是不一样的
     }
-    ZMSystemMessage *latestSystemMessage = [ZMSystemMessage fetchLatestPotentialGapSystemMessageInConversation:self];
-    if (nil == latestSystemMessage) {
-        return;
-    }
-    if (users.count == 0 || latestSystemMessage.users.count == 0) {
-        return; //增加错误控制
-    }
-    
-    NSMutableSet <ZMUser *>* removedUsers = latestSystemMessage.users.mutableCopy;
-    [removedUsers minusSet:users];
-    
-    NSMutableSet <ZMUser *>* addedUsers = users.mutableCopy;
-    [addedUsers minusSet:latestSystemMessage.users];
-    
-    latestSystemMessage.addedUsers = addedUsers;
-    latestSystemMessage.removedUsers = removedUsers;
-    [latestSystemMessage updateNeedsUpdatingUsersIfNeeded];
+//    ZMSystemMessage *latestSystemMessage = [ZMSystemMessage fetchLatestPotentialGapSystemMessageInConversation:self];
+//    if (nil == latestSystemMessage) {
+//        return;
+//    }
+//    if (users.count == 0 || latestSystemMessage.users.count == 0) {
+//        return; //增加错误控制
+//    }
+//
+//    NSMutableSet <ZMUser *>* removedUsers = latestSystemMessage.users.mutableCopy;
+//    [removedUsers minusSet:users];
+//
+//    NSMutableSet <ZMUser *>* addedUsers = users.mutableCopy;
+//    [addedUsers minusSet:latestSystemMessage.users];
+//
+//    latestSystemMessage.addedUsers = addedUsers;
+//    latestSystemMessage.removedUsers = removedUsers;
+//    [latestSystemMessage updateNeedsUpdatingUsersIfNeeded];
 }
 
 /// Pass timestamp when the timestamp equals the time of the lastRead / cleared event, otherwise pass nil
