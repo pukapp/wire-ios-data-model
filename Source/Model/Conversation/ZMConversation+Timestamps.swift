@@ -226,12 +226,11 @@ extension ZMConversation {
         
         if message.shouldGenerateLastVisibleMessage(),
             message.hiddenInConversation == nil && message.visibleInConversation == self {
-            guard self.lastVisibleMessage?.serverTimestamp > message.serverTimestamp else {
+            if self.lastVisibleMessage?.serverTimestamp < message.serverTimestamp {
                 self.lastVisibleMessage = message
-                return
             }
         }
-        //calculateLastUnreadMessages()
+        calculateLastUnreadMessages()
     }
     
     /// Update timetamps after an message has been inserted locally by the self user
