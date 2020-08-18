@@ -109,6 +109,23 @@ extension ZMGenericMessage {
                 return (data, .ignoreAllMissingClientsNotFromUsers(users: recipientUsers))
             }
         }
+        // 如果是通话消息，加入通话相关明文信息
+        // video参数暂时设置为false,等待avs框架更换
+        if hasCalling() {
+            if let conversationId = conversation.remoteIdentifier?.transportString(),
+                let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users,
+                                                       externalData: nil,
+                                                       context: context,
+                                                       unblock: unblock,
+                                                       video: false,
+                                                       callUserId: ZMUser.selfUser(in: context).remoteIdentifier.transportString(),
+                                                       callUserName: ZMUser.selfUser(in: context).newName(),
+                                                       conversationId: conversationId) {
+                return (data, recipientsAndStrategy.strategy)
+            } else {
+                return nil
+            }
+        }
         if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
             return (data, recipientsAndStrategy.strategy)
         }
@@ -126,7 +143,14 @@ extension ZMGenericMessage {
         return nil
     }
     
-    fileprivate func encryptedMessagePayloadData(for recipients: Set<ZMUser>, externalData: Data?, context: NSManagedObjectContext, unblock: Bool = false) -> Data? {
+    fileprivate func encryptedMessagePayloadData(for recipients: Set<ZMUser>,
+                                                 externalData: Data?,
+                                                 context: NSManagedObjectContext,
+                                                 unblock: Bool = false,
+                                                 video: Bool? = nil,
+                                                 callUserId: String? = nil,
+                                                 callUserName: String? = nil,
+                                                 conversationId: String? = nil) -> Data? {
         guard let selfClient = ZMUser.selfUser(in: context).selfClient(), selfClient.remoteIdentifier != nil
             else { return nil }
         
@@ -134,7 +158,15 @@ extension ZMGenericMessage {
         var messageData : Data?
         
         encryptionContext.perform { (sessionsDirectory) in
-            let message = otrMessage(selfClient, recipients: recipients, externalData: externalData, sessionDirectory: sessionsDirectory, unblock: unblock)
+            let message = otrMessage(selfClient,
+                                     recipients: recipients,
+                                     externalData: externalData,
+                                     sessionDirectory: sessionsDirectory,
+                                     unblock: unblock,
+                                     video: video,
+                                     callUserId: callUserId,
+                                     callUserName: callUserName,
+                                     conversationId: conversationId)
 
             messageData = message.data()
             
@@ -236,11 +268,23 @@ extension ZMGenericMessage {
                                 recipients: Set<ZMUser>,
                                 externalData: Data?,
                                 sessionDirectory: EncryptionSessionsDirectory,
-                                unblock: Bool = false) -> ZMNewOtrMessage {
+                                unblock: Bool = false,
+                                video: Bool? = nil,
+                                callUserId: String? = nil,
+                                callUserName: String? = nil,
+                                conversationId: String? = nil) -> ZMNewOtrMessage {
         
         let userEntries = self.recipientsWithEncryptedData(selfClient, recipients: recipients, sessionDirectory: sessionDirectory)
         let nativePush = !hasConfirmation() // We do not want to send pushes for delivery receipts
-        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush, recipients: userEntries, blob: externalData, unblock: unblock)
+        let message = ZMNewOtrMessage.message(withSender: selfClient,
+                                              nativePush: nativePush,
+                                              recipients: userEntries,
+                                              blob: externalData,
+                                              unblock: unblock,
+                                              video: video,
+                                              callUserId: callUserId,
+                                              callUserName: callUserName,
+                                              conversationId: conversationId)
         
         return message
     }

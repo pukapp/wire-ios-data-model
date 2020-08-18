@@ -644,7 +644,15 @@ public extension ZMUserEntry {
 
 public extension ZMNewOtrMessage {
     
-    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil, unblock: Bool = false) -> ZMNewOtrMessage {
+     static func message(withSender sender: UserClient,
+                              nativePush: Bool,
+                              recipients: [ZMUserEntry],
+                              blob: Data? = nil,
+                              unblock: Bool = false,
+                              video: Bool? = nil,
+                              callUserId: String? = nil,
+                              callUserName: String? = nil,
+                              conversationId: String? = nil) -> ZMNewOtrMessage {
         let builder = ZMNewOtrMessage.builder()!
         builder.setNativePush(nativePush)
         builder.setSender(sender.clientId)
@@ -654,6 +662,15 @@ public extension ZMNewOtrMessage {
         }
         if unblock {
             builder.setUnblock(unblock)
+        }
+        if let video = video,
+            let callUserId = callUserId,
+            let callUserName = callUserName,
+            let conversationId = conversationId {
+            builder.setVideo(video)
+            builder.setCallUserId(callUserId)
+            builder.setCallUserName(callUserName)
+            builder.setCallConversationId(conversationId)
         }
         return builder.build()
     }
