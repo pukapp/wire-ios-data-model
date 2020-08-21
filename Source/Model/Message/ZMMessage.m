@@ -1147,6 +1147,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             NSData *dataInfo = [NSJSONSerialization dataWithJSONObject:dictionaryInfo options:0 error:NULL];
             NSString *jsonStringInfo = dataInfo.base64String;
             systemMessage.text = jsonStringInfo;
+            conversation.iTaskDoneDate = [NSDate date];
             break;
         }
             
