@@ -94,6 +94,7 @@ NSString * const ZMMessageDiscoveredClientsKey = @"discoveredClients";
 
 NSString * const ZMMessageJsonTextKey = @"jsonText";
 
+NSNotificationName const ZMUpdateTaskListNotificationName = @"ZMUpdateTaskListNotificationName";
 
 @interface ZMMessage ()
 
@@ -1130,6 +1131,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             break;
         }
         case ZMSystemMessageTypeParticipantsAdded:
+            [[NSNotificationCenter defaultCenter] postNotificationName:ZMUpdateTaskListNotificationName object:nil userInfo:nil];
         case ZMSystemMessageTypeParticipantsRemoved:
         {
             NSArray * userNamesSet = [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_names"];
