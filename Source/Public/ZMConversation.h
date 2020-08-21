@@ -166,6 +166,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 // itask群
 @property (nonatomic) BOOL isITaskGroup;
 @property (nonatomic) BOOL isITaskFavorite;
+@property (nonatomic, nullable) NSDate *iTaskDoneDate;
 @property (nullable, nonatomic, copy) NSString *iTaskTaskId;
 @property (nullable, nonatomic, copy) NSString *iTaskProjectId;
 

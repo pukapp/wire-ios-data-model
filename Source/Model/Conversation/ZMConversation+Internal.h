@@ -113,6 +113,7 @@ extern NSString *const ZMConversationPreviewAvatarKey;
 extern NSString *const ZMConversationCompleteAvatarKey;
 extern NSString *const ZMConversationIsITaskGroupKey;
 extern NSString *const ZMConversationIsITaskFavoriteKey;
+extern NSString *const ZMConversationITaskDoneDateKey;
 NS_ASSUME_NONNULL_END
 
 @interface ZMConversation (Internal)

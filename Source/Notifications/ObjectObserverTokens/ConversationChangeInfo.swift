@@ -69,7 +69,8 @@ extension ZMConversation : ObjectInSnapshot {
                     ZMConversation.externalParticipantsStateKey,
                     #keyPath(ZMConversation.legalHoldStatus),
                     #keyPath(ZMConversation.labels),
-                    #keyPath(ZMConversation.isITaskFavorite)
+                    #keyPath(ZMConversation.isITaskFavorite),
+                    #keyPath(ZMConversation.iTaskDoneDate)
             ])
     }
 
@@ -123,6 +124,11 @@ extension ZMConversation : ObjectInSnapshot {
     // 任务关注状态变化
     public var iTaskFavoriteStatusChanged : Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.isITaskFavorite))
+    }
+    
+    //任务完成状态变化
+    public var iTaskDoneDateChanged : Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.iTaskDoneDate))
     }
     
     public var communityIDChanged : Bool {

@@ -150,7 +150,7 @@ public class ConversationListObserverCenter : NSObject, ChangeInfoConsumer {
               || changes.clearedChanged           || changes.securityLevelChanged    || changes.teamChanged
               || changes.messagesChanged          || changes.selfRemarkChanged       || changes.previewAvatarDataChanged
               || changes.replyTypeChanged         || changes.placeTopStatusChanged
-              || changes.messagesChanged          || changes.labelsChanged           ||  changes.iTaskFavoriteStatusChanged
+            || changes.messagesChanged          || changes.labelsChanged           ||  changes.iTaskFavoriteStatusChanged || changes.iTaskDoneDateChanged
         else { return }
         zmLog.debug("conversationDidChange with changes \(changes.customDebugDescription)")
         forwardToSnapshots{$0.processConversationChanges(changes)}
