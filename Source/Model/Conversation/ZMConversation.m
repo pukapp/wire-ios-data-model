@@ -1382,7 +1382,9 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     if ([otherUsers intersectsSet:selfUserSet]) {
         [otherUsers minusSet:selfUserSet];
         self.isSelfAnActiveMember = NO;
-        self.isArchived = sender.isSelfUser;
+        if (self.conversationType != ZMConversationTypeHugeGroup) {
+            self.isArchived = sender.isSelfUser;
+        }
     }
     // TODO: 用于模拟bug出现的情况，上线前请删除
 //    self.isSelfAnActiveMember = NO;
