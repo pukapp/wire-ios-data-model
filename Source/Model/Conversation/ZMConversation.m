@@ -1340,10 +1340,11 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
         [otherUsers minusSet:selfUserSet];
 
         self.isSelfAnActiveMember = YES;
-        self.needsToBeUpdatedFromBackend = YES;
-        
-        if (self.mutedStatus == MutedMessageOptionValueNone) {
-            self.isArchived = NO;
+        if (self.conversationType != ZMConversationTypeHugeGroup) {
+            self.needsToBeUpdatedFromBackend = YES;
+            if (self.mutedStatus == MutedMessageOptionValueNone) {
+                self.isArchived = NO;
+            }
         }
     }
     
