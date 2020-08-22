@@ -37,6 +37,8 @@ public enum MissingClientsStrategy : Equatable {
     case ignoreAllMissingClientsNotFromUsers(users: Set<ZMUser>)
     /// Do not fail the request, no matter which clients are missing
     case ignoreAllMissingClients
+    
+    case ignoreAllMissingClientsFromUsers(users: Set<ZMUser>)
 }
 
 public func ==(lhs: MissingClientsStrategy, rhs: MissingClientsStrategy) -> Bool {
@@ -46,6 +48,8 @@ public func ==(lhs: MissingClientsStrategy, rhs: MissingClientsStrategy) -> Bool
     case (.ignoreAllMissingClients, .ignoreAllMissingClients):
         return true
     case (.ignoreAllMissingClientsNotFromUsers(let leftUsers), .ignoreAllMissingClientsNotFromUsers(let rightUsers)):
+        return leftUsers == rightUsers
+    case (.ignoreAllMissingClientsFromUsers(let leftUsers), .ignoreAllMissingClientsFromUsers(let rightUsers)):
         return leftUsers == rightUsers
     default:
         return false
@@ -112,18 +116,50 @@ extension ZMGenericMessage {
         // 如果是通话消息，加入通话相关明文信息
         // video参数暂时设置为false,等待avs框架更换
         if hasCalling() {
-            if let conversationId = conversation.remoteIdentifier?.transportString(),
-                let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users,
+            guard let callingContent = calling.content.data(using: .utf8),
+                let callingInfo = try? JSONSerialization.jsonObject(with: callingContent, options: []) as? [AnyHashable : Any],
+                let type = callingInfo["type"] as? String,
+                let resp = callingInfo["resp"] as? Bool else {
+                    return nil
+            }
+            print("----\(callingInfo)")
+            var callingType: String? = nil
+            var users = recipientsAndStrategy.users
+            if conversation.conversationType == .oneOnOne && type == "SETUP" && resp == false ||
+                conversation.conversationType == .group && type == "GROUPSTART" && resp == false {
+                callingType = "1"
+                users.remove(ZMUser.selfUser(in: context))
+            }
+            if conversation.conversationType == .oneOnOne && type == "SETUP" && resp == true {
+                callingType = "2"
+            }
+            if conversation.conversationType == .oneOnOne && type == "CANCEL" {
+                callingType = "3"
+                users.remove(ZMUser.selfUser(in: context))
+            }
+            var video = false
+            if let props = callingInfo["resp"] as? [AnyHashable: Any],
+                let videosend = props["videosend"] as? Bool {
+                video = videosend
+            }
+            
+            if callingType != nil,
+                let conversationId = conversation.remoteIdentifier?.transportString(),
+                let data = encryptedMessagePayloadData(for: users,
                                                        externalData: nil,
                                                        context: context,
                                                        unblock: unblock,
-                                                       video: false,
+                                                       video: video,
                                                        callUserId: ZMUser.selfUser(in: context).remoteIdentifier.transportString(),
                                                        callUserName: ZMUser.selfUser(in: context).newName(),
-                                                       conversationId: conversationId) {
-                return (data, recipientsAndStrategy.strategy)
-            } else {
-                return nil
+                                                       conversationId: conversationId,
+                                                       callingType: callingType) {
+                if callingType == "1" || callingType == "3" {
+                    return (data, .ignoreAllMissingClientsFromUsers(users: Set([ZMUser.selfUser(in: context)])))
+                } else {
+                    return (data, recipientsAndStrategy.strategy)
+                }
+                
             }
         }
         if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
@@ -150,7 +186,8 @@ extension ZMGenericMessage {
                                                  video: Bool? = nil,
                                                  callUserId: String? = nil,
                                                  callUserName: String? = nil,
-                                                 conversationId: String? = nil) -> Data? {
+                                                 conversationId: String? = nil,
+                                                 callingType: String? = nil) -> Data? {
         guard let selfClient = ZMUser.selfUser(in: context).selfClient(), selfClient.remoteIdentifier != nil
             else { return nil }
         
@@ -166,7 +203,8 @@ extension ZMGenericMessage {
                                      video: video,
                                      callUserId: callUserId,
                                      callUserName: callUserName,
-                                     conversationId: conversationId)
+                                     conversationId: conversationId,
+                                     callingType: callingType)
 
             messageData = message.data()
             
@@ -272,7 +310,8 @@ extension ZMGenericMessage {
                                 video: Bool? = nil,
                                 callUserId: String? = nil,
                                 callUserName: String? = nil,
-                                conversationId: String? = nil) -> ZMNewOtrMessage {
+                                conversationId: String? = nil,
+                                callingType: String? = nil) -> ZMNewOtrMessage {
         
         let userEntries = self.recipientsWithEncryptedData(selfClient, recipients: recipients, sessionDirectory: sessionDirectory)
         let nativePush = !hasConfirmation() // We do not want to send pushes for delivery receipts
@@ -284,7 +323,8 @@ extension ZMGenericMessage {
                                               video: video,
                                               callUserId: callUserId,
                                               callUserName: callUserName,
-                                              conversationId: conversationId)
+                                              conversationId: conversationId,
+                                              callingType: callingType)
         
         return message
     }

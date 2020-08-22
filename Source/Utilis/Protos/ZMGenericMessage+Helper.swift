@@ -652,7 +652,8 @@ public extension ZMNewOtrMessage {
                               video: Bool? = nil,
                               callUserId: String? = nil,
                               callUserName: String? = nil,
-                              conversationId: String? = nil) -> ZMNewOtrMessage {
+                              conversationId: String? = nil,
+                              callingType: String? = nil) -> ZMNewOtrMessage {
         let builder = ZMNewOtrMessage.builder()!
         builder.setNativePush(nativePush)
         builder.setSender(sender.clientId)
@@ -666,11 +667,12 @@ public extension ZMNewOtrMessage {
         if let video = video,
             let callUserId = callUserId,
             let callUserName = callUserName,
-            let conversationId = conversationId {
+            let conversationId = conversationId, let callType = callingType {
             builder.setVideo(video)
             builder.setCallUserId(callUserId)
             builder.setCallUserName(callUserName)
             builder.setCallConversationId(conversationId)
+            builder.setCallType(callType)
         }
         return builder.build()
     }
