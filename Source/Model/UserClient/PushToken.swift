@@ -25,6 +25,7 @@ public struct PushToken: Equatable, Codable {
     public var isRegistered: Bool
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
+    public var isiOS13Registered: Bool = false
 }
 
 public struct ApnsPushToken: Equatable, Codable {
