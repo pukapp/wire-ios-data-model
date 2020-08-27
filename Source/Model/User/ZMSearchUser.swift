@@ -115,6 +115,24 @@ extension NSManagedObjectContext
 }
 
 
+let NSManagedObjectContextBGPMemberAssetCacheKey = "BGPMemberAssetCache"
+extension NSManagedObjectContext
+{
+    @objc
+    public var zm_BGPMemberAssetCache: NSCache<NSUUID, NSData>? {
+        get {
+            guard zm_isUserInterfaceContext else { return nil }
+            return self.userInfo[NSManagedObjectContextBGPMemberAssetCacheKey] as? NSCache
+        }
+        
+        set {
+            guard zm_isUserInterfaceContext else { return }
+            self.userInfo[NSManagedObjectContextBGPMemberAssetCacheKey] = newValue
+        }
+    }
+}
+
+
 @objc
 public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     public var providerIdentifier: String?

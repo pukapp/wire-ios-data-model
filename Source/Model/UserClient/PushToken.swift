@@ -25,6 +25,16 @@ public struct PushToken: Equatable, Codable {
     public var isRegistered: Bool
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
+    public var isiOS13Registered: Bool = false
+}
+
+public struct ApnsPushToken: Equatable, Codable {
+    public let deviceToken: String
+    public let appIdentifier: String
+    public let transportType: String
+    public var isRegistered: Bool
+    public var isMarkedForDeletion: Bool = false
+    public var isMarkedForDownload: Bool = false
 }
 
 extension PushToken {
@@ -51,6 +61,38 @@ extension PushToken {
     }
 
     public func markToDelete() -> PushToken {
+        var token = self
+        token.isMarkedForDeletion = true
+        return token
+    }
+
+}
+
+
+extension ApnsPushToken {
+
+    public init(deviceToken: String, appIdentifier: String, transportType: String, isRegistered: Bool) {
+        self.init(deviceToken: deviceToken, appIdentifier: appIdentifier, transportType: transportType, isRegistered: isRegistered, isMarkedForDeletion: false, isMarkedForDownload: false)
+    }
+    
+    public var deviceTokenString: String {
+        return deviceToken
+    }
+
+    public func resetFlags() -> ApnsPushToken {
+        var token = self
+        token.isMarkedForDownload = false
+        token.isMarkedForDeletion = false
+        return token
+    }
+
+    public func markToDownload() -> ApnsPushToken {
+        var token = self
+        token.isMarkedForDownload = true
+        return token
+    }
+
+    public func markToDelete() -> ApnsPushToken {
         var token = self
         token.isMarkedForDeletion = true
         return token
