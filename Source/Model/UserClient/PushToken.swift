@@ -23,6 +23,7 @@ public struct PushToken: Equatable, Codable {
     public let appIdentifier: String
     public let transportType: String
     public var isRegistered: Bool
+    public var randomCode: Int
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
     public var isiOS13Registered: Bool = false
@@ -33,14 +34,16 @@ public struct ApnsPushToken: Equatable, Codable {
     public let appIdentifier: String
     public let transportType: String
     public var isRegistered: Bool
+    public var randomCode: Int
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
+    
 }
 
 extension PushToken {
 
-    public init(deviceToken: Data, appIdentifier: String, transportType: String, isRegistered: Bool) {
-        self.init(deviceToken: deviceToken, appIdentifier: appIdentifier, transportType: transportType, isRegistered: isRegistered, isMarkedForDeletion: false, isMarkedForDownload: false)
+    public init(deviceToken: Data, appIdentifier: String, transportType: String, isRegistered: Bool, randomCode: Int = 0) {
+        self.init(deviceToken: deviceToken, appIdentifier: appIdentifier, transportType: transportType, isRegistered: isRegistered, randomCode: randomCode, isMarkedForDeletion: false, isMarkedForDownload: false)
     }
 
     public var deviceTokenString: String {
@@ -71,8 +74,8 @@ extension PushToken {
 
 extension ApnsPushToken {
 
-    public init(deviceToken: String, appIdentifier: String, transportType: String, isRegistered: Bool) {
-        self.init(deviceToken: deviceToken, appIdentifier: appIdentifier, transportType: transportType, isRegistered: isRegistered, isMarkedForDeletion: false, isMarkedForDownload: false)
+    public init(deviceToken: String, appIdentifier: String, transportType: String, isRegistered: Bool, randomCode: Int = 0) {
+        self.init(deviceToken: deviceToken, appIdentifier: appIdentifier, transportType: transportType, isRegistered: isRegistered, randomCode: randomCode, isMarkedForDeletion: false, isMarkedForDownload: false)
     }
     
     public var deviceTokenString: String {
