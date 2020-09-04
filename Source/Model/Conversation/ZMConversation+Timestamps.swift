@@ -230,7 +230,7 @@ extension ZMConversation {
                 self.lastVisibleMessage = message
             }
         }
-        calculateLastUnreadMessages()
+//        calculateLastUnreadMessages()
     }
     
     /// Update timetamps after an message has been inserted locally by the self user
