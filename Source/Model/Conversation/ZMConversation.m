@@ -357,9 +357,9 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     self.lastReadTimestampSaveDelay = ZMConversationDefaultLastReadTimestampSaveDelay;
     if (self.managedObjectContext.zm_isSyncContext) {
         // From the documentation: You are typically discouraged from performing fetches within an implementation of awakeFromInsert. Although it is allowed, execution of the fetch request can trigger the sending of internal Core Data notifications which may have unwanted side-effects. Since we fetch the unread messages here, we should do a dispatch async
-        [self.managedObjectContext performGroupedBlock:^{
-            [self calculateLastUnreadMessages];
-        }];
+//        [self.managedObjectContext performGroupedBlock:^{
+//            [self calculateLastUnreadMessages];
+//        }];
     }
 }
 
@@ -605,9 +605,9 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     [self setPrimitiveValue:lastReadServerTimeStamp forKey:ZMConversationLastReadServerTimeStampKey];
     [self didChangeValueForKey:ZMConversationLastReadServerTimeStampKey];
     
-    if (self.managedObjectContext.zm_isSyncContext) {
-        [self calculateLastUnreadMessages];
-    }
+//    if (self.managedObjectContext.zm_isSyncContext) {
+//        [self calculateLastUnreadMessages];
+//    }
 }
 
 - (NSUUID *)remoteIdentifier;

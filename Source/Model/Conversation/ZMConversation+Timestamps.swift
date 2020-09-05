@@ -262,7 +262,7 @@ extension ZMConversation {
     @objc
     func updateTimestampsAfterDeletingMessage() {
         // If an unread message is deleted we must re-calculate the unread messages.
-        calculateLastUnreadMessages()
+//        calculateLastUnreadMessages()
     }
     
     // MARK: - Mark as read
