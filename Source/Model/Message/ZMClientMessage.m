@@ -216,7 +216,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
 
 @end
 
-@implementation ZMMessage (Ephemeral)
+@implementation ZMClientMessage (Ephemeral)
 
 - (BOOL)isEphemeral
 {
