@@ -690,6 +690,11 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     return conversationType;
 }
 
+- (ZMConversationType)pureConversationType
+{
+    return (ZMConversationType)[[self primitiveConversationType] shortValue];;
+}
+
 
 + (NSArray *)defaultSortDescriptors
 {
@@ -893,6 +898,16 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 + (instancetype)conversationWithRemoteID:(NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(NSManagedObjectContext *)moc
 {
     return [self conversationWithRemoteID:UUID createIfNeeded:create inContext:moc created:NULL];
+}
+
++ (nullable instancetype)conversationNoRowCacheWithRemoteID:(nonnull NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc
+{
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], UUID.data];
+    fetchRequest.fetchLimit = 1;
+    fetchRequest.includesPropertyValues = NO;
+    NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
+    return fetchResult.firstObject;
 }
 
 + (instancetype)conversationWithRemoteID:(NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(NSManagedObjectContext *)moc created:(BOOL *)created

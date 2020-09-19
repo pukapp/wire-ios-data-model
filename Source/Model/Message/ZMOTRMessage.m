@@ -294,6 +294,37 @@ NSString * const DeliveredKey = @"delivered";
     return nil;
 }
 
++ (NSMutableArray *)createNotificationMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
+                                           inManagedObjectContext:(NSManagedObjectContext *)moc {
+    NSMutableArray * array = [NSMutableArray array];
+    ZMGenericMessage *message;
+    ZMOTRMessage *clientMessage;
+    @try {
+        message = [ZMGenericMessage genericMessageFromUpdateEvent:updateEvent];
+    } @catch(NSException *e) {
+        ZMLogError(@"Cannot create message from protobuffer: %@", e);
+        message = nil;
+    }
+    if (message == nil) {
+        return nil;
+    }
+    NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
+    Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
+    ZMConversation *conversation = [ZMConversation conversationNoRowCacheWithRemoteID: updateEvent.conversationUUID createIfNeeded:NO inContext: moc];
+    VerifyReturnNil(conversation != nil);
+    ZMUser * sender = [ZMUser userNoRowCacheWithRemoteID:updateEvent.senderUUID createIfNeeded:NO inContext:moc];
+    clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
+    //TODO
+    [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate: YES];
+    clientMessage.sender = sender;
+    if (message.hasTextJson) {
+       [clientMessage updateAssistantbotWithUpdateEvent:updateEvent forConversation:conversation jsonText:message.textJson.content];
+    }
+    [array addObject:clientMessage];
+    [array addObject:conversation];
+    return array;
+}
+
 -(void)updateWithPostPayload:(NSDictionary *)payload updatedKeys:(NSSet *)updatedKeys {
 
     NSDate *timestamp = [payload dateFor:@"time"];

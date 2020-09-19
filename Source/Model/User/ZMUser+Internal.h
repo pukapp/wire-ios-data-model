@@ -54,6 +54,8 @@ extern NSString * __nonnull const ReadReceiptsEnabledKey;
 - (void)updateWithTransportData:(nonnull NSDictionary *)transportData authoritative:(BOOL)authoritative;
 
 + (nullable instancetype)userWithRemoteID:(nonnull NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc;
+
++ (nullable instancetype)userNoRowCacheWithRemoteID:(nonnull NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc;
 // 先从conversation的lastServerSyncedActiveParticipants中查找user，找不到再去数据库中去，降低从数据库中读取的频次
 + (nullable instancetype)userWithRemoteID:(nonnull NSUUID *)uuid createIfNeeded:(BOOL)create inConversation:(nonnull ZMConversation *)conversation inContext:(nonnull NSManagedObjectContext *)moc;
 + (nullable instancetype)userWithEmailAddress:(nonnull NSString *)emailAddress inContext:(nonnull NSManagedObjectContext *)context;

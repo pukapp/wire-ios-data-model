@@ -43,6 +43,8 @@ extern NSString * const DeliveredKey;
                                         inManagedObjectContext:(NSManagedObjectContext *)moc
                                                 prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 
++ (NSMutableArray *)createNotificationMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
+                                           inManagedObjectContext:(NSManagedObjectContext *)moc;
 @end
 
 NS_ASSUME_NONNULL_END

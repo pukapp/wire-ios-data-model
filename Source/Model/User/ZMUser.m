@@ -480,6 +480,15 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     }
 }
 
++ (nullable instancetype)userNoRowCacheWithRemoteID:(nonnull NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc {
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], UUID.data];
+    fetchRequest.fetchLimit = 1;
+    fetchRequest.includesPropertyValues = NO;
+    NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
+    return fetchResult.firstObject;
+}
+
 // 先从conversation的lastServerSyncedActiveParticipants中查找user，找不到再去数据库中去，降低从数据库中读取的频次
 + (ZMUser *)userWithRemoteID:(NSUUID *)uuid createIfNeeded:(BOOL)create inConversation:(ZMConversation *)conversation inContext:(NSManagedObjectContext *)moc {
     if ([[ZMUser selfUserInContext:moc].remoteIdentifier isEqual:uuid]) {
@@ -829,8 +838,8 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     ZMSession *session = (ZMSession *)[moc executeFetchRequestOrAssert:[ZMSession sortedFetchRequest]].firstObject;
     if (session == nil) {
         session = [ZMSession insertNewObjectInManagedObjectContext:moc];
-        RequireString([moc obtainPermanentIDsForObjects:@[session] error:&error],
-                      "Failed to get ID for self user: %lu", (long) error.code);
+//        RequireString([moc obtainPermanentIDsForObjects:@[session] error:&error],
+//                      "Failed to get ID for self user: %lu", (long) error.code);
     }
     
     //if there is already user in session, don't create new
@@ -838,8 +847,8 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     
     if (selfUser == nil) {
         selfUser = [ZMUser insertNewObjectInManagedObjectContext:moc];
-        RequireString([moc obtainPermanentIDsForObjects:@[selfUser] error:&error],
-                      "Failed to get ID for self user: %lu", (long) error.code);
+//        RequireString([moc obtainPermanentIDsForObjects:@[selfUser] error:&error],
+//                      "Failed to get ID for self user: %lu", (long) error.code);
     }
 
     session.selfUser = selfUser;

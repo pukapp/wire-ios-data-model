@@ -21,7 +21,7 @@ import Foundation
 extension NSPersistentStoreCoordinator {
     
     /// Creates a filesystem-based persistent store at the given url with the given model
-    convenience init(
+    public convenience init(
         storeFile: URL,
         accountIdentifier: UUID?,
         applicationContainer: URL,
@@ -59,7 +59,7 @@ extension NSPersistentStoreCoordinator {
     }
     
     /// Creates an in memory persistent store coordinator with the given model
-    convenience init(inMemoryWithModel model: NSManagedObjectModel) {
+    public convenience init(inMemoryWithModel model: NSManagedObjectModel) {
         self.init(managedObjectModel: model)
         do {
             try self.addPersistentStore(
@@ -178,7 +178,7 @@ extension NSPersistentStoreCoordinator {
     }
  
     /// Returns the set of options that need to be passed to the persistent sotre
-    static func persistentStoreOptions(supportsMigration: Bool) -> [String: Any] {
+    public static func persistentStoreOptions(supportsMigration: Bool) -> [String: Any] {
         return [
             // https://www.sqlite.org/pragma.html
             NSSQLitePragmasOption: [

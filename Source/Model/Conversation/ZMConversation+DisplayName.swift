@@ -51,6 +51,17 @@ public extension ZMConversation {
         }
     }
     
+    //NSE use this
+    @objc var pureMeaningfulDisplayName: String? {
+        switch pureConversationType {
+        case .connection: return connectionDisplayName()
+        case .group, .hugeGroup: return groupDisplayName()
+        case .oneOnOne: return oneOnOneDisplayName()
+        case .self: return managedObjectContext.map(ZMUser.selfUser)?.name
+        default: return nil
+        }
+    }
+    
     private func connectionDisplayName() -> String? {
         precondition(conversationType == .connection)
 
@@ -70,15 +81,8 @@ public extension ZMConversation {
         if let userDefined = userDefinedName, !userDefined.isEmpty {
             return userDefined
         }
-
-        let selfUser = managedObjectContext.map(ZMUser.selfUser)
-
-        let activeNames: [String] = lastServerSyncedActiveParticipants.compactMap { (user) -> String? in
-            guard let user = user as? ZMUser, user != selfUser && !user.displayName.isEmpty else { return nil }
-            return user.displayName
-        }
         
-        return activeNames.isEmpty ? nil : activeNames.joined(separator: ", ")
+        return "Secret"
     }
 
     private func oneOnOneDisplayName() -> String? {

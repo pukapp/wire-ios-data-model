@@ -91,6 +91,7 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nonatomic, copy, nullable) NSString *userDefinedName;
 
 @property (readonly, nonatomic) ZMConversationType conversationType;
+@property (readonly, nonatomic) ZMConversationType pureConversationType;
 @property (readonly, nonatomic, nullable) NSDate *lastModifiedDate;
 @property (nonatomic, nullable) NSDate *disableSendLastModifiedDate;
 @property (readonly, nonatomic, nonnull) NSOrderedSet *messages;
