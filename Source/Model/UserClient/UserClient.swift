@@ -220,8 +220,13 @@ private let zmLog = ZMSLog(tag: "UserClient")
         let relationClients = user.clients.filter({$0.remoteIdentifier == remoteIdentifier})
         
         requireInternal(relationClients.count <= 1, "Detected duplicate clients: \(relationClients.map({ $0.safeForLoggingDescription }))")
-        
+
         if let client = relationClients.first {
+            relationClients.forEach { (c) in
+                if c != client {
+                    context.delete(c)
+                }
+            }
             return client
         }
         
