@@ -1690,5 +1690,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     }];
 }
 
+- (void)obfuscate {
+    
+    ZMLogDebug(@"obfuscating message %@", self.nonce.transportString);
+    self.isObfuscated = YES;
+    self.destructionDate = nil;
+}
+
 @end
 

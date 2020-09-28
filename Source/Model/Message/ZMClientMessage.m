@@ -231,11 +231,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
     return -1;
 }
 
-- (void)obfuscate;
+- (void)obfuscate
 {
-    ZMLogDebug(@"obfuscating message %@", self.nonce.transportString);
-    self.isObfuscated = YES;
-    self.destructionDate = nil;
+    [super obfuscate];
     if (self.genericMessage.knockData == nil) {
         ZMGenericMessage *obfuscatedMessage = [self.genericMessage obfuscatedMessage];
         [self deleteContent];
@@ -247,6 +245,5 @@ static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
 }
 
 @end
-
 
 
