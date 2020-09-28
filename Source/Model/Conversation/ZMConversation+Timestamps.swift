@@ -276,10 +276,10 @@ extension ZMConversation {
             return
         }
         // Any unsent unread message is cleared when entering a conversation
-        if hasUnreadUnsentMessage {
+//        if hasUnreadUnsentMessage {
             ///TODO:Secret: unread和unsent需要分开，不应该每次点进这个会话，就把unsent的状态改变了
-            hasUnreadUnsentMessage = false
-        }
+//            hasUnreadUnsentMessage = false
+//        }
         
         //获取childMessage 时间较长(可忽略childMessage)
         guard let messageTimestamp = message.serverTimestamp else { return }

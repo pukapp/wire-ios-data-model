@@ -284,7 +284,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 {
     self.isExpired = YES;
     [self removeExpirationDate];
-    self.conversation.hasUnreadUnsentMessage = YES;
+//    self.conversation.hasUnreadUnsentMessage = YES;
 }
 
 + (NSSet *)keyPathsForValuesAffectingDeliveryState;
