@@ -335,9 +335,9 @@ static NSString *ZMLogTag = @"fetchMessage";
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], uuid.data];
     fetchRequest.fetchLimit = 2; // We only want 1, but want to check if there are too many.
     NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
-    RequireString([fetchResult count] <= 1, "More than one object with the same UUID: %s", uuid.transportString.UTF8String);
+//    VerifyString([fetchResult count] <= 1, "More than one object with the same UUID: %s", uuid.transportString.UTF8String);
     if ([fetchResult count] > 1) {
-        ZMLogInfo(@"More than one object with the same nonce in the same conversation");
+        ZMLogInfo(@"More than one object with the same UUID: %s", uuid.transportString.UTF8String);
       
         for (NSUInteger i = 0; i < [fetchResult count]; i++) {
             if (i > 0) {
