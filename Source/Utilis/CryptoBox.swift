@@ -27,8 +27,8 @@ extension NSManagedObjectContext {
     @objc(setupUserKeyStoreInAccountDirectory:applicationContainer:)
     public func setupUserKeyStore(accountDirectory: URL, applicationContainer: URL) -> Void
     {
-        if !self.zm_isSyncContext {
-            fatal("Can't initiliazie crypto box on non-sync context")
+        if self.zm_isUserInterfaceContext {
+            fatal("Can't initiliazie crypto box on ui context")
         }
 
         let newKeyStore = UserClientKeysStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
@@ -37,8 +37,8 @@ extension NSManagedObjectContext {
     
     /// Returns the cryptobox instance associated with this managed object context
     @objc public var zm_cryptKeyStore : UserClientKeysStore! {
-        if !self.zm_isSyncContext {
-            fatal("Can't access key store: Currently not on sync context")
+        if self.zm_isUserInterfaceContext {
+            fatal("Can't access key store: Currently on ui context")
         }
         let keyStore = self.userInfo.object(forKey: NSManagedObjectContext.ZMUserClientKeysStoreKey)
         if let keyStore = keyStore as? UserClientKeysStore {

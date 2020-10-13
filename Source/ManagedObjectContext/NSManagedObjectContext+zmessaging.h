@@ -36,6 +36,10 @@ extern NSString * _Nonnull const IsEventContextKey;
 ///
 /// Individual fields are marked as "needs to be pushed to the server" or "is in sync with server" when they are changed by either a user interface context or a sync context repsectively.
 @property (readonly) BOOL zm_isSyncContext;
+
+/// handler msg send
+@property (readonly) BOOL zm_isMsgContext;
+
 /// Inverse of @c zm_isSyncContext
 @property (readonly) BOOL zm_isUserInterfaceContext;
 

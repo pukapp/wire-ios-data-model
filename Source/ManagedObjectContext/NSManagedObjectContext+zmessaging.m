@@ -33,11 +33,13 @@
 
 NSString * const IsSyncContextKey = @"ZMIsSyncContext";
 NSString * const IsSearchContextKey = @"ZMIsSearchContext";
+NSString * const IsMsgContextKey = @"ZMIsMsgContext";
 NSString * const IsUserInterfaceContextKey = @"ZMIsUserInterfaceContext";
 NSString * const IsEventContextKey = @"ZMIsEventDecoderContext";
 
 static NSString * const SyncContextKey = @"ZMSyncContext";
 static NSString * const UserInterfaceContextKey = @"ZMUserInterfaceContext";
+static NSString * const MsgContextKey = @"ZMMsgContext";
 static NSString * const IsRefreshOfObjectsDisabled = @"ZMIsRefreshOfObjectsDisabled";
 static NSString * const IsSaveDisabled = @"ZMIsSaveDisabled";
 static NSString * const IsFailingToSave = @"ZMIsFailingToSave";
@@ -131,6 +133,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     return [self.userInfo[IsSearchContextKey] boolValue];
 }
 
+- (BOOL)zm_isMsgContext
+{
+    return [[self validUserInfoValueOfClass:[NSNumber class] forKey:IsMsgContextKey] boolValue];
+}
+
 - (NSManagedObjectContext*)zm_syncContext
 {
     if (self.zm_isSyncContext) {
@@ -146,9 +153,29 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     return nil;
 }
 
+- (NSManagedObjectContext*)zm_msgContext
+{
+    if (self.zm_isMsgContext) {
+        return self;
+    }
+    else {
+        UnownedNSObject *unownedContext = self.userInfo[MsgContextKey];
+        if (nil != unownedContext) {
+            return (NSManagedObjectContext *)unownedContext.unbox;
+        }
+    }
+    
+    return nil;
+}
+
 - (void)setZm_syncContext:(NSManagedObjectContext *)zm_syncContext
 {
     self.userInfo[SyncContextKey] = [[UnownedNSObject alloc] init:zm_syncContext];
+}
+
+- (void)setZm_MsgContext:(NSManagedObjectContext *)zm_msgContext
+{
+    self.userInfo[MsgContextKey] = [[UnownedNSObject alloc] init:zm_msgContext];
 }
 
 - (NSManagedObjectContext*)zm_userInterfaceContext
@@ -548,6 +575,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 {
     [self performBlockAndWait:^{
         self.userInfo[IsUserInterfaceContextKey] = @YES;
+        self.userInfo[DisplayNameGeneratorKey] = [[DisplayNameGenerator alloc] initWithManagedObjectContext:self];
+    }];
+}
+
+- (void)markAsMsgContext
+{
+    [self performBlockAndWait:^{
+        self.userInfo[IsMsgContextKey] = @YES;
         self.userInfo[DisplayNameGeneratorKey] = [[DisplayNameGenerator alloc] initWithManagedObjectContext:self];
     }];
 }

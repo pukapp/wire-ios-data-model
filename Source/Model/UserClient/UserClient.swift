@@ -264,7 +264,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     /// Resets releationships and ends an exisiting session before deleting the object
     /// Call this from the syncMOC only
     public func deleteClientAndEndSession() {
-        assert(self.managedObjectContext!.zm_isSyncContext, "clients can only be deleted on syncContext")
+        assert(!self.managedObjectContext!.zm_isUserInterfaceContext, "clients can't be deleted on uiContext")
         // hold on to the conversations that are affected by removing this client
         let conversations = activeConversationsForUserOfClients([self])
         let user = self.user
