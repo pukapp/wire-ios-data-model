@@ -92,7 +92,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     @NSManaged private var primitivePushToken: Data?
     public var pushToken: PushToken? {
         set {
-            precondition(managedObjectContext!.zm_isSyncContext, "Push token should be set only on sync context")
+            precondition(!managedObjectContext!.zm_isUserInterfaceContext, "Push token should be set only on sync context")
             if newValue != pushToken {
                 self.willChangeValue(forKey: Keys.PushToken)
                 primitivePushToken = try? JSONEncoder().encode(newValue)
@@ -116,7 +116,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     @NSManaged private var primitiveApnsPushToken: Data?
     public var apnsPushToken: ApnsPushToken? {
         set {
-            precondition(managedObjectContext!.zm_isSyncContext, "Apns Push token should be set only on sync context")
+            precondition(!managedObjectContext!.zm_isUserInterfaceContext, "Apns Push token should be set only on sync context")
             if newValue != apnsPushToken {
                 self.willChangeValue(forKey: Keys.ApnsPushToken)
                 primitiveApnsPushToken = try? JSONEncoder().encode(newValue)
@@ -167,7 +167,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
         // Fetch fingerprint if not there yet (could remain nil after fetch)
         if let managedObjectContext = self.managedObjectContext,
             let _ = self.remoteIdentifier
-            , managedObjectContext.zm_isSyncContext && self.fingerprint == .none
+            , !managedObjectContext.zm_isUserInterfaceContext && self.fingerprint == .none
         {
             self.fingerprint = self.fetchFingerprint()
         }
@@ -211,7 +211,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     }
     
     public static func fetchUserClient(withRemoteId remoteIdentifier: String, forUser user:ZMUser, createIfNeeded: Bool) -> UserClient? {
-        precondition(!createIfNeeded || user.managedObjectContext!.zm_isSyncContext, "clients can only be created on the syncContext")
+        precondition(!createIfNeeded || !user.managedObjectContext!.zm_isUserInterfaceContext, "clients can only be created on the syncContext")
         
         guard let context = user.managedObjectContext else {
             fatal("User \(user.safeForLoggingDescription) is not a member of a managed object context (deleted object).")

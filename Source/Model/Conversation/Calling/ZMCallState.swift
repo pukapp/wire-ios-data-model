@@ -62,7 +62,7 @@ extension NSManagedObjectContext {
     }
     
     @objc public func mergeCallStateChanges(fromUserInfo userInfo: [String : Any]) {
-        guard self.zm_isSyncContext else { return } // we don't merge anything to UI, UI is autoritative
+        guard !self.zm_isUserInterfaceContext else { return } // we don't merge anything to UI, UI is autoritative
         
         if let callState = self.userInfo[UserInfoCallStateKey] as? ZMCallState {
             _ = callState.mergeChangesFromState(userInfo[UserInfoCallStateKey] as? ZMCallState)

@@ -213,7 +213,7 @@ public class AssetCollectionBatched : NSObject, ZMCollection {
     }
     
     static func categorizedMessages<T : ZMMessage>(for conversation: ZMConversation, matchPairs: [CategoryMatch]) -> [T] {
-        precondition(conversation.managedObjectContext!.zm_isSyncContext, "Fetch should only be performed on the sync context")
+        precondition(!conversation.managedObjectContext!.zm_isUserInterfaceContext, "Fetch should only be performed on the sync context")
         let request = T.fetchRequestMatching(matchPairs: matchPairs, conversation: conversation)
         let excludedCategoryPredicate =  NSPredicate(format: "%K & %d == 0", ZMMessageCachedCategoryKey, MessageCategory.excludedFromCollection.rawValue)
         request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [request.predicate!, excludedCategoryPredicate])
@@ -224,7 +224,7 @@ public class AssetCollectionBatched : NSObject, ZMCollection {
     }
     
     func unCategorizedMessages<T : ZMMessage>(for conversation: ZMConversation) -> [T]  {
-        precondition(conversation.managedObjectContext!.zm_isSyncContext, "Fetch should only be performed on the sync context")
+        precondition(!conversation.managedObjectContext!.zm_isUserInterfaceContext, "Fetch should only be performed on the sync context")
         
         let request : NSFetchRequest<T> = AssetCollectionBatched.fetchRequestForUnCategorizedMessages(in: conversation)
         request.fetchBatchSize = AssetCollectionBatched.defaultFetchCount

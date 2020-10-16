@@ -32,13 +32,13 @@ public extension NSManagedObjectContext {
     }
     
     @objc var zm_messageObfuscationTimer : ZMMessageDestructionTimer? {
-        precondition(zm_isSyncContext, "MessageObfuscationTimer should be started only on the syncContext")
+        precondition(!zm_isUserInterfaceContext, "MessageObfuscationTimer should be started only on the syncContext")
         
         return userInfo[MessageObfuscationTimerKey] as? ZMMessageDestructionTimer
     }
     
     @objc func zm_createMessageObfuscationTimer() {
-        precondition(zm_isSyncContext, "MessageObfuscationTimer should be started only on the syncContext")
+        precondition(!zm_isUserInterfaceContext, "MessageObfuscationTimer should be started only on the syncContext")
         
         guard userInfo[MessageObfuscationTimerKey] == nil else {
             log.debug("Obfuscation timer already exists, skipping")
@@ -64,7 +64,7 @@ public extension NSManagedObjectContext {
     /// Tears down zm_messageObfuscationTimer and zm_messageDeletionTimer
     /// Call inside a performGroupedBlock(AndWait) when calling it from another context
     @objc func zm_teardownMessageObfuscationTimer() {
-        precondition(zm_isSyncContext, "MessageObfuscationTimer is located on the syncContext")
+        precondition(!zm_isUserInterfaceContext, "MessageObfuscationTimer is located on the syncContext")
         if let timer = userInfo[MessageObfuscationTimerKey] as? ZMMessageDestructionTimer {
             timer.tearDown()
             userInfo.removeObject(forKey: MessageObfuscationTimerKey)

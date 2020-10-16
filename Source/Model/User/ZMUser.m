@@ -464,7 +464,7 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     // where the UI and sync contexts could both insert the same user (same UUID) and we'd end up
     // having two duplicates of that user, and we'd have a really hard time recovering from that.
     //
-    RequireString(! create || moc.zm_isSyncContext, "Race condition!");
+    RequireString(! create || !moc.zm_isUserInterfaceContext, "Race condition!");
     
     ZMUser *result = [self fetchObjectWithRemoteIdentifier:UUID inManagedObjectContext:moc];
     

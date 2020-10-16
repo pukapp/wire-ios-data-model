@@ -64,7 +64,7 @@ extension ZMConversation {
             lastReadServerTimeStamp = timestamp
             
             // modified keys are set "automatically" on the uiMOC
-            if synchronize && managedObjectContext.zm_isSyncContext {
+            if synchronize && !managedObjectContext.zm_isUserInterfaceContext {
                 setLocallyModifiedKeys(Set([ZMConversationLastReadServerTimeStampKey]))
             }
             
@@ -93,7 +93,7 @@ extension ZMConversation {
         if timestamp > clearedTimeStamp {
             clearedTimeStamp = timestamp
             
-            if synchronize && managedObjectContext.zm_isSyncContext {
+            if synchronize && !managedObjectContext.zm_isMsgContext {
                 setLocallyModifiedKeys(Set([ZMConversationClearedTimeStampKey]))
             }
         }
@@ -106,7 +106,7 @@ extension ZMConversation {
         if timestamp > archivedChangedTimestamp {
             archivedChangedTimestamp = timestamp
             
-            if synchronize && managedObjectContext.zm_isSyncContext {
+            if synchronize && !managedObjectContext.zm_isMsgContext {
                 setLocallyModifiedKeys([ZMConversationArchivedChangedTimeStampKey])
             }
             
@@ -162,7 +162,7 @@ extension ZMConversation {
         if timestamp > silencedChangedTimestamp {
             silencedChangedTimestamp = timestamp
             
-            if synchronize && managedObjectContext.zm_isSyncContext {
+            if synchronize && !managedObjectContext.zm_isMsgContext {
                 setLocallyModifiedKeys([ZMConversationSilencedChangedTimeStampKey])
             }
             
@@ -341,7 +341,7 @@ extension ZMConversation {
     /// when the last read timetamp changes or a message is inserted / deleted.
     @objc
     func calculateLastUnreadMessages() {
-        guard let managedObjectContext = managedObjectContext, managedObjectContext.zm_isSyncContext else { return } // We only calculate unread message on the sync MOC
+        guard let managedObjectContext = managedObjectContext, !managedObjectContext.zm_isUserInterfaceContext else { return } // We only calculate unread message on the sync MOC
         
         let messages = unreadMessagesIncludingInvisible().filter(ZMMessage.isVisible)
         var lastKnockDate: Date? = nil

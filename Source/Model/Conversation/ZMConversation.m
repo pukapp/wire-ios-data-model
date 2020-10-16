@@ -594,7 +594,7 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     [self willChangeValueForKey:ZMConversationClearedTimeStampKey];
     [self setPrimitiveValue:clearedTimeStamp forKey:ZMConversationClearedTimeStampKey];
     [self didChangeValueForKey:ZMConversationClearedTimeStampKey];
-    if (self.managedObjectContext.zm_isSyncContext) {
+    if (!self.managedObjectContext.zm_isUserInterfaceContext) {
         [self deleteOlderMessages];
     }
 }
@@ -918,7 +918,7 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     // where the UI and sync contexts could both insert the same conversation (same UUID) and we'd end up
     // having two duplicates of that conversation, and we'd have a really hard time recovering from that.
     //
-    RequireString(! create || moc.zm_isSyncContext, "Race condition!");
+    RequireString(! create || !moc.zm_isUserInterfaceContext, "Race condition!");
     
     ZMConversation *result = [self fetchObjectWithRemoteIdentifier:UUID inManagedObjectContext:moc];
     

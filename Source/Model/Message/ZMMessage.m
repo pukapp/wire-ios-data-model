@@ -1584,7 +1584,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         return NO;
     }
     BOOL isSelfUser = self.sender.isSelfUser;
-    if (isSelfUser && self.managedObjectContext.zm_isSyncContext) {
+    if (isSelfUser && !self.managedObjectContext.zm_isUserInterfaceContext) {
         self.destructionDate = [NSDate dateWithTimeIntervalSinceNow:self.deletionTimeout];
         ZMMessageDestructionTimer *timer = self.managedObjectContext.zm_messageObfuscationTimer;
         if (timer != nil) { 
@@ -1677,7 +1677,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 - (void)restartObfuscationTimer:(NSTimeInterval)remainingTime
 {
     NSManagedObjectContext *syncContext = self.managedObjectContext;
-    if (!syncContext.zm_isSyncContext) {
+    if (syncContext.zm_isUserInterfaceContext) {
         syncContext = self.managedObjectContext.zm_syncContext;
     }
     [syncContext performGroupedBlock:^{

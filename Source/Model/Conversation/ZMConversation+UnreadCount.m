@@ -46,7 +46,7 @@ NSString *const ZMConversationLastReadLocalTimestampKey = @"lastReadLocalTimesta
 
 - (void)setLastUnreadKnockDate:(NSDate *)lastUnreadKnockDate
 {
-    RequireString(self.managedObjectContext.zm_isSyncContext, "lastUnreadKnockDate should only be set from the sync context");
+    RequireString(!self.managedObjectContext.zm_isUserInterfaceContext, "lastUnreadKnockDate should only be set from the sync context");
     
     [self willChangeValueForKey:ZMConversationLastUnreadKnockDateKey];
     [self setPrimitiveValue:lastUnreadKnockDate forKey:ZMConversationLastUnreadKnockDateKey];
@@ -55,7 +55,7 @@ NSString *const ZMConversationLastReadLocalTimestampKey = @"lastReadLocalTimesta
 
 - (void)setLastUnreadMissedCallDate:(NSDate *)lastUnreadMissedCallDate
 {
-    RequireString(self.managedObjectContext.zm_isSyncContext, "lastUnreadMissedCallDate should only be set from the sync context");
+    RequireString(!self.managedObjectContext.zm_isUserInterfaceContext, "lastUnreadMissedCallDate should only be set from the sync context");
     
     [self willChangeValueForKey:ZMConversationLastUnreadMissedCallDateKey];
     [self setPrimitiveValue:lastUnreadMissedCallDate forKey:ZMConversationLastUnreadMissedCallDateKey];
@@ -142,7 +142,7 @@ NSString *const ZMConversationLastReadLocalTimestampKey = @"lastReadLocalTimesta
 
 - (void)setInternalEstimatedUnreadCount:(int64_t)internalEstimatedUnreadCount
 {
-    RequireString(self.managedObjectContext.zm_isSyncContext, "internalEstimatedUnreadCount should only be set from the sync context");
+    RequireString(!self.managedObjectContext.zm_isUserInterfaceContext, "internalEstimatedUnreadCount should only be set from the sync context");
     
     [self willChangeValueForKey:ZMConversationInternalEstimatedUnreadCountKey];
     [self setPrimitiveValue:@(internalEstimatedUnreadCount) forKey:ZMConversationInternalEstimatedUnreadCountKey];
@@ -151,7 +151,7 @@ NSString *const ZMConversationLastReadLocalTimestampKey = @"lastReadLocalTimesta
 
 - (void)setInternalEstimatedUnreadSelfMentionCount:(int64_t)internalEstimatedUnreadSelfMentionCount
 {
-    RequireString(self.managedObjectContext.zm_isSyncContext, "internalEstimatedUnreadSelfMentionCount should only be set from the sync context");
+    RequireString(!self.managedObjectContext.zm_isUserInterfaceContext, "internalEstimatedUnreadSelfMentionCount should only be set from the sync context");
     
     [self willChangeValueForKey:ZMConversationInternalEstimatedUnreadSelfMentionCountKey];
     [self setPrimitiveValue:@(internalEstimatedUnreadSelfMentionCount) forKey:ZMConversationInternalEstimatedUnreadSelfMentionCountKey];
@@ -160,7 +160,7 @@ NSString *const ZMConversationLastReadLocalTimestampKey = @"lastReadLocalTimesta
 
 - (void)setInternalEstimatedUnreadSelfReplyCount:(int64_t)internalEstimatedUnreadSelfReplyCount
 {
-    RequireString(self.managedObjectContext.zm_isSyncContext, "internalEstimatedUnreadSelfReplyCount should only be set from the sync context");
+    RequireString(!self.managedObjectContext.zm_isUserInterfaceContext, "internalEstimatedUnreadSelfReplyCount should only be set from the sync context");
     
     [self willChangeValueForKey:ZMConversationInternalEstimatedUnreadSelfReplyCountKey];
     [self setPrimitiveValue:@(internalEstimatedUnreadSelfReplyCount) forKey:ZMConversationInternalEstimatedUnreadSelfReplyCountKey];

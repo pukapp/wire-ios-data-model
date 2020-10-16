@@ -22,7 +22,7 @@ extension NSManagedObjectContext {
     
     /// Prepare a backed up database for being imported, deleting self client, push token etc.
     func prepareToImportBackup() {
-        require(self.zm_isSyncContext, "Needs to be run on Sync Context to avoid race conditions")
+        require(!self.zm_isUserInterfaceContext, "can't to be run on ui Context to avoid race conditions")
         setPersistentStoreMetadata(nil as Data?, key: ZMPersistedClientIdKey)
         setPersistentStoreMetadata(nil as Data?, key: PersistentMetadataKey.importedFromBackup.rawValue)
         setPersistentStoreMetadata(nil as Data?, key: PersistentMetadataKey.pushToken.rawValue)

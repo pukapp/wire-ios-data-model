@@ -88,7 +88,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 
 - (BOOL)zm_isValidContext
 {
-    return self.zm_isSyncContext || self.zm_isUserInterfaceContext || self.zm_isSearchContext;
+    return self.zm_isSyncContext || self.zm_isUserInterfaceContext || self.zm_isSearchContext || self.zm_isMsgContext;
 }
 
 - (id)validUserInfoValueOfClass:(Class)class forKey:(NSString *)key
@@ -228,7 +228,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 
 - (NSMutableSet *)zm_failedToEstablishSessionStore
 {
-    if (!self.zm_isSyncContext) {
+    if (self.zm_isUserInterfaceContext || self.zm_isSearchContext) {
         return nil;
     }
     
@@ -298,7 +298,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
         NSError *error;
         ZMLogDebug(@"Saving <%@: %p>.", self.class, self);
         self.timeOfLastSave = [NSDate date];
-        ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:[NSString stringWithFormat:@"Saving context %@", self.zm_isSyncContext ? @"sync": @"ui"]];
+        ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:[NSString stringWithFormat:@"Saving context %@", self.zm_isSyncContext ? @"sync": (self.zm_isUserInterfaceContext ? @"ui" : @"msg")]];
         if (! [self save:&error]) {
             ZMLogError(@"Failed to save: %@", error);
             [self reportSaveErrorWithError:error];

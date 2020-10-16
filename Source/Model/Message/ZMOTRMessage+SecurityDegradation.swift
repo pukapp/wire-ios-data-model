@@ -34,7 +34,7 @@ extension ZMOTRMessage {
         }
         set {
             guard let conversation = self.conversation, let moc = self.managedObjectContext else { return }
-            guard moc.zm_isSyncContext else { fatal("Cannot mark message as degraded security on non-sync moc") }
+            guard !moc.zm_isUserInterfaceContext else { fatal("Cannot mark message as degraded security on non-sync moc") }
             
             // make sure it's persisted
             if self.objectID.isTemporaryID {

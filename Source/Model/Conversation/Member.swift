@@ -59,7 +59,7 @@
 
     @objc(getOrCreateMemberForUser:inTeam:context:)
     public static func getOrCreateMember(for user: ZMUser, in team: Team, context: NSManagedObjectContext) -> Member {
-        precondition(context.zm_isSyncContext)
+//        precondition(context.zm_isSyncContext)
         
         if let existing = user.membership {
             return existing

@@ -24,7 +24,7 @@ extension ZMConversation {
         
         guard let managedObjectContext = self.managedObjectContext,
               let clearedTimeStamp = self.clearedTimeStamp,
-              managedObjectContext.zm_isSyncContext else {
+              !managedObjectContext.zm_isUserInterfaceContext else {
             return
         }
         
