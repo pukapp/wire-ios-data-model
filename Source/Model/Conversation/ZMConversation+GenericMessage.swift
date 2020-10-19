@@ -43,7 +43,7 @@ extension ZMConversation {
                 message.updateCategoryCache()
                 message.prepareToSend()
             }
-
+            self.addSelfToTopSectionDirectory()
             return message
         } catch {
             return nil

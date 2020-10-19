@@ -1209,7 +1209,7 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
         [message updateCategoryCache];
         [message prepareToSend];
     }
-    
+    [self addSelfToTopSectionDirectory];
     return message;
 }
 
