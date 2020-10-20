@@ -24,6 +24,7 @@
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMUser+Internal.h"
 #import "ZMMessage+Internal.h"
+#import <WireDataModel/WireDataModel-Swift.h>
 
 NSString * const ZMDataPropertySuffix = @"_data";
 
@@ -316,6 +317,11 @@ static NSString *ZMLogTag = @"fetchMessage";
 
 + (instancetype)fetchObjectWithRemoteIdentifier:(NSUUID *)uuid inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
+    
+    if (!uuid) {
+        return nil;
+    }
+    
     // Executing a fetch request is quite expensive, because it will _always_ (1) round trip through
     // (1) the persistent store coordinator and the SQLite engine, and (2) touch the file system.
     // Looping through all objects in the context is way cheaper, because it does not involve (1)
@@ -324,13 +330,18 @@ static NSString *ZMLogTag = @"fetchMessage";
     NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
     Require(entity != nil);
     
-    NSString *key = [self remoteIdentifierDataKey];
-    NSData *data = uuid.data;
-    for (NSManagedObject *mo in moc.registeredObjects) {
-        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
-            return (id) mo;
-        }
+//    NSString *key = [self remoteIdentifierDataKey];
+//    NSData *data = uuid.data;
+//    for (NSManagedObject *mo in moc.registeredObjects) {
+//        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
+//            return (id) mo;
+//        }
+//    }
+    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID: uuid];
+    if (object) {
+        return object;
     }
+    
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], uuid.data];
     fetchRequest.fetchLimit = 2; // We only want 1, but want to check if there are too many.
@@ -341,11 +352,12 @@ static NSString *ZMLogTag = @"fetchMessage";
       
         for (NSUInteger i = 0; i < [fetchResult count]; i++) {
             if (i > 0) {
-                NSManagedObject *object = fetchResult[i];
-                [moc deleteObject:object];
+                NSManagedObject *o = fetchResult[i];
+                [moc deleteObject:o];
             }
         }
     }
+    [moc setCacheManagedObjectWithUUID:uuid object:fetchResult.firstObject];
     return fetchResult.firstObject;
 }
 
@@ -354,12 +366,15 @@ static NSString *ZMLogTag = @"fetchMessage";
     NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
     Require(entity != nil);
     
-    NSString *key = [self remoteIdentifierDataKey];
-    NSData *data = uuid.data;
-    for (NSManagedObject *mo in moc.registeredObjects) {
-        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
-            return YES;
-        }
+//    NSString *key = [self remoteIdentifierDataKey];
+//    NSData *data = uuid.data;
+//    for (NSManagedObject *mo in moc.registeredObjects) {
+//        if (!mo.isFault && mo.entity == entity && [data isEqual:[mo valueForKey:key]]) {
+//            return YES;
+//        }
+//    }
+    if ([moc getCacheManagedObjectWithUUID: uuid]) {
+        return YES;
     }
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], uuid.data];
@@ -389,10 +404,17 @@ static NSString *ZMLogTag = @"fetchMessage";
         return uuid.data;
     }] mutableCopy];
     
-    for (NSManagedObject *mo in moc.registeredObjects) {
-        if ((mo.entity == entity) && [uuidDataArray containsObject:[mo valueForKey:key]]) {
-            [objects addObject:mo];
-            [uuidDataArray removeObject:[mo valueForKey:key]];
+//    for (NSManagedObject *mo in moc.registeredObjects) {
+//        if ((mo.entity == entity) && [uuidDataArray containsObject:[mo valueForKey:key]]) {
+//            [objects addObject:mo];
+//            [uuidDataArray removeObject:[mo valueForKey:key]];
+//        }
+//    }
+    for (NSUUID *nsuuid in uuids) {
+        ZMManagedObject *cacheObject = [moc getCacheManagedObjectWithUUID: nsuuid];
+        if (cacheObject) {
+            [objects addObject:cacheObject];
+            [uuidDataArray removeObject:[cacheObject valueForKey:key]];
         }
     }
     
@@ -402,21 +424,28 @@ static NSString *ZMLogTag = @"fetchMessage";
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K IN %@", [self remoteIdentifierDataKey], uuidDataArray];
-    fetchRequest.fetchLimit = uuidDataArray.count + 1; // We only want 1 object for each uuid, but want to check if there are too many.
+    fetchRequest.fetchLimit = uuidDataArray.count * 2; // We only want 1 object for each uuid, but want to check if there are too many.
     NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
     ///由于改变了消息的插入机制，所以导致可能会有两条相同的消息被插入到数据库中，这里做一个删除处理
     if (fetchResult.count > uuidDataArray.count) {
-        NSMutableArray * uuidarr = [NSMutableArray arrayWithCapacity:fetchResult.count];
+        NSMutableArray * existMessageIds = [NSMutableArray array];
         for (NSManagedObject * ob in fetchResult) {
             if ([ob isKindOfClass:[ZMMessage class]]) {
                 ZMMessage * me = (ZMMessage*)ob;
-                if ([uuidarr containsObject:me.nonce]) {
+                [moc setCacheManagedObjectWithUUID:me.nonce object:me];
+                if ([existMessageIds containsObject:me.nonce]) {
                     [moc deleteObject:ob];
-                    [moc saveOrRollback];
-                    break;
+                    continue;
                 }
-                [uuidarr addObject:me.nonce];
+                [existMessageIds addObject:me.nonce];
             }
+        }
+    }
+    for (ZMManagedObject * managedObject in fetchResult) {
+        if ([managedObject isKindOfClass:[ZMConversation class]] || [managedObject isKindOfClass:[ZMUser class]] ||
+            [managedObject isKindOfClass:[UserClient class]]) {
+            NSUUID *uuid = [managedObject transientUUIDForKey:@"remoteIdentifier"];
+            [moc setCacheManagedObjectWithUUID:uuid object:managedObject];
         }
     }
     //RequireString([fetchResult count] <= uuidDataArray.count, "More than one object with the same UUID");
@@ -795,19 +824,19 @@ static NSString *ZMLogTag = @"fetchMessage";
 
 + (instancetype)existingObjectWithNonpersistedObjectIdentifer:(NSString *)identifier inUserSession:(id<ZMManagedObjectContextProvider>)userSession;
 {
-    VerifyReturnNil(identifier != nil);
-    intptr_t value = 0;
-    if (sscanf([identifier UTF8String], "Z%tx", &value) != 1) {
-        return nil;
-    }
-    
-    NSManagedObjectContext *moc =  userSession.managedObjectContext;
-    for (ZMManagedObject *mo in moc.registeredObjects) {
-        intptr_t otherValue = (intptr_t) ((__bridge void *) mo);
-        if (otherValue == value) {
-            return mo;
-        }
-    }
+//    VerifyReturnNil(identifier != nil);
+//    intptr_t value = 0;
+//    if (sscanf([identifier UTF8String], "Z%tx", &value) != 1) {
+//        return nil;
+//    }
+//
+//    NSManagedObjectContext *moc =  userSession.managedObjectContext;
+//    for (ZMManagedObject *mo in moc.registeredObjects) {
+//        intptr_t otherValue = (intptr_t) ((__bridge void *) mo);
+//        if (otherValue == value) {
+//            return mo;
+//        }
+//    }
     return nil;
 }
 
