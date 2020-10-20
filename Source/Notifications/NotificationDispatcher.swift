@@ -43,6 +43,7 @@ extension Notification.Name {
 
     public static let NonCoreDataChangeInManagedObject = Notification.Name("NonCoreDataChangeInManagedObject")
     
+    public static let FireAllNotificationWhenIdle = Notification.Name("FireAllNotificationWhenIdle")
 }
 
 
@@ -185,10 +186,7 @@ extension ZMManagedObject {
                                            ZMAssetClientMessage.classIdentifier,
                                            ZMSystemMessage.classIdentifier,
                                            Reaction.classIdentifier,
-                                           ZMGenericMessageData.classIdentifier,
-                                           Team.classIdentifier,
-                                           Member.classIdentifier,
-                                           Label.classIdentifier]
+                                           ZMGenericMessageData.classIdentifier]
         self.affectingKeysStore = DependencyKeyStore(classIdentifiers : classIdentifiers)
         self.snapshotCenter = SnapshotCenter(managedObjectContext: managedObjectContext)
         super.init()
@@ -198,6 +196,7 @@ extension ZMManagedObject {
             selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
             name:.NSManagedObjectContextObjectsDidChange,
             object: self.managedObjectContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(NotificationDispatcher.fireWhenIdle), name: NSNotification.Name.FireAllNotificationWhenIdle, object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(NotificationDispatcher.contextDidSave(_:)),
@@ -415,7 +414,12 @@ extension ZMManagedObject {
         }
     }
     
-    func fireAllNotifications(){
+    func fireAllNotifications() {
+        let nofi = Notification(name: .FireAllNotificationWhenIdle)
+        NotificationQueue.default.enqueue(nofi, postingStyle: .whenIdle, coalesceMask: .onName, forModes: [RunLoop.Mode.default])
+    }
+    
+    func fireWhenIdle() {
         let changes = allChanges
         let unreads = unreadMessages
         
