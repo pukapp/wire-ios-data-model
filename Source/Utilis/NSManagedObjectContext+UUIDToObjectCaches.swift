@@ -45,10 +45,12 @@ import Foundation
     }
     
     
-    @objc(getCacheManagedObjectWithUUID:)
-    public func getCacheManagedObject(uuid: UUID?) -> ZMManagedObject? {
+    @objc(getCacheManagedObjectWithUUID:clazz:)
+    public func getCacheManagedObject(uuid: UUID?, clazz: AnyClass) -> ZMManagedObject? {
         guard let u = uuid else {return nil}
-        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type] , let object = threadLocal.object(forKey: u as NSUUID) {
+        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type],
+            let object = threadLocal.object(forKey: u as NSUUID),
+            object.isKind(of: clazz){
             return object
         }
         return nil

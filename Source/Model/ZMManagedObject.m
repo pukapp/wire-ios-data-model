@@ -337,7 +337,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //            return (id) mo;
 //        }
 //    }
-    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID: uuid];
+    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID:uuid clazz: self];
     if (object) {
         return object;
     }
@@ -373,7 +373,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //            return YES;
 //        }
 //    }
-    if ([moc getCacheManagedObjectWithUUID: uuid]) {
+    if ([moc getCacheManagedObjectWithUUID: uuid clazz:self]) {
         return YES;
     }
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
@@ -411,7 +411,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //        }
 //    }
     for (NSUUID *nsuuid in uuids) {
-        ZMManagedObject *cacheObject = [moc getCacheManagedObjectWithUUID: nsuuid];
+        ZMManagedObject *cacheObject = [moc getCacheManagedObjectWithUUID:nsuuid clazz: self];
         if (cacheObject) {
             [objects addObject:cacheObject];
             [uuidDataArray removeObject:[cacheObject valueForKey:key]];
