@@ -148,6 +148,9 @@ extension ZMManagedObject {
     
     private var allChanges : [ZMManagedObject : Changes] = [:]
     private var userChanges : [ZMManagedObject : Set<String>] = [:]
+    private var changedObjects : Set = Set<ZMManagedObject>()
+    private var insertObjects : Set = Set<ZMManagedObject>()
+    private var deleteObjects : Set = Set<ZMManagedObject>()
     private var unreadMessages : [Notification.Name : Set<ZMMessage>] = [:]
     private var shouldStartObserving: Bool {
         return !isDisabled && !isInBackground
@@ -196,7 +199,7 @@ extension ZMManagedObject {
             selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
             name:.NSManagedObjectContextObjectsDidChange,
             object: self.managedObjectContext)
-        NotificationCenter.default.addObserver(self, selector: #selector(NotificationDispatcher.fireWhenIdle), name: NSNotification.Name.FireAllNotificationWhenIdle, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(NotificationDispatcher.extractAndfireWhenIdle), name: NSNotification.Name.FireAllNotificationWhenIdle, object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(NotificationDispatcher.contextDidSave(_:)),
@@ -234,6 +237,9 @@ extension ZMManagedObject {
         self.unreadMessages = [:]
         self.allChanges = [:]
         self.userChanges = [:]
+        self.changedObjects = Set()
+        self.insertObjects = Set()
+        self.deleteObjects = Set()
         self.snapshotCenter.clearAllSnapshots()
         self.allChangeInfoConsumers.forEach{$0.stopObserving()}
     }
@@ -253,7 +259,7 @@ extension ZMManagedObject {
     /// This is called when the uiMOC saved
     @objc func contextDidSave(_ note: Notification){
         guard isObserving else { return }
-        self.fireAllNotifications()
+        self.postFireNotification()
     }
     
     /// This will be called if a change to an object does not cause a change in Core Data, e.g. downloading the asset and adding it to the cache
@@ -267,7 +273,7 @@ extension ZMManagedObject {
         self.allChanges = self.allChanges.merged(with: objectAndChangedKeys)
         // Fire notifications only if there won't be a save happening anytime soon
         if !managedObjectContext.zm_hasChanges {
-            self.fireAllNotifications()
+            self.postFireNotification()
         } else { // make sure we will save eventually, even if we forgot to save somehow
             managedObjectContext.enqueueDelayedSave()
         }
@@ -277,9 +283,9 @@ extension ZMManagedObject {
     internal func forwardChangesToConversationListObserver(note: Notification) {
         guard let userInfo = note.userInfo as? [String: Any] else { return }
         
-        let insertedLabels = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? Label} ?? []
-        let deletedLabels = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? Label} ?? []
-        self.conversationListObserverCenter.folderChanges(inserted: insertedLabels, deleted: deletedLabels)
+//        let insertedLabels = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? Label} ?? []
+//        let deletedLabels = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? Label} ?? []
+//        self.conversationListObserverCenter.folderChanges(inserted: insertedLabels, deleted: deletedLabels)
         
         let insertedConversations = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMConversation} ?? []
         let deletedConversations = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMConversation} ?? []
@@ -290,8 +296,8 @@ extension ZMManagedObject {
     public func didMergeChanges(_ changedObjectIDs: Set<NSManagedObjectID>) {
         guard isObserving else { return }
         let changedObjects : [ZMManagedObject] = changedObjectIDs.compactMap{(try? managedObjectContext.existingObject(with: $0)) as? ZMManagedObject}
-        self.extractChanges(from: Set(changedObjects))
-        self.fireAllNotifications()
+        self.changedObjects = self.changedObjects.union(changedObjects)
+        self.postFireNotification()
     }
     
     func process(note: Notification) {
@@ -305,12 +311,11 @@ extension ZMManagedObject {
         self.snapshotCenter.createSnapshots(for: insertedObjects)
         
         let allUpdated = updatedObjects.union(refreshedObjects)
-        self.extractChanges(from: allUpdated)
-        self.extractChangesCausedByInsertionOrDeletion(of: insertedObjects)
-        self.extractChangesCausedByInsertionOrDeletion(of: deletedObjects)
-
-        self.checkForUnreadMessages(insertedObjects: insertedObjects, updatedObjects:updatedObjects )
+        self.changedObjects = self.changedObjects.union(allUpdated)
+        self.insertObjects = self.insertObjects.union(insertedObjects)
+        self.deleteObjects = self.deleteObjects.union(deletedObjects)
         
+        self.postFireNotification()
         self.userChanges = [:]
     }
     
@@ -414,12 +419,27 @@ extension ZMManagedObject {
         }
     }
     
-    func fireAllNotifications() {
+    func postFireNotification() {
         let nofi = Notification(name: .FireAllNotificationWhenIdle)
         NotificationQueue.default.enqueue(nofi, postingStyle: .whenIdle, coalesceMask: .onName, forModes: [RunLoop.Mode.default])
     }
     
-    func fireWhenIdle() {
+    func extractAndfireWhenIdle() {
+        self.extractChanges()
+        self.fireAllNotification()
+    }
+    
+    func extractChanges() {
+        self.extractChanges(from: self.changedObjects)
+        self.extractChangesCausedByInsertionOrDeletion(of: self.insertObjects)
+        self.extractChangesCausedByInsertionOrDeletion(of: self.deleteObjects)
+        self.checkForUnreadMessages(insertedObjects: self.insertObjects, updatedObjects: self.changedObjects)
+        self.changedObjects = Set<ZMManagedObject>()
+        self.insertObjects = Set<ZMManagedObject>()
+        self.deleteObjects = Set<ZMManagedObject>()
+    }
+    
+    func fireAllNotification() {
         let changes = allChanges
         let unreads = unreadMessages
         
