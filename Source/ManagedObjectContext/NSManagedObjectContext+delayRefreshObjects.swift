@@ -12,13 +12,13 @@ extension NSManagedObjectContext {
     
     static let RefreshObjectsTimeStampKey = "RefreshObjectsTimeStampKey"
     
-    static let TWO_MINUTE: Double = 3 * 60
+    static let INTERVAl_MINUTE: Double = 3 * 60
     
     @objc
     public var shouldRefreshObjects: Bool {
         if let lastRefreshDate = self.refreshObjectsTimeStamp {
             let seconds = NSDate().timeIntervalSince(lastRefreshDate)
-            if seconds > NSManagedObjectContext.TWO_MINUTE {
+            if seconds > NSManagedObjectContext.INTERVAl_MINUTE {
                 resetRefreshObjectsTimeStamp()
                 return true
             }
