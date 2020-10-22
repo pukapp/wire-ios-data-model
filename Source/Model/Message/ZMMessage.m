@@ -152,6 +152,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic isNeedAssistantBotReply;
 @dynamic isillegal;
 @dynamic illegalUserName;
+@dynamic isSendRead;
+@dynamic isSendDelivered;
 @dynamic dataSet;
 @dynamic quote;
 @dynamic updatedTimestamp;
@@ -259,7 +261,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 {
     self.isExpired = NO;
     [self setExpirationDate];
-    [self prepareToSend];
 }
 
 - (void)setExpirationDate
@@ -529,7 +530,6 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     self.visibleInConversation = nil;
     self.replies = [[NSSet alloc] init];
     [self clearAllReactions];
-    [self clearConfirmations];
     
     if (clearingSender) {
         self.sender = nil;

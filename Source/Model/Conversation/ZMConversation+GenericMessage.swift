@@ -41,7 +41,6 @@ extension ZMConversation {
                 appendMessage(message)
                 unarchiveIfNeeded()
                 message.updateCategoryCache()
-                message.prepareToSend()
             }
             self.addSelfToTopSectionDirectory()
             return message

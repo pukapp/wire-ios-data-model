@@ -133,7 +133,6 @@ extension ZMConversation {
         }
         
         message.updateCategoryCache()
-        message.prepareToSend()
         
         return message
     }

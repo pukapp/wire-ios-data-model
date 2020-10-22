@@ -65,9 +65,6 @@ public protocol ZMConversationMessage : NSObjectProtocol {
     
     /// True if the message has been successfully sent to the server
     var isSent: Bool { get }
-    
-    /// List of recipients who have read the message.
-    var readReceipts: [ReadReceipt] { get }
 
     /// Whether the message expects read confirmations.
     var needsReadConfirmation: Bool { get }
@@ -237,10 +234,6 @@ extension ZMMessage : ZMConversationMessage {
     @NSManaged public var linkAttachments: [LinkAttachment]?
     @NSManaged public var needsLinkAttachmentsUpdate: Bool
     @NSManaged public var replies: Set<ZMMessage>
-    
-    public var readReceipts: [ReadReceipt] {
-        return confirmations.filter({ $0.type == .read }).sorted(by: { a, b in  a.serverTimestamp < b.serverTimestamp })
-    }
 
     public var objectIdentifier: String {
         return nonpersistedObjectIdentifer!

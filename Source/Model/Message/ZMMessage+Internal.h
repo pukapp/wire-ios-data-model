@@ -239,6 +239,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL isillegal;
 //违规操作者名字
 @property (nonatomic) NSString * _Nullable illegalUserName;
+//是否已送达
+@property (nonatomic) BOOL isSendDelivered;
+//是否已读
+@property (nonatomic) BOOL isSendRead;
 
 @property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
 

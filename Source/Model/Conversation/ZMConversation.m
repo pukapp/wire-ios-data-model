@@ -1207,7 +1207,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
         [self appendMessage:message];
         [self unarchiveIfNeeded];
         [message updateCategoryCache];
-        [message prepareToSend];
     }
     [self addSelfToTopSectionDirectory];
     return message;
@@ -1229,7 +1228,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     [self unarchiveIfNeeded];
     [self.managedObjectContext.zm_fileAssetCache storeAssetData:message format:ZMImageFormatOriginal encrypted:NO data:imageData];
     [message updateCategoryCache];
-    [message prepareToSend];
     
     return message;
 }
