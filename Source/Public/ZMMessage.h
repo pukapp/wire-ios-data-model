@@ -125,6 +125,8 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
 /// Returns true if the link preview will have an image
 @property (nonatomic, readonly) BOOL linkPreviewHasImage;
 
+@property (nonatomic, readonly) BOOL isMarkDown;
+
 /// Unique identifier for link preview image.
 @property (nonatomic, readonly, nullable) NSString *linkPreviewImageCacheKey;
 

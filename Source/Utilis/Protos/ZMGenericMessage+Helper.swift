@@ -289,10 +289,11 @@ extension ZMTextJson: MessageContentType{
 @objc
 extension ZMText: EphemeralMessageContentType {
 
-    public static func text(with message: String, mentions: [Mention] = [], linkPreviews: [ZMLinkPreview] = [], replyingTo quotedMessage: ZMOTRMessage? = nil) -> ZMText {
+    public static func text(with message: String, mentions: [Mention] = [], linkPreviews: [ZMLinkPreview] = [], replyingTo quotedMessage: ZMOTRMessage? = nil, isMarkDown: Bool = false) -> ZMText {
         let builder = ZMTextBuilder()
                 
         builder.setContent(message)
+        builder.setMarkdown(isMarkDown)
         builder.setMentionsArray(mentions.compactMap(ZMMention.mention))
         builder.setLinkPreviewArray(linkPreviews)
         

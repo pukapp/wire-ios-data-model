@@ -63,16 +63,17 @@ extension ZMConversation {
         return append(text: text, mentions: mentions, replyingTo: nil, fetchLinkPreview: fetchLinkPreview, nonce: nonce)
     }
     
-    @discardableResult @objc(appendText:mentions:replyingToMessage:fetchLinkPreview:nonce:)
+    @discardableResult @objc(appendText:mentions:replyingToMessage:fetchLinkPreview:nonce:isMarkDown:)
     public func append(text: String,
                        mentions: [Mention] = [],
                        replyingTo quotedMessage: ZMConversationMessage? = nil,
                        fetchLinkPreview: Bool = true,
-                       nonce: UUID = UUID()) -> ZMConversationMessage? {
+                       nonce: UUID = UUID(),
+                       isMarkDown: Bool = false) -> ZMConversationMessage? {
         
         guard !(text as NSString).zmHasOnlyWhitespaceCharacters() else { return nil }
         
-        let textContent = ZMText.text(with: text, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
+        let textContent = ZMText.text(with: text, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage, isMarkDown: isMarkDown)
         let genericMessage = ZMGenericMessage.message(content: textContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: managedObjectContext!)
         clientMessage.add(genericMessage.data())

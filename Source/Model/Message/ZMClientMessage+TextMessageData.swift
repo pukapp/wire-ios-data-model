@@ -39,6 +39,10 @@ extension ZMClientMessage: ZMTextMessageData {
         return genericMessage?.textData?.content.removingExtremeCombiningCharacters
     }
     
+    @objc public var isMarkDown: Bool {
+        return genericMessage?.textData?.markdown() ?? false
+    }
+    
     public var mentions: [Mention] {
         guard let protoBuffers = genericMessage?.textData?.mentions,
               let messageText = messageText,
