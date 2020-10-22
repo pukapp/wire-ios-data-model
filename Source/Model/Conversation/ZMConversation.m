@@ -254,6 +254,7 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 @dynamic fifth_name;
 @dynamic fifth_image;
 @dynamic assistantBot;
+@dynamic triggerCode;
 
 @synthesize pendingLastReadServerTimestamp;
 @synthesize lastReadTimestampSaveDelay;

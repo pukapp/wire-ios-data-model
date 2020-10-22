@@ -105,6 +105,7 @@ static NSString * const LastUpdateDateInGMTKey = @"lastUpdateDateInGMT";
 @dynamic message;
 @dynamic status;
 @dynamic to;
+@dynamic triggerCode;
 
 @end
 

@@ -167,6 +167,8 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 
 //群助手id
 @property (nullable, nonatomic, copy) NSString *assistantBot;
+// 随机数 用于触发 conversation 同步
+@property (nonatomic) int16_t triggerCode;
 
 @property (nonatomic) NSSet<NSString *> * _Nullable orator;
 

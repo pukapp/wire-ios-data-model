@@ -82,6 +82,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     @NSManaged public var apsDecryptionKey: Data?
     @NSManaged public var needsToUploadSignalingKeys: Bool
     @NSManaged public var discoveredByMessage: ZMOTRMessage?
+    @NSManaged public var triggerCode: Int16
 
     private enum Keys {
         static let PushToken = "pushToken"

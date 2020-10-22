@@ -32,6 +32,7 @@
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="status" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="triggerCode" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="conversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="connection" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="to" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="connection" inverseEntity="User" syncable="YES"/>
     </entity>
@@ -109,6 +110,7 @@
         <attribute name="teamRemoteIdentifier" optional="YES" transient="YES" syncable="YES"/>
         <attribute name="teamRemoteIdentifier_data" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="topApps" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="triggerCode" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="userDefinedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="voiceChannel" optional="YES" transient="YES" syncable="YES"/>
         <relationship name="allMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="visibleInConversation" inverseEntity="Message" syncable="YES"/>
@@ -367,6 +369,7 @@
         <attribute name="preKeysRangeMax" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="pushToken" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="remoteIdentifier" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="triggerCode" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="type" attributeType="String" defaultValueString="permanent" syncable="YES"/>
         <relationship name="addedOrRemovedInSystemMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SystemMessage" inverseName="clients" inverseEntity="SystemMessage" syncable="YES"/>
         <relationship name="discoveredByMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="discoveredClients" inverseEntity="Message" syncable="YES"/>
@@ -406,8 +409,8 @@
         <element name="AddressBookEntry" positionX="9" positionY="153" width="128" height="90"/>
         <element name="AssetClientMessage" positionX="9" positionY="153" width="128" height="240"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
-        <element name="Connection" positionX="0" positionY="0" width="128" height="165"/>
-        <element name="Conversation" positionX="178" positionY="42" width="128" height="1380"/>
+        <element name="Connection" positionX="0" positionY="0" width="128" height="178"/>
+        <element name="Conversation" positionX="178" positionY="42" width="128" height="1393"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="90"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
@@ -423,7 +426,7 @@
         <element name="TextMessage" positionX="-182" positionY="-121" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="990"/>
         <element name="UserAliasname" positionX="-234" positionY="-117" width="128" height="90"/>
-        <element name="UserClient" positionX="9" positionY="153" width="128" height="523"/>
+        <element name="UserClient" positionX="9" positionY="153" width="128" height="538"/>
         <element name="UserDisableSendMsgStatus" positionX="-225" positionY="-108" width="128" height="135"/>
         <element name="WebApp" positionX="-234" positionY="-117" width="128" height="240"/>
     </elements>
