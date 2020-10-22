@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19H2" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.25">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19H2" minimumToolsVersion="Xcode 4.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="2.40.24">
     <entity name="AddressBookEntry" representedClassName=".AddressBookEntry" syncable="YES">
         <attribute name="cachedName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="localIdentifier" optional="YES" attributeType="String" indexed="YES" syncable="YES"/>
@@ -187,6 +187,8 @@
         <attribute name="isObfuscated" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isRefuse" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isSelfSend" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isSendDelivered" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="isSendRead" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="linkAttachments" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="needsLinkAttachmentsUpdate" optional="YES" attributeType="Boolean" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
@@ -197,7 +199,6 @@
         <attribute name="senderClientID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" indexed="YES" syncable="YES"/>
         <attribute name="unblock" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
-        <relationship name="confirmations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MessageConfirmation" inverseName="message" inverseEntity="MessageConfirmation" syncable="YES"/>
         <relationship name="discoveredClients" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="discoveredByMessage" inverseEntity="UserClient" syncable="YES"/>
         <relationship name="hiddenInConversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="hiddenMessages" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="missingRecipients" optional="YES" transient="YES" toMany="YES" deletionRule="Nullify" destinationEntity="UserClient" inverseName="messagesMissingRecipient" inverseEntity="UserClient" syncable="YES"/>
@@ -213,12 +214,6 @@
                 <index value="isExpired"/>
             </compoundIndex>
         </compoundIndexes>
-    </entity>
-    <entity name="MessageConfirmation" representedClassName="ZMMessageConfirmation" syncable="YES">
-        <attribute name="serverTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
-        <relationship name="message" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="confirmations" inverseEntity="Message" syncable="YES"/>
-        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
     </entity>
     <entity name="Reaction" representedClassName=".Reaction" syncable="YES">
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" syncable="YES"/>
@@ -419,8 +414,7 @@
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
-        <element name="Message" positionX="106" positionY="-261" width="128" height="583"/>
-        <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>
+        <element name="Message" positionX="106" positionY="-261" width="128" height="598"/>
         <element name="Reaction" positionX="18" positionY="162" width="128" height="105"/>
         <element name="ServiceMessage" positionX="-216" positionY="-99" width="128" height="150"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
