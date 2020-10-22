@@ -235,6 +235,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL unblock;
 // 是否需要群助手回复
 @property (nonatomic) BOOL isNeedAssistantBotReply;
+//是否违规
+@property (nonatomic) BOOL isillegal;
+//违规操作者名字
+@property (nonatomic) NSString * _Nullable illegalUserName;
 
 @property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
 

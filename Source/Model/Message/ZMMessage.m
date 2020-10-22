@@ -150,6 +150,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic unblock;
 @dynamic recipientUsers;
 @dynamic isNeedAssistantBotReply;
+@dynamic isillegal;
+@dynamic illegalUserName;
 @dynamic dataSet;
 @dynamic quote;
 @dynamic updatedTimestamp;
@@ -603,8 +605,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     ZMMessage *localMessage = [ZMMessage fetchMessageWithNonce:nonce
                                                forConversation:conversation
                                         inManagedObjectContext:moc];
-    [localMessage addOperation:MessageOperationTypeIllegal status:MessageOperationStatusOn byOperator:sender];
-    [localMessage updateCategoryCache];
+    localMessage.isillegal = YES;
+    localMessage.illegalUserName = operation.optName;
 }
 
 + (void)removeMessageWithRemotelyDeletedMessage:(ZMMessageDelete *)deletedMessage inConversation:(ZMConversation *)conversation senderID:(NSUUID *)senderID inManagedObjectContext:(NSManagedObjectContext *)moc;
@@ -778,6 +780,11 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                inManagedObjectContext:(NSManagedObjectContext *)moc
                        prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
+    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID:nonce clazz:self];
+    if (object && [object isKindOfClass:[ZMMessage class]]) {
+        return (ZMMessage *)object;
+    }
+    
     NSSet <ZMMessage *>* prefetchedMessages = prefetchResult.messagesByNonce[nonce];
     
     if (nil != prefetchedMessages) {
@@ -834,12 +841,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
       
         for (NSUInteger i = 0; i < [fetchResult count]; i++) {
             if (i > 0) {
-                NSManagedObject *object = fetchResult[i];
-                [moc deleteObject:object];
+                [moc deleteObject:fetchResult[i]];
             }
         }
     }
     
+    [moc setCacheManagedObjectWithUUID:nonce object:fetchResult.firstObject];
     
     return fetchResult.firstObject;
 }
