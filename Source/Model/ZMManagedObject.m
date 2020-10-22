@@ -593,7 +593,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 - (void)awakeFromFetch
 {
     [super awakeFromFetch];
-    [self removeObsoleteKeys];
+//    [self removeObsoleteKeys];
 }
 
 /// Removes keys that were previously tracked but are not tracked anymore from the modifiedKeys

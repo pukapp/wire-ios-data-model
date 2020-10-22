@@ -27,7 +27,7 @@ public extension ZMConversationMessage {
         return textMessageData != nil
     }
     
-    public var isJsonText: Bool {
+    var isJsonText: Bool {
         return jsonTextMessageData != nil
     }
 
