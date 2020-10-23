@@ -114,34 +114,94 @@ public extension ZMMeeting {
     
     @discardableResult
     static func createOrUpdateMeeting(with payload: [String: Any], context: NSManagedObjectContext) -> ZMMeeting? {
+        guard let meetingId = payload["meet_id"] as? String else { return nil }
+        
+        print("createOrUpdateMeeting-\(payload)--\(context)---\(Thread.current)")
+        
+        var fetchedMeeting = fetchExistingMeeting(with: meetingId, in: context)
+        if fetchedMeeting == nil {
+            fetchedMeeting = ZMMeeting.createMeeting(with: payload, context: context)
+        }
+        fetchedMeeting!.updateMeeting(with: payload, context: context)
+        return fetchedMeeting
+    }
+    
+    /**
+     * 更新会议
+     */
+    func updateMeeting(with payload: [String: Any], context: NSManagedObjectContext) {
+        
+        if let roomId = payload["room_id"] as? String {
+            self.roomId = roomId
+        }
+        if let owner = payload["owner"] as? [String: Any], let ownerId = owner["user_id"] as? String {
+            self.ownerId = ownerId
+        }
+        if let startDate = payload["start_time"] as? String {
+            self.startDate = startDate
+        }
+        if let muteAllRawValue = payload["mute_all"] as? String, let muteAll = MeetingMuteState(rawValue: muteAllRawValue) {
+            self.muteAll = muteAll
+        }
+        if let onlineUserNum = payload["user_online_num"] as? Int {
+            self.onlineUserNum = onlineUserNum
+        }
+        if let onlineUserNum = payload["user_online_num"] as? Int {
+            self.onlineUserNum = onlineUserNum
+        }
+        if let allUserNum = payload["user_all_sum"] as? Int {
+            self.allUserNum = allUserNum
+        }
+        if let holder = payload["holder"] as? [String: Any] {
+            if let holderId = holder["user_id"] as? String {
+                self.holdId = holderId
+            }
+            if let holderName = holder["nickname"] as? String {
+                self.holdName = holderName
+            }
+            if let holderAvatar = holder["avatar"] as? String {
+                self.holdAvatar = holderAvatar
+            }
+        }
+        if let speaker = payload["speaker"] as? [String: Any],
+            let speakerId = speaker["user_id"] as? String {
+            self.speakerId = speakerId
+        }
+        if let screenShareUser = payload["screen_share_user"] as? [String: Any],
+            let screenShareUserId = screenShareUser["user_id"] as? String {
+            self.screenShareUserId = screenShareUserId
+        }
+        if let watcher = payload["watch_user"] as? [String: Any],
+            let watcherId = watcher["user_id"] as? String {
+            self.watchUserId = watcherId
+        }
+        if let internalValue = payload["internal"] as? Int {
+            self.isInternal = internalValue == 1
+        }
+        if let canScreenShareValue = payload["screen_share"] as? Int {
+            self.onlyHosterCanShareScreen = canScreenShareValue == 1
+        }
+        if let lockMeetingValue = payload["lock_meeting"] as? Int {
+            self.isLocked = lockMeetingValue == 1
+        }
+    }
+    
+    static func createMeeting(with payload: [String: Any], context: NSManagedObjectContext) -> ZMMeeting {
+        print("createMeeting-\(payload)--\(context)---\(Thread.current)")
+        require(context.zm_isSyncContext)
         guard let meetingId = payload["meet_id"] as? String,
             let title = payload["title"] as? String,
             let startDate = payload["start_time"] as? String,
-            let stateRawValue = payload["state"] as? String else { return nil }
+            let stateRawValue = payload["state"] as? String else { fatal("wrong meeting msg") }
         
-        let fetchedMeeting = fetchExistingMeeting(with: meetingId, in: context)
-        let meeting = fetchedMeeting ?? ZMMeeting.insertNewObject(in: context)
-        
+        let meeting = ZMMeeting.insertNewObject(in: context)
         meeting.meetingId = meetingId
         meeting.title = title
         meeting.startDate = startDate
         meeting.stateRawValue = stateRawValue
-        
-        let needSetDefaultValues: () -> Void = {
-            print("MeetingNotification--createMeeting--\(meeting.meetingId)")
-            //下面字段为初始默认值
-            meeting.createDate = Date()
-            meeting.mode = .video
-            meeting.notificationState = .show
-            meeting.muteAll = .no
-            meeting.onlineUserNum = 0
-            meeting.allUserNum = 1
-            meeting.isInternal = false
-            meeting.isLocked = false
-            meeting.onlyHosterCanShareScreen = false
-        }
-        //只有是刚创建的meeting，才需要设置默认值
-        if fetchedMeeting == nil { needSetDefaultValues() }
+        //此两个属性与服务器不同步，仅用作本地业务需求
+        meeting.createDate = Date()
+        meeting.notificationState = .show
         
         return meeting
     }
@@ -153,13 +213,8 @@ public extension ZMMeeting {
         fetchRequest.fetchLimit = 2
          
         let result = context.fetchOrAssert(request: fetchRequest)
-        for meeting in result {
-            print("MeetingNotification--fetchExistingMeeting--\(meeting.meetingId)--\(meeting.notificationStateRawValue)")
-        }
-        if result.count == 2 {
-            print("MeetingNotification--fetchExistingMeeting--2 same id meeting")
-            context.delete(result.last!)
-            context.saveOrRollback()
+        if result.count > 1 {
+            fatal("wrong meeting")
         }
         if result.count > 0 {
             return result.first
@@ -176,7 +231,6 @@ public extension ZMMeeting {
         
         let result = context.fetchOrAssert(request: fetchRequest)
         if result.count > 0 {
-            print("MeetingNotification--fetchNeedNotificationMeeting--\(result.first!.notificationStateRawValue)")
             return result.first
         }
         return nil
