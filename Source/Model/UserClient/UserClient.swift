@@ -213,6 +213,10 @@ private let zmLog = ZMSLog(tag: "UserClient")
     
     public static func fetchUserClient(withRemoteId remoteIdentifier: String, forUser user:ZMUser, createIfNeeded: Bool) -> UserClient? {
         precondition(!createIfNeeded || !user.managedObjectContext!.zm_isUserInterfaceContext, "clients can only be created on the syncContext")
+
+        if let client = user.managedObjectContext?.getCacheManagedObject(uuidString: remoteIdentifier, clazz: UserClient.self) as? UserClient {
+            return client
+        }
         
         guard let context = user.managedObjectContext else {
             fatal("User \(user.safeForLoggingDescription) is not a member of a managed object context (deleted object).")
@@ -228,10 +232,12 @@ private let zmLog = ZMSLog(tag: "UserClient")
                     context.delete(c)
                 }
             }
+            user.managedObjectContext?.setCacheManagedObject(uuidString: remoteIdentifier, object: client)
             return client
         }
         
         if let client = self.fetchExistingUserClient(with: remoteIdentifier, in: context) {
+            user.managedObjectContext?.setCacheManagedObject(uuidString: remoteIdentifier, object: client)
             return client
         }
         
@@ -243,6 +249,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
             newClient.discoveryDate = Date()
             // Form reverse relationship
             user.mutableSetValue(forKey: "clients").add(newClient)
+            user.managedObjectContext?.setCacheManagedObject(uuidString: remoteIdentifier, object: newClient)
             return newClient
         }
         
@@ -267,8 +274,6 @@ private let zmLog = ZMSLog(tag: "UserClient")
     public func deleteClientAndEndSession() {
         assert(!self.managedObjectContext!.zm_isUserInterfaceContext, "clients can't be deleted on uiContext")
         // hold on to the conversations that are affected by removing this client
-        let conversations = activeConversationsForUserOfClients([self])
-        let user = self.user
         
         self.failedToEstablishSession = false
         // reset the session
@@ -277,15 +282,6 @@ private let zmLog = ZMSLog(tag: "UserClient")
         }
         // reset the relationship
         self.user = nil
-
-        // increase securityLevel of affected conversations
-        if let previousUser = user {
-            if isLegalHoldDevice && previousUser.isSelfUser {
-                previousUser.needsToAcknowledgeLegalHoldStatus = true
-            }
-
-            conversations.forEach{ $0.increaseSecurityLevelIfNeededAfterRemoving(clients: [previousUser: [self]]) }
-        }
 
         // delete the object
         managedObjectContext?.delete(self)
@@ -543,6 +539,7 @@ public extension UserClient {
         if !hasLocalModifications(forKey: ZMUserClientMissingKey) {
             setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMissingKey))
         }
+        self.triggerCode = Int16(arc4random() % 100)
     }
     
     /// Use this method only for the selfClient
@@ -700,7 +697,7 @@ extension UserClient {
     }
     
     public func updateSecurityLevelAfterDiscovering(_ clients: Set<UserClient>) {
-        changeSecurityLevel(.clientDiscovered, clients: clients, causedBy: clients.compactMap(\.discoveredByMessage).first)
+//        changeSecurityLevel(.clientDiscovered, clients: clients, causedBy: clients.compactMap(\.discoveredByMessage).first)
     }
     
     func activeConversationsForUserOfClients(_ clients: Set<UserClient>) -> Set<ZMConversation> {

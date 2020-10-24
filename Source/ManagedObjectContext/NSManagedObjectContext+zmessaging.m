@@ -173,7 +173,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
     self.userInfo[SyncContextKey] = [[UnownedNSObject alloc] init:zm_syncContext];
 }
 
-- (void)setZm_MsgContext:(NSManagedObjectContext *)zm_msgContext
+- (void)setZm_msgContext:(NSManagedObjectContext *)zm_msgContext
 {
     self.userInfo[MsgContextKey] = [[UnownedNSObject alloc] init:zm_msgContext];
 }

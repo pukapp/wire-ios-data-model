@@ -157,6 +157,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic dataSet;
 @dynamic quote;
 @dynamic updatedTimestamp;
+@dynamic protoDataSet;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
@@ -352,6 +353,8 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
     if (data == nil) {
         return;
     }
+    
+    
     
     ZMGenericMessageData *messageData = [self mergeWithExistingData:data];
     [self setGenericMessage:self.genericMessageFromDataSet];
@@ -780,7 +783,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                inManagedObjectContext:(NSManagedObjectContext *)moc
                        prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
-    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID:nonce clazz:self];
+    ZMManagedObject *object = [moc getCacheManagedObjectWithuuidString:nonce.transportString clazz:self];
     if (object && [object isKindOfClass:[ZMMessage class]]) {
         return (ZMMessage *)object;
     }
@@ -846,7 +849,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         }
     }
     
-    [moc setCacheManagedObjectWithUUID:nonce object:fetchResult.firstObject];
+    [moc setCacheManagedObjectWithuuidString: nonce.transportString object:fetchResult.firstObject];
     
     return fetchResult.firstObject;
 }

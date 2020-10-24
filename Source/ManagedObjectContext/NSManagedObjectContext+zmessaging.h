@@ -58,6 +58,9 @@ extern NSString * _Nonnull const IsEventContextKey;
 /// Returns @c self in case this is a sync context, or attached sync context, if present
 @property (nonatomic, null_unspecified) NSManagedObjectContext* zm_syncContext;
 
+/// Returns @c self in case this is a sync context, or attached sync context, if present
+@property (nonatomic, null_unspecified) NSManagedObjectContext* zm_msgContext;
+
 /// Returns @c self in case this is a UI context, or attached UI context, if present
 @property (nonatomic, null_unspecified) NSManagedObjectContext *zm_userInterfaceContext;
 

@@ -337,7 +337,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //            return (id) mo;
 //        }
 //    }
-    ZMManagedObject *object = [moc getCacheManagedObjectWithUUID:uuid clazz: self];
+    ZMManagedObject *object = [moc getCacheManagedObjectWithuuidString:uuid.transportString clazz:self];
     if (object) {
         return object;
     }
@@ -357,7 +357,7 @@ static NSString *ZMLogTag = @"fetchMessage";
             }
         }
     }
-    [moc setCacheManagedObjectWithUUID:uuid object:fetchResult.firstObject];
+    [moc setCacheManagedObjectWithuuidString:uuid.transportString object:fetchResult.firstObject];
     return fetchResult.firstObject;
 }
 
@@ -373,7 +373,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //            return YES;
 //        }
 //    }
-    if ([moc getCacheManagedObjectWithUUID: uuid clazz:self]) {
+    if ([moc getCacheManagedObjectWithuuidString: uuid.transportString clazz:self]) {
         return YES;
     }
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
@@ -411,7 +411,7 @@ static NSString *ZMLogTag = @"fetchMessage";
 //        }
 //    }
     for (NSUUID *nsuuid in uuids) {
-        ZMManagedObject *cacheObject = [moc getCacheManagedObjectWithUUID:nsuuid clazz: self];
+        ZMManagedObject *cacheObject = [moc getCacheManagedObjectWithuuidString:nsuuid.transportString clazz: self];
         if (cacheObject) {
             [objects addObject:cacheObject];
             [uuidDataArray removeObject:[cacheObject valueForKey:key]];
@@ -432,7 +432,7 @@ static NSString *ZMLogTag = @"fetchMessage";
         for (NSManagedObject * ob in fetchResult) {
             if ([ob isKindOfClass:[ZMMessage class]]) {
                 ZMMessage * me = (ZMMessage*)ob;
-                [moc setCacheManagedObjectWithUUID:me.nonce object:me];
+                [moc setCacheManagedObjectWithuuidString:me.nonce.transportString object:me];
                 if ([existMessageIds containsObject:me.nonce]) {
                     [moc deleteObject:ob];
                     continue;
@@ -445,7 +445,7 @@ static NSString *ZMLogTag = @"fetchMessage";
         if ([managedObject isKindOfClass:[ZMConversation class]] || [managedObject isKindOfClass:[ZMUser class]] ||
             [managedObject isKindOfClass:[UserClient class]]) {
             NSUUID *uuid = [managedObject transientUUIDForKey:@"remoteIdentifier"];
-            [moc setCacheManagedObjectWithUUID:uuid object:managedObject];
+            [moc setCacheManagedObjectWithuuidString:uuid.transportString object:managedObject];
         }
     }
     //RequireString([fetchResult count] <= uuidDataArray.count, "More than one object with the same UUID");

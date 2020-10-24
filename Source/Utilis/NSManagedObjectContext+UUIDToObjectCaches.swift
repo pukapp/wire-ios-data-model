@@ -10,8 +10,8 @@ import Foundation
 
 @objc extension NSManagedObjectContext {
     
-    static var UUIDToObjectCaches: [NSManagedObjectContextType.RawValue: NSMapTable<NSUUID, ZMManagedObject>] = {
-        var caches = [NSManagedObjectContextType.RawValue: NSMapTable<NSUUID, ZMManagedObject>]()
+    static var UUIDToObjectCaches: [NSManagedObjectContextType.RawValue: NSMapTable<NSString, ZMManagedObject>] = {
+        var caches = [NSManagedObjectContextType.RawValue: NSMapTable<NSString, ZMManagedObject>]()
         caches[NSManagedObjectContextType.msg.rawValue] = NSMapTable.strongToWeakObjects()
         caches[NSManagedObjectContextType.ui.rawValue] = NSMapTable.strongToWeakObjects()
         caches[NSManagedObjectContextType.sync.rawValue] = NSMapTable.strongToWeakObjects()
@@ -45,23 +45,23 @@ import Foundation
     }
     
     
-    @objc(getCacheManagedObjectWithUUID:clazz:)
-    public func getCacheManagedObject(uuid: UUID?, clazz: AnyClass) -> ZMManagedObject? {
-        guard let u = uuid else {return nil}
+    @objc(getCacheManagedObjectWithuuidString:clazz:)
+    public func getCacheManagedObject(uuidString: String?, clazz: AnyClass) -> ZMManagedObject? {
+        guard let u = uuidString else {return nil}
         if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type],
-            let object = threadLocal.object(forKey: u as NSUUID),
+            let object = threadLocal.object(forKey: u as NSString),
             object.isKind(of: clazz){
             return object
         }
         return nil
     }
     
-    @objc(setCacheManagedObjectWithUUID:object:)
-    public func setCacheManagedObject(uuid: UUID?, object: ZMManagedObject) {
-        guard let u = uuid else {return}
+    @objc(setCacheManagedObjectWithuuidString:object:)
+    public func setCacheManagedObject(uuidString: String?, object: ZMManagedObject) {
+        guard let u = uuidString else {return}
         if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type]
             {
-            threadLocal.setObject(object, forKey: u as NSUUID)
+            threadLocal.setObject(object, forKey: u as NSString)
         }
     }
     

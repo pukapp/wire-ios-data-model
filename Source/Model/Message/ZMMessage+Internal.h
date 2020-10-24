@@ -243,6 +243,9 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL isSendDelivered;
 //是否已读
 @property (nonatomic) BOOL isSendRead;
+//消息内容 之前使用dataset字段 关联GenericMessageData表 以后迁移至此属性
+//GenericMessageData 过几个版本可以删掉 
+@property (nonatomic) NSOrderedSet<NSData *> * _Nullable protoDataSet;
 
 @property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
 
