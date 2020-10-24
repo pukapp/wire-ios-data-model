@@ -28,6 +28,9 @@
 @class NSManagedObjectContext;
 @class ZMConversation;
 
+
+extern NSString * _Nonnull const SaveHugeNoMuteConversationsNotificationName;
+
 @interface ZMConversationListDirectory : NSObject
 
 @property (nonatomic, readonly, nonnull) NSManagedObjectContext *managedObjectContext;

@@ -29,6 +29,7 @@ static NSString * const UnarchivedKey = @"Unarchived";
 static NSString * const ArchivedKey = @"Archived";
 static NSString * const PendingKey = @"Pending";
 
+NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteConversationsNotificationName";
 
 
 @interface ZMConversationListDirectory ()
