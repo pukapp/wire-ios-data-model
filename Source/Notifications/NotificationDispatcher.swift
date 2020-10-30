@@ -40,6 +40,7 @@ extension Notification.Name {
     static let VoiceChannelParticipantStateChange = Notification.Name("ZMVoiceChannelParticipantStateChangeNotification")
     static let TeamChange = Notification.Name("TeamChangeNotification")
     static let LabelChange = Notification.Name("LabelChangeNotification")
+    static let MeetingChange = Notification.Name("MeetingChangeNotification")
 
     public static let NonCoreDataChangeInManagedObject = Notification.Name("NonCoreDataChangeInManagedObject")
     
@@ -133,12 +134,16 @@ extension ZMManagedObject {
     private var searchUserObserverCenter: SearchUserObserverCenter {
         return managedObjectContext.searchUserObserverCenter
     }
+    private var meetingListObserverCenter: MeetingListObserverCenter {
+        return managedObjectContext.meetingListObserverCenter
+    }
     private let snapshotCenter: SnapshotCenter
     private var changeInfoConsumers = [UnownedNSObject]()
     private var allChangeInfoConsumers : [ChangeInfoConsumer] {
         var consumers = changeInfoConsumers.compactMap{$0.unbox as? ChangeInfoConsumer}
         consumers.append(searchUserObserverCenter)
         consumers.append(conversationListObserverCenter)
+        consumers.append(meetingListObserverCenter)
         return consumers
     }
     
@@ -188,7 +193,8 @@ extension ZMManagedObject {
                                            ZMGenericMessageData.classIdentifier,
                                            Team.classIdentifier,
                                            Member.classIdentifier,
-                                           Label.classIdentifier]
+                                           Label.classIdentifier,
+                                           ZMMeeting.classIdentifier]
         self.affectingKeysStore = DependencyKeyStore(classIdentifiers : classIdentifiers)
         self.snapshotCenter = SnapshotCenter(managedObjectContext: managedObjectContext)
         super.init()
@@ -248,6 +254,7 @@ extension ZMManagedObject {
     @objc func objectsDidChange(_ note: Notification){
         guard isObserving else { return }
         self.forwardChangesToConversationListObserver(note: note)
+        self.forwardChangesToMeetingListObserver(note: note)
         self.process(note: note)
     }
     
@@ -285,6 +292,16 @@ extension ZMManagedObject {
         let insertedConversations = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMConversation} ?? []
         let deletedConversations = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMConversation} ?? []
         self.conversationListObserverCenter.conversationsChanges(inserted: insertedConversations, deleted: deletedConversations)
+    }
+    
+    /// 转发给MeetingList 处理 新增或删除的coreData对象
+    internal func forwardChangesToMeetingListObserver(note: Notification) {
+        guard let userInfo = note.userInfo as? [String: Any] else { return }
+        
+        let insertedMeetings = (userInfo[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMMeeting} ?? []
+        let deletedMeetings = (userInfo[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.compactMap{$0 as? ZMMeeting} ?? []
+        
+        self.meetingListObserverCenter.meetingListChanges(inserted: insertedMeetings, deleted: deletedMeetings)
     }
     
     /// Call this from syncStrategy AFTER merging the changes from syncMOC into uiMOC

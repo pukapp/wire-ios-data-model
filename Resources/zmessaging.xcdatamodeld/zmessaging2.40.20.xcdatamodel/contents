@@ -159,6 +159,7 @@
     </entity>
     <entity name="Meeting" representedClassName=".ZMMeeting" syncable="YES">
         <attribute name="allUserNum" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="callingDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="holdAvatar" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="holdId" optional="YES" attributeType="String" syncable="YES"/>
@@ -440,7 +441,7 @@
         <element name="JsonTextMessage" positionX="-225" positionY="-108" width="128" height="60"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>
         <element name="Label" positionX="-225" positionY="-108" width="128" height="150"/>
-        <element name="Meeting" positionX="-225" positionY="-108" width="128" height="373"/>
+        <element name="Meeting" positionX="-225" positionY="-108" width="128" height="388"/>
         <element name="Member" positionX="18" positionY="162" width="128" height="165"/>
         <element name="Message" positionX="106" positionY="-261" width="128" height="555"/>
         <element name="MessageConfirmation" positionX="9" positionY="153" width="128" height="105"/>

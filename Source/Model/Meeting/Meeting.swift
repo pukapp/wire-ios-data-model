@@ -34,6 +34,7 @@ public enum MeetingMuteState: String {
 public let ZMMeetingIdentifierKey = "meetingId"
 public let ZMMeetingStateKey = "stateRawValue"
 public let ZMMeetingNotificationStateKey = "notificationStateRawValue"
+public let ZMMeetingCallingDateKey = "callingDate"
 
 public class ZMMeeting: ZMManagedObject {
     
@@ -53,7 +54,7 @@ public class ZMMeeting: ZMManagedObject {
             modeRawValue = newValue.rawValue
         }
     }
-    @NSManaged private var muteAllRawValue: String
+    @NSManaged var muteAllRawValue: String
     public var muteAll: MeetingMuteState {
         get {
             return MeetingMuteState(rawValue: muteAllRawValue)!
@@ -62,7 +63,7 @@ public class ZMMeeting: ZMManagedObject {
             muteAllRawValue = newValue.rawValue
         }
     }
-    @NSManaged private var stateRawValue: String
+    @NSManaged var stateRawValue: String
     public var state: MeetingState {
         get {
             return MeetingState(rawValue: stateRawValue)!
@@ -71,7 +72,7 @@ public class ZMMeeting: ZMManagedObject {
             stateRawValue = newValue.rawValue
         }
     }
-    @NSManaged public var notificationStateRawValue: String
+    @NSManaged var notificationStateRawValue: String
     public var notificationState: MeetingNotificationState {
         get {
             return MeetingNotificationState(rawValue: notificationStateRawValue)!
@@ -96,8 +97,10 @@ public class ZMMeeting: ZMManagedObject {
     @NSManaged public var isInternal: Bool
     @NSManaged public var isLocked: Bool
     
+    //被呼叫的时间-收到推送时更新，用来显示滑动加入会议的成员被呼叫页面
+    @NSManaged public var callingDate: Date?
     @NSManaged public var mediaServerToken: String? //加入媒体服务器所需要的token
-        
+    
     public var memberList: NSOrderedSet = NSOrderedSet(array: [])
     
     public override static func entityName() -> String {
@@ -130,7 +133,9 @@ public extension ZMMeeting {
      * 更新会议
      */
     func updateMeeting(with payload: [String: Any], context: NSManagedObjectContext) {
-        
+        if let stateRawValue = payload["state"] as? String {
+            self.state = MeetingState(rawValue: stateRawValue)!
+        }
         if let roomId = payload["room_id"] as? String {
             self.roomId = roomId
         }
@@ -230,6 +235,25 @@ public extension ZMMeeting {
         fetchRequest.fetchLimit = 2
         
         let result = context.fetchOrAssert(request: fetchRequest)
+        result.forEach({
+            print("test----needNotificationMeeting:\($0.meetingId)-\($0.title)")
+        })
+        if result.count > 0 {
+            return result.first
+        }
+        return nil
+    }
+    
+    static func fetchNeedShowCallingViewMeeting(in context: NSManagedObjectContext) -> ZMMeeting? {
+        let fetchRequest = NSFetchRequest<ZMMeeting>(entityName: ZMMeeting.entityName())
+        fetchRequest.predicate = NSPredicate(format: "%K == %@ AND %K != NULL", ZMMeetingStateKey, MeetingState.on.rawValue,
+                                             ZMMeetingCallingDateKey)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: #keyPath(ZMMeeting.callingDate), ascending: false)]
+        fetchRequest.fetchLimit = 2
+        let result = context.fetchOrAssert(request: fetchRequest)
+        result.forEach({
+            print("test----needShowCallingViewMeeting:\($0.meetingId)-\($0.title)")
+        })
         if result.count > 0 {
             return result.first
         }
