@@ -212,7 +212,6 @@ private let zmLog = ZMSLog(tag: "UserClient")
     }
     
     public static func fetchUserClient(withRemoteId remoteIdentifier: String, forUser user:ZMUser, createIfNeeded: Bool) -> UserClient? {
-        precondition(!createIfNeeded || !user.managedObjectContext!.zm_isUserInterfaceContext, "clients can only be created on the syncContext")
 
         if let client = user.managedObjectContext?.getCacheManagedObject(uuidString: remoteIdentifier, clazz: UserClient.self) as? UserClient {
             return client

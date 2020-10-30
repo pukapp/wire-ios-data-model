@@ -8,6 +8,13 @@
 
 import Foundation
 
+enum NSManagedObjectContextType: String {
+    case ui
+    case sync
+    case msg
+    case search
+}
+
 @objc extension NSManagedObjectContext {
     
     static var UUIDToObjectCaches: [NSManagedObjectContextType.RawValue: NSMapTable<NSString, ZMManagedObject>] = {
@@ -21,34 +28,24 @@ import Foundation
     
     typealias UUIDString = String
     
-    enum NSManagedObjectContextType: String {
-        case ui
-        case sync
-        case msg
-        case search
-    }
-    
-    var type: String {
-        if self.zm_isSyncContext {
-            return NSManagedObjectContextType.sync.rawValue
+    var type: String? {
+        guard let string = Thread.current.name else {return nil}
+        guard
+            string != NSManagedObjectContextType.ui.rawValue,
+            string != NSManagedObjectContextType.sync.rawValue,
+            string != NSManagedObjectContextType.msg.rawValue,
+            string != NSManagedObjectContextType.search.rawValue else {
+            return nil
         }
-        if self.zm_isMsgContext {
-            return NSManagedObjectContextType.msg.rawValue
-        }
-        if self.zm_isUserInterfaceContext {
-            return NSManagedObjectContextType.ui.rawValue
-        }
-        if self.zm_isSearchContext {
-            return NSManagedObjectContextType.search.rawValue
-        }
-        return NSManagedObjectContextType.sync.rawValue
+        return string
     }
     
     
     @objc(getCacheManagedObjectWithuuidString:clazz:)
     public func getCacheManagedObject(uuidString: String?, clazz: AnyClass) -> ZMManagedObject? {
         guard let u = uuidString else {return nil}
-        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type],
+        guard let type = self.type else {return nil}
+        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[type],
             let object = threadLocal.object(forKey: u as NSString),
             object.isKind(of: clazz){
             return object
@@ -59,7 +56,8 @@ import Foundation
     @objc(setCacheManagedObjectWithuuidString:object:)
     public func setCacheManagedObject(uuidString: String?, object: ZMManagedObject) {
         guard let u = uuidString else {return}
-        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[self.type]
+        guard let type = self.type else {return}
+        if let threadLocal = NSManagedObjectContext.UUIDToObjectCaches[type]
             {
             threadLocal.setObject(object, forKey: u as NSString)
         }

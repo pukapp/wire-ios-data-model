@@ -85,6 +85,8 @@ extension ManagedObjectContextDirectory {
         
         let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         moc.performAndWait {
+            Thread.current.name = NSManagedObjectContextType.ui.rawValue
+            moc.name = NSManagedObjectContextType.ui.rawValue
             moc.markAsUIContext()
             moc.configure(with: persistentStoreCoordinator)
             ZMUser.selfUser(in: moc)
@@ -104,6 +106,8 @@ extension ManagedObjectContextDirectory {
         let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         moc.markAsSyncContext()
         moc.performAndWait {
+            Thread.current.name = NSManagedObjectContextType.sync.rawValue
+            moc.name = NSManagedObjectContextType.sync.rawValue
             moc.configure(with: persistentStoreCoordinator)
             moc.setupLocalCachedSessionAndSelfUser()
             moc.setupUserKeyStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
@@ -130,6 +134,8 @@ extension ManagedObjectContextDirectory {
             let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
             moc.markAsMsgContext()
             moc.performAndWait {
+                Thread.current.name = NSManagedObjectContextType.msg.rawValue
+                moc.name = NSManagedObjectContextType.msg.rawValue
                 moc.configure(with: persistentStoreCoordinator)
                 moc.setupLocalCachedSessionAndSelfUser()
                 moc.setupUserKeyStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
@@ -155,6 +161,8 @@ extension ManagedObjectContextDirectory {
         let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         moc.markAsSearch()
         moc.performAndWait {
+            Thread.current.name = NSManagedObjectContextType.search.rawValue
+            moc.name = NSManagedObjectContextType.search.rawValue
             moc.configure(with: persistentStoreCoordinator)
             moc.setupLocalCachedSessionAndSelfUser()
             moc.undoManager = nil

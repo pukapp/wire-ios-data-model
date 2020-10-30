@@ -559,6 +559,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 - (void)markAsSyncContext;
 {
     [self performBlockAndWait:^{
+        self.name = SyncContextKey;
         self.userInfo[IsSyncContextKey] = @YES;
         self.userInfo[DisplayNameGeneratorKey] = [[DisplayNameGenerator alloc] initWithManagedObjectContext:self];
     }];
@@ -574,6 +575,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 - (void)markAsUIContext
 {
     [self performBlockAndWait:^{
+        self.name = UserInterfaceContextKey;
         self.userInfo[IsUserInterfaceContextKey] = @YES;
         self.userInfo[DisplayNameGeneratorKey] = [[DisplayNameGenerator alloc] initWithManagedObjectContext:self];
     }];
@@ -582,6 +584,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"NSManagedObjectContext";
 - (void)markAsMsgContext
 {
     [self performBlockAndWait:^{
+        self.name = MsgContextKey;
         self.userInfo[IsMsgContextKey] = @YES;
         self.userInfo[DisplayNameGeneratorKey] = [[DisplayNameGenerator alloc] initWithManagedObjectContext:self];
     }];

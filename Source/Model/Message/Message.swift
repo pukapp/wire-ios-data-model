@@ -65,7 +65,7 @@ public extension ZMConversationMessage {
         return systemMessageData != nil
     }
     
-    public var isService: Bool {
+    var isService: Bool {
         if let systemMessage = self as? ZMSystemMessage, systemMessage.serviceMessage != nil {
             return true
         }
@@ -73,7 +73,7 @@ public extension ZMConversationMessage {
     }
     
     /// 新增的系统通知消息
-    public var isNewSystem: Bool {
+    var isNewSystem: Bool {
         guard let jsonMessageData = jsonTextMessageData?.jsonMessageText?.data(using: .utf8),
             let jsonObject = try? JSONSerialization.jsonObject(with: jsonMessageData, options: JSONSerialization.ReadingOptions.mutableContainers),
             let dict = jsonObject as? [String: Any] else {
@@ -93,11 +93,11 @@ public extension ZMConversationMessage {
         return isText
             || isImage
             || isKnock
+            || (isJsonText && !isNewSystem)
             || isFile
             || isVideo
             || isAudio
             || isLocation
-            || (isJsonText && !isNewSystem)
     }
 
     var isConnectionRequest: Bool {
