@@ -835,6 +835,10 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     NSFetchRequest *fetchRequest = [self.class sortedFetchRequestWithPredicate:predicate];
     fetchRequest.fetchLimit = 2;
     fetchRequest.includesSubentities = YES;
+    if ([self isKindOfClass:[ZMClientMessage class]] ||
+        [self isKindOfClass:[ZMAssetClientMessage class]]) {
+        fetchRequest.relationshipKeyPathsForPrefetching = @[@"dataSet"];
+    }
     
     NSArray* fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
     VerifyString([fetchResult count] <= 1, "More than one message with the same nonce in the same conversation");
