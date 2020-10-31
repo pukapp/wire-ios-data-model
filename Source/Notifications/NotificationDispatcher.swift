@@ -156,7 +156,7 @@ extension ZMManagedObject {
         return !isDisabled && !isInBackground
     }
     
-    private var isObserving : Bool = true {
+    private var isObserving : Bool = false {
         didSet {
             guard oldValue != isObserving else { return }
             
@@ -420,6 +420,7 @@ extension ZMManagedObject {
     }
     
     func postFireNotification() {
+        guard isObserving else {return}
         let nofi = Notification(name: .FireAllNotificationWhenIdle)
         NotificationQueue.default.enqueue(nofi, postingStyle: .whenIdle, coalesceMask: .onName, forModes: [RunLoop.Mode.default])
     }
