@@ -76,17 +76,18 @@ NSString *const ZMConversationEstimatedUnreadCountKey = @"estimatedUnreadCount";
 NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data";
 NSString *const SecurityLevelKey = @"securityLevel";
 NSString *const ZMConversationLabelsKey = @"labels";
+NSString *const LastModifiedDateKey = @"lastModifiedDate";
+NSString *const LastVisibleMessage = @"lastVisibleMessage";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 NSString *const CreatorKey = @"creator";
 static NSString *const DraftMessageDataKey = @"draftMessageData";
 static NSString *const IsPendingConnectionConversationKey = @"isPendingConnectionConversation";
-static NSString *const LastModifiedDateKey = @"lastModifiedDate";
 static NSString *const DisableSendLastModifiedDateKey = @"disableSendLastModifiedDate";
 static NSString *const LastReadMessageKey = @"lastReadMessage";
 static NSString *const lastEditableMessageKey = @"lastEditableMessage";
 static NSString *const NeedsToBeUpdatedFromBackendKey = @"needsToBeUpdatedFromBackend";
-static NSString *const RemoteIdentifierKey = @"remoteIdentifier";
+NSString *const RemoteIdentifierKey = @"remoteIdentifier";
 static NSString *const TeamRemoteIdentifierKey = @"teamRemoteIdentifier";
 NSString *const TeamRemoteIdentifierDataKey = @"teamRemoteIdentifier_data";
 static NSString *const VoiceChannelKey = @"voiceChannel";
@@ -673,7 +674,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     // 4. This participant is not a service user (bot).
     if ((conversationType == ZMConversationTypeGroup ||
          conversationType == ZMConversationTypeHugeGroup) &&
-        self.teamRemoteIdentifier != nil &&
         self.lastServerSyncedActiveParticipants.count == 1 &&
         !self.lastServerSyncedActiveParticipants.firstObject.isServiceUser &&
         self.userDefinedName.length == 0) {

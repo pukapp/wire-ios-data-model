@@ -136,18 +136,15 @@ extension ZMConversation {
 
     @objc(predicateForConversationsIncludingArchived)
     class func predicateForConversationsIncludingArchived() -> NSPredicate {
-        let notClearedTimestamp = NSPredicate(format: "\(ZMConversationClearedTimeStampKey) == NULL OR \(ZMConversationLastServerTimeStampKey) > \(ZMConversationClearedTimeStampKey) OR (\(ZMConversationLastServerTimeStampKey) == \(ZMConversationClearedTimeStampKey) AND \(ZMConversationIsArchivedKey) == NO)")
         
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [notClearedTimestamp, predicateForValidConversations()])
+        return predicateForValidConversations()
     }
     
     @objc(predicateForGroupConversations)
     class func predicateForGroupConversations() -> NSPredicate {
         let groupConversationPredicate = NSPredicate(format: "\(ZMConversationConversationTypeKey) == \(ZMConversationType.group.rawValue)")
-        let notInFolderPredicate = NSCompoundPredicate(notPredicateWithSubpredicate: predicateForConversationsInFolders())
-        let notTeamOneToOneConveration = NSCompoundPredicate(notPredicateWithSubpredicate: predicateForTeamOneToOneConversation())
         
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [predicateForConversationsExcludingArchived(), groupConversationPredicate, notInFolderPredicate, notTeamOneToOneConveration])
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [predicateForConversationsExcludingArchived(), groupConversationPredicate])
     }
     
     @objc(predicateForLabeledConversations:)
@@ -199,9 +196,7 @@ extension ZMConversation {
 
     @objc(predicateForConversationsExcludingArchived)
     class func predicateForConversationsExcludingArchived() -> NSPredicate {
-        let notArchivedPredicate = NSPredicate(format: "\(ZMConversationIsArchivedKey) == NO")
-        
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [predicateForConversationsIncludingArchived(), notArchivedPredicate])
+        return predicateForConversationsIncludingArchived()
     }
 
     @objc(predicateForSharableConversations)

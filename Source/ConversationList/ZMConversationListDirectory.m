@@ -30,6 +30,7 @@ static NSString * const ArchivedKey = @"Archived";
 static NSString * const PendingKey = @"Pending";
 
 NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteConversationsNotificationName";
+NSString *const AllConversationListCacheNameKey = @"AllConversationListCacheNameKey";
 
 
 @interface ZMConversationListDirectory ()
@@ -50,6 +51,7 @@ NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteCo
 @property (nonatomic) FolderList *folderList;
 
 @property (nonatomic) NSManagedObjectContext *managedObjectContext;
+@property (nonatomic) NSFetchedResultsController *fetchAllConversationController;
 
 @end
 
@@ -64,48 +66,19 @@ NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteCo
         self.managedObjectContext = moc;
         
         NSArray *allConversations = [self fetchAllConversations:moc];
-        NSArray *allFolders = [self fetchAllFolders:moc];
-        
-        self.folderList = [[FolderList alloc] initWithLabels:allFolders];
-        self.listsByFolder = [self createListsFromFolders:allFolders allConversations:allConversations];
 
         self.unarchivedConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
                                                                          filteringPredicate:ZMConversation.predicateForConversationsExcludingArchived
                                                                                         moc:moc
                                                                                 description:@"unarchivedConversations"];
-        self.archivedConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                       filteringPredicate:ZMConversation.predicateForArchivedConversations
-                                                                                      moc:moc
-                                                                              description:@"archivedConversations"];
-        self.conversationsIncludingArchived = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                                filteringPredicate:ZMConversation.predicateForConversationsIncludingArchived
-                                                                                               moc:moc
-                                                                                       description:@"conversationsIncludingArchived"];
         self.pendingConnectionConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
                                                                                 filteringPredicate:ZMConversation.predicateForPendingConversations
                                                                                                moc:moc
                                                                                   description:@"pendingConnectionConversations"];
-        self.clearedConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                      filteringPredicate:ZMConversation.predicateForClearedConversations
-                                                                                     moc:moc
-                                                                             description:@"clearedConversations"];
         self.hugeGroupConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
                                                                         filteringPredicate:ZMConversation.predicateForHugeGroupConversations
                                                                                        moc:moc
                                                                                description:@"hugeGroupConversations"];
-        self.oneToOneConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                       filteringPredicate:ZMConversation.predicateForOneToOneConversations
-                                                                                      moc:moc
-                                                                              description:@"oneToOneConversations"];
-        
-        self.groupConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                    filteringPredicate:ZMConversation.predicateForGroupConversations
-                                                                                   moc:moc
-                                                                           description:@"groupConversations"];
-        
-        self.favoriteConversations = [[ZMConversationList alloc] initWithAllConversations:allConversations
-                                                                       filteringPredicate:[ZMConversation predicateForLabeledConversations:[Label fetchFavoriteLabelIn:moc]]
-                                                                                      moc:moc description:@"favorites"];
     }
     return self;
 }
@@ -113,15 +86,22 @@ NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteCo
 - (NSArray *)fetchAllConversations:(NSManagedObjectContext *)context
 {
     NSFetchRequest *allConversationsRequest = [ZMConversation sortedFetchRequest];
+    allConversationsRequest.returnsObjectsAsFaults = NO;
     // Since this is extremely likely to trigger the "lastServerSyncedActiveParticipants" and "connection" relationships, we make sure these gets prefetched:
     NSMutableArray *keyPaths = [NSMutableArray arrayWithArray:allConversationsRequest.relationshipKeyPathsForPrefetching];
     [keyPaths addObject:ZMConversationLastServerSyncedActiveParticipantsKey];
-//    [keyPaths addObject:ZMConversationConnectionKey];
+    [keyPaths addObject:@"connection.status"];
+    [keyPaths addObject:@"connection.to"];
+    [keyPaths addObject:ZMConversationConnectionKey];
+    [keyPaths addObject:ZMConversationLastServerSyncedActiveParticipantsKey];
+    [keyPaths addObject:LastVisibleMessage];
+    allConversationsRequest.propertiesToFetch = @[ZMConversationConversationTypeKey, ZMConversationIsPlacedTopKey, LastModifiedDateKey, ZMConversationRemoteIdentifierDataKey];
     allConversationsRequest.relationshipKeyPathsForPrefetching = keyPaths;
-    
+    self.fetchAllConversationController = [[NSFetchedResultsController alloc] initWithFetchRequest:allConversationsRequest managedObjectContext: context sectionNameKeyPath:nil cacheName: AllConversationListCacheNameKey];
+    self.fetchAllConversationController.delegate = self;
     NSError *error;
-    return [context executeFetchRequest:allConversationsRequest error:&error];
-    NSAssert(error != nil, @"Failed to fetch");
+    [self.fetchAllConversationController performFetch: &error];
+    return self.fetchAllConversationController.fetchedObjects;
 }
 
 - (NSArray *)fetchAllFolders:(NSManagedObjectContext *)context
@@ -191,13 +171,7 @@ NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteCo
 {
     return @[
              self.pendingConnectionConversations,
-             self.archivedConversations,
-             self.conversationsIncludingArchived,
-             self.unarchivedConversations,
-             self.clearedConversations,
-             self.oneToOneConversations,
-             self.groupConversations,
-             self.favoriteConversations
+             self.unarchivedConversations
              ];
 }
 
@@ -205,6 +179,8 @@ NSString *const SaveHugeNoMuteConversationsNotificationName = @"SaveHugeNoMuteCo
 {
     return self.folderList.backingList;
 }
+
+
 
 @end
 

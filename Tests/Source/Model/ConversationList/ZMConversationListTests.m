@@ -118,28 +118,28 @@
     XCTAssertEqual(list.count, 0u);
 }
 
-- (void)testThatItReturnsAllUnarchivedConversations
-{
-    // given
-    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c1.conversationType = ZMConversationTypeGroup;
-    ZMConversation *c2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c2.conversationType = ZMConversationTypeOneOnOne;
-    ZMConversation *c3 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c3.conversationType = ZMConversationTypeGroup;
-    c3.isArchived = YES;
-    ZMConversation *c4 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c4.conversationType = ZMConversationTypeOneOnOne;
-    c4.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    c4.connection.status = ZMConnectionStatusBlocked;
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    NSArray *list = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    XCTAssertEqual(list.count, 2u);
-    NSArray *expected = @[c1, c2];
-    AssertArraysContainsSameObjects(list, expected);
-}
+//- (void)testThatItReturnsAllUnarchivedConversations
+//{
+//    // given
+//    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c1.conversationType = ZMConversationTypeGroup;
+//    ZMConversation *c2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c2.conversationType = ZMConversationTypeOneOnOne;
+//    ZMConversation *c3 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c3.conversationType = ZMConversationTypeGroup;
+//    c3.isArchived = YES;
+//    ZMConversation *c4 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c4.conversationType = ZMConversationTypeOneOnOne;
+//    c4.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c4.connection.status = ZMConnectionStatusBlocked;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    NSArray *list = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    XCTAssertEqual(list.count, 2u);
+//    NSArray *expected = @[c1, c2];
+//    AssertArraysContainsSameObjects(list, expected);
+//}
 
 - (void)testThatItReturnsConversationsSorted
 {
@@ -345,280 +345,280 @@
     (void)observer;
 }
 
-- (void)testThatItUpdatesWhenNewConnectionIsAccepted;
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.conversationType = ZMConversationTypeConnection;
-    conversation.lastModifiedDate = [NSDate date];
-    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.connection.status = ZMConnectionStatusPending;
-    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *pendingList = [ZMConversation pendingConversationsInContext:self.uiMOC];
-    XCTAssertEqual(normalList.count, 0u);
-    XCTAssertEqualObjects(normalList, @[]);
-    XCTAssertEqual(pendingList.count, 1u);
-    XCTAssertEqualObjects(pendingList, @[conversation]);
-    
-    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
-    ConversationListChangeObserver *pendingObserver = [[ConversationListChangeObserver alloc] initWithConversationList:pendingList managedObjectContext:self.uiMOC];
+//- (void)testThatItUpdatesWhenNewConnectionIsAccepted;
+//{
+//    // given
+//    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.conversationType = ZMConversationTypeConnection;
+//    conversation.lastModifiedDate = [NSDate date];
+//    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.connection.status = ZMConnectionStatusPending;
+//    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *pendingList = [ZMConversation pendingConversationsInContext:self.uiMOC];
+//    XCTAssertEqual(normalList.count, 0u);
+//    XCTAssertEqualObjects(normalList, @[]);
+//    XCTAssertEqual(pendingList.count, 1u);
+//    XCTAssertEqualObjects(pendingList, @[conversation]);
+//
+//    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
+//    ConversationListChangeObserver *pendingObserver = [[ConversationListChangeObserver alloc] initWithConversationList:pendingList managedObjectContext:self.uiMOC];
+//
+//    // when
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    conversation.conversationType = ZMConversationTypeOneOnOne;
+//    conversation.connection.status = ZMConnectionStatusAccepted;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    XCTAssertEqual(normalList.count, 1u);
+//    XCTAssertEqualObjects(normalList, @[conversation]);
+//    XCTAssertEqual(pendingList.count, 0u);
+//    XCTAssertEqualObjects(pendingList, @[]);
+//    (void)normalObserver;
+//    (void)pendingObserver;
+//}
 
-    // when
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.connection.status = ZMConnectionStatusAccepted;
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    XCTAssertEqual(normalList.count, 1u);
-    XCTAssertEqualObjects(normalList, @[conversation]);
-    XCTAssertEqual(pendingList.count, 0u);
-    XCTAssertEqualObjects(pendingList, @[]);
-    (void)normalObserver;
-    (void)pendingObserver;
-}
+//- (void)testThatItUpdatesWhenNewAUserIsUnblocked;
+//{
+//    // given
+//    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.conversationType = ZMConversationTypeOneOnOne;
+//    conversation.lastModifiedDate = [NSDate date];
+//    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.connection.status = ZMConnectionStatusBlocked;
+//    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    XCTAssertEqual(normalList.count, 0u);
+//    XCTAssertEqualObjects(normalList, @[]);
+//
+//    ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
+//
+//    // when
+//    [conversation.connection.to accept];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    XCTAssertEqual(normalList.count, 1u);
+//    XCTAssertEqualObjects(normalList, @[conversation]);
+//    (void)observer;
+//}
 
-- (void)testThatItUpdatesWhenNewAUserIsUnblocked;
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.lastModifiedDate = [NSDate date];
-    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.connection.status = ZMConnectionStatusBlocked;
-    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssert([self.uiMOC saveOrRollback]);
-
-    // then
-    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    XCTAssertEqual(normalList.count, 0u);
-    XCTAssertEqualObjects(normalList, @[]);
-
-    ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
-    
-    // when
-    [conversation.connection.to accept];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    XCTAssertEqual(normalList.count, 1u);
-    XCTAssertEqualObjects(normalList, @[conversation]);
-    (void)observer;
-}
-
-- (void)testThatItUpdatesWhenTwoNewConnectionsAreAccepted;
-{
-    // given
-    ZMConversation *conversation1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation1.conversationType = ZMConversationTypeConnection;
-    conversation1.lastModifiedDate = [NSDate date];
-    conversation1.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation1.connection.status = ZMConnectionStatusPending;
-    conversation1.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    ZMConversation *conversation2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation2.conversationType = ZMConversationTypeConnection;
-    conversation2.lastModifiedDate = [NSDate date];
-    conversation2.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation2.connection.status = ZMConnectionStatusPending;
-    conversation2.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *pendingList = [ZMConversation pendingConversationsInContext:self.uiMOC];
-    NSArray *conversations = @[conversation2, conversation1];
-    XCTAssertEqual(normalList.count, 0u);
-    XCTAssertEqualObjects(normalList, @[]);
-    XCTAssertEqual(pendingList.count, 2u);
-    XCTAssertEqualObjects(pendingList, conversations);
-    
-    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
-    ConversationListChangeObserver *pendingObserver =[[ConversationListChangeObserver alloc] initWithConversationList:pendingList managedObjectContext:self.uiMOC];
-
-    // when
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    conversation1.conversationType = ZMConversationTypeOneOnOne;
-    conversation1.connection.status = ZMConnectionStatusAccepted;
-    conversation2.conversationType = ZMConversationTypeOneOnOne;
-    conversation2.connection.status = ZMConnectionStatusAccepted;
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    XCTAssertEqual(normalList.count, 2u);
-    XCTAssertEqualObjects(normalList, conversations);
-    XCTAssertEqual(pendingList.count, 0u);
-    XCTAssertEqualObjects(pendingList, @[]);
-    (void)normalObserver;
-    (void)pendingObserver;
-}
+//- (void)testThatItUpdatesWhenTwoNewConnectionsAreAccepted;
+//{
+//    // given
+//    ZMConversation *conversation1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation1.conversationType = ZMConversationTypeConnection;
+//    conversation1.lastModifiedDate = [NSDate date];
+//    conversation1.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation1.connection.status = ZMConnectionStatusPending;
+//    conversation1.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+//
+//    ZMConversation *conversation2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation2.conversationType = ZMConversationTypeConnection;
+//    conversation2.lastModifiedDate = [NSDate date];
+//    conversation2.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation2.connection.status = ZMConnectionStatusPending;
+//    conversation2.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *pendingList = [ZMConversation pendingConversationsInContext:self.uiMOC];
+//    NSArray *conversations = @[conversation2, conversation1];
+//    XCTAssertEqual(normalList.count, 0u);
+//    XCTAssertEqualObjects(normalList, @[]);
+//    XCTAssertEqual(pendingList.count, 2u);
+//    XCTAssertEqualObjects(pendingList, conversations);
+//
+//    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
+//    ConversationListChangeObserver *pendingObserver =[[ConversationListChangeObserver alloc] initWithConversationList:pendingList managedObjectContext:self.uiMOC];
+//
+//    // when
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    conversation1.conversationType = ZMConversationTypeOneOnOne;
+//    conversation1.connection.status = ZMConnectionStatusAccepted;
+//    conversation2.conversationType = ZMConversationTypeOneOnOne;
+//    conversation2.connection.status = ZMConnectionStatusAccepted;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    XCTAssertEqual(normalList.count, 2u);
+//    XCTAssertEqualObjects(normalList, conversations);
+//    XCTAssertEqual(pendingList.count, 0u);
+//    XCTAssertEqualObjects(pendingList, @[]);
+//    (void)normalObserver;
+//    (void)pendingObserver;
+//}
 
 
-- (void)testThatItUpdatesWhenNewAConversationIsArchived;
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.conversationType = ZMConversationTypeConnection;
-    conversation.lastModifiedDate = [NSDate date];
-    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.connection.status = ZMConnectionStatusAccepted;
-    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
-    XCTAssertEqual(normalList.count, 1u);
-    XCTAssertEqualObjects(normalList, @[conversation]);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqualObjects(archivedList, @[]);
-    
-    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
-    ConversationListChangeObserver *archivedObserver =[[ConversationListChangeObserver alloc] initWithConversationList:archivedList managedObjectContext:self.uiMOC];
+//- (void)testThatItUpdatesWhenNewAConversationIsArchived;
+//{
+//    // given
+//    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.conversationType = ZMConversationTypeConnection;
+//    conversation.lastModifiedDate = [NSDate date];
+//    conversation.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+//    conversation.connection.status = ZMConnectionStatusAccepted;
+//    conversation.connection.to = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    ZMConversationList *normalList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
+//    XCTAssertEqual(normalList.count, 1u);
+//    XCTAssertEqualObjects(normalList, @[conversation]);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqualObjects(archivedList, @[]);
+//
+//    ConversationListChangeObserver *normalObserver = [[ConversationListChangeObserver alloc] initWithConversationList:normalList managedObjectContext:self.uiMOC];
+//    ConversationListChangeObserver *archivedObserver =[[ConversationListChangeObserver alloc] initWithConversationList:archivedList managedObjectContext:self.uiMOC];
+//
+//    // when
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//    conversation.isArchived = YES;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    XCTAssertTrue(conversation.isArchived);
+//    XCTAssertEqual(normalList.count, 0u);
+//    XCTAssertEqualObjects(normalList, @[]);
+//    XCTAssertEqual(archivedList.count, 1u);
+//    XCTAssertEqualObjects(archivedList, @[conversation]);
+//    (void)normalObserver;
+//    (void)archivedObserver;
+//}
 
-    // when
-    XCTAssert([self.uiMOC saveOrRollback]);
-    conversation.isArchived = YES;
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    XCTAssertTrue(conversation.isArchived);
-    XCTAssertEqual(normalList.count, 0u);
-    XCTAssertEqualObjects(normalList, @[]);
-    XCTAssertEqual(archivedList.count, 1u);
-    XCTAssertEqualObjects(archivedList, @[conversation]);
-    (void)normalObserver;
-    (void)archivedObserver;
-}
+//- (void)testThatClearingConversationMovesItToClearedList
+//{
+//    // given
+//    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c1.conversationType = ZMConversationTypeOneOnOne;
+//    c1.lastModifiedDate = [NSDate date];
+//    ZMMessage *message = (id)[c1 appendMessageWithText:@"message"];
+//    message.serverTimestamp = [NSDate date];
+//    c1.lastServerTimeStamp = message.serverTimestamp;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
+//    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
+//
+//    XCTAssertEqual(activeList.count, 1u);
+//    XCTAssertEqualObjects(activeList.firstObject, c1);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 0u);
+//
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//    // when
+//    [c1 clearMessageHistory];
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//
+//    // then
+//    XCTAssertEqual(activeList.count, 0u);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 1u);
+//    XCTAssertEqualObjects(clearedList.firstObject, c1);
+//}
 
-- (void)testThatClearingConversationMovesItToClearedList
-{
-    // given
-    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c1.conversationType = ZMConversationTypeOneOnOne;
-    c1.lastModifiedDate = [NSDate date];
-    ZMMessage *message = (id)[c1 appendMessageWithText:@"message"];
-    message.serverTimestamp = [NSDate date];
-    c1.lastServerTimeStamp = message.serverTimestamp;
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
-    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
-    
-    XCTAssertEqual(activeList.count, 1u);
-    XCTAssertEqualObjects(activeList.firstObject, c1);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 0u);
+//- (void)testThatClearingConversationDoesNotClearOtherConversations
+//{
+//    // GIVEN
+//    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c1.conversationType = ZMConversationTypeOneOnOne;
+//    c1.lastModifiedDate = [NSDate date];
+//    ZMMessage *message1 = (id)[c1 appendMessageWithText:@"message 1"];
+//    message1.serverTimestamp = [NSDate date];
+//    c1.lastServerTimeStamp = message1.serverTimestamp;
+//
+//    ZMConversation *c2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c2.conversationType = ZMConversationTypeOneOnOne;
+//    c2.lastModifiedDate = [NSDate date];
+//    ZMMessage *message2 = (id)[c2 appendMessageWithText:@"message 2"];
+//    message2.serverTimestamp = [NSDate date];
+//    c2.lastServerTimeStamp = message2.serverTimestamp;
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    NSSet *conversations = [NSSet setWithArray:@[c1, c2]];
+//    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
+//    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
+//
+//    XCTAssertTrue([c1.allMessages containsObject:message1]);
+//    XCTAssertTrue([c2.allMessages containsObject:message2]);
+//
+//    XCTAssertEqual(activeList.count, 2u);
+//    XCTAssertEqualObjects(activeList.set, conversations);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 0u);
+//
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//    // when
+//    [self performPretendingUiMocIsSyncMoc:^{
+//        [c1 clearMessageHistory];
+//    }];
+//
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//    // then
+//    XCTAssertFalse([c1.allMessages containsObject:message1]);
+//    XCTAssertTrue([c2.allMessages containsObject:message2]);
+//
+//    XCTAssertEqual(activeList.count, 1u);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 1u);
+//    XCTAssertEqualObjects(clearedList.firstObject, c1);
+//
+//}
 
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    // when
-    [c1 clearMessageHistory];
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-    
-    
-    // then
-    XCTAssertEqual(activeList.count, 0u);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 1u);
-    XCTAssertEqualObjects(clearedList.firstObject, c1);
-}
-
-- (void)testThatClearingConversationDoesNotClearOtherConversations
-{
-    // GIVEN
-    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c1.conversationType = ZMConversationTypeOneOnOne;
-    c1.lastModifiedDate = [NSDate date];
-    ZMMessage *message1 = (id)[c1 appendMessageWithText:@"message 1"];
-    message1.serverTimestamp = [NSDate date];
-    c1.lastServerTimeStamp = message1.serverTimestamp;
-
-    ZMConversation *c2 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c2.conversationType = ZMConversationTypeOneOnOne;
-    c2.lastModifiedDate = [NSDate date];
-    ZMMessage *message2 = (id)[c2 appendMessageWithText:@"message 2"];
-    message2.serverTimestamp = [NSDate date];
-    c2.lastServerTimeStamp = message2.serverTimestamp;
-    XCTAssert([self.uiMOC saveOrRollback]);
-
-    NSSet *conversations = [NSSet setWithArray:@[c1, c2]];
-    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
-    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
-
-    XCTAssertTrue([c1.allMessages containsObject:message1]);
-    XCTAssertTrue([c2.allMessages containsObject:message2]);
-
-    XCTAssertEqual(activeList.count, 2u);
-    XCTAssertEqualObjects(activeList.set, conversations);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 0u);
-
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [c1 clearMessageHistory];
-    }];
-
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    // then
-    XCTAssertFalse([c1.allMessages containsObject:message1]);
-    XCTAssertTrue([c2.allMessages containsObject:message2]);
-
-    XCTAssertEqual(activeList.count, 1u);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 1u);
-    XCTAssertEqualObjects(clearedList.firstObject, c1);
-
-}
-
-- (void)testThatAddingMessageToClearedConversationMovesItToActiveConversationsList
-{
-    // given
-    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    c1.conversationType = ZMConversationTypeOneOnOne;
-    c1.lastModifiedDate = [NSDate date];
-    ZMMessage *message = (id)[c1 appendMessageWithText:@"message"];
-    message.serverTimestamp = [NSDate date];
-    
-    c1.lastServerTimeStamp = message.serverTimestamp;
-    
-    [c1 clearMessageHistory];
-    XCTAssert([self.uiMOC saveOrRollback]);
-
-    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
-    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
-    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
-    
-    XCTAssertEqual(activeList.count, 0u);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 1u);
-    XCTAssertEqualObjects(clearedList.firstObject, c1);
-
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    // when
-    //UI should call this when opening cleared conversation first time
-    [c1 revealClearedConversation];
-
-    // then
-    XCTAssertTrue([self.uiMOC saveOrRollback]);
-
-    XCTAssertEqual(activeList.count, 1u);
-    XCTAssertEqualObjects(activeList.firstObject, c1);
-    XCTAssertEqual(archivedList.count, 0u);
-    XCTAssertEqual(clearedList.count, 0u);
-}
+//- (void)testThatAddingMessageToClearedConversationMovesItToActiveConversationsList
+//{
+//    // given
+//    ZMConversation *c1 = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
+//    c1.conversationType = ZMConversationTypeOneOnOne;
+//    c1.lastModifiedDate = [NSDate date];
+//    ZMMessage *message = (id)[c1 appendMessageWithText:@"message"];
+//    message.serverTimestamp = [NSDate date];
+//
+//    c1.lastServerTimeStamp = message.serverTimestamp;
+//
+//    [c1 clearMessageHistory];
+//    XCTAssert([self.uiMOC saveOrRollback]);
+//
+//    ZMConversationList *activeList = [ZMConversation conversationsExcludingArchivedInContext:self.uiMOC];
+//    ZMConversationList *archivedList = [ZMConversation archivedConversationsInContext:self.uiMOC];
+//    ZMConversationList *clearedList = [ZMConversation clearedConversationsInContext:self.uiMOC];
+//
+//    XCTAssertEqual(activeList.count, 0u);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 1u);
+//    XCTAssertEqualObjects(clearedList.firstObject, c1);
+//
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//    // when
+//    //UI should call this when opening cleared conversation first time
+//    [c1 revealClearedConversation];
+//
+//    // then
+//    XCTAssertTrue([self.uiMOC saveOrRollback]);
+//
+//    XCTAssertEqual(activeList.count, 1u);
+//    XCTAssertEqualObjects(activeList.firstObject, c1);
+//    XCTAssertEqual(archivedList.count, 0u);
+//    XCTAssertEqual(clearedList.count, 0u);
+//}
 
 @end
 

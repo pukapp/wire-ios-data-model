@@ -108,21 +108,21 @@ final class ZMConversationListTests_Teams: ZMBaseManagedObjectTest {
         XCTAssertEqual(sut.setValue, [archived1, archived2])
     }
 
-    func testThatItReturnsAllUnarchivedConversationsOfATeam() {
-        // given
-        let conversation1 = createGroupConversation(in: team)
-        let conversation2 = createGroupConversation(in: team)
-        createGroupConversation(in: team, archived: true)
-        createGroupConversation(in: team, archived: true)
-        uiMOC.saveOrRollback()
-
-        // when
-        let sut = ZMConversation.conversationsExcludingArchived(in: uiMOC)
-
-        // then
-        XCTAssertEqual(sut.count, 2)
-        XCTAssertEqual(sut.setValue, [conversation1, conversation2])
-    }
+//    func testThatItReturnsAllUnarchivedConversationsOfATeam() {
+//        // given
+//        let conversation1 = createGroupConversation(in: team)
+//        let conversation2 = createGroupConversation(in: team)
+//        createGroupConversation(in: team, archived: true)
+//        createGroupConversation(in: team, archived: true)
+//        uiMOC.saveOrRollback()
+//
+//        // when
+//        let sut = ZMConversation.conversationsExcludingArchived(in: uiMOC)
+//
+//        // then
+//        XCTAssertEqual(sut.count, 2)
+//        XCTAssertEqual(sut.setValue, [conversation1, conversation2])
+//    }
 
     func testThatItReturnsTeamConversationsSorted() {
         // given
