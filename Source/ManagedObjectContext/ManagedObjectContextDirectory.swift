@@ -104,11 +104,12 @@ extension ManagedObjectContextDirectory {
         applicationContainer: URL) -> NSManagedObjectContext {
         
         let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        moc.markAsSyncContext()
         moc.performAndWait {
             Thread.current.name = NSManagedObjectContextType.sync.rawValue
             moc.name = NSManagedObjectContextType.sync.rawValue
+            moc.markAsSyncContext()
             moc.configure(with: persistentStoreCoordinator)
+            ZMUser.selfUser(in: moc)
             moc.setupLocalCachedSessionAndSelfUser()
             moc.setupUserKeyStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
             moc.undoManager = nil
@@ -132,11 +133,12 @@ extension ManagedObjectContextDirectory {
             applicationContainer: URL) -> NSManagedObjectContext {
             
             let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-            moc.markAsMsgContext()
             moc.performAndWait {
                 Thread.current.name = NSManagedObjectContextType.msg.rawValue
                 moc.name = NSManagedObjectContextType.msg.rawValue
+                moc.markAsMsgContext()
                 moc.configure(with: persistentStoreCoordinator)
+                ZMUser.selfUser(in: moc)
                 moc.setupLocalCachedSessionAndSelfUser()
                 moc.setupUserKeyStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
                 moc.undoManager = nil

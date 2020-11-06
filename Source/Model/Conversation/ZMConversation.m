@@ -152,7 +152,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 
 @property (nonatomic) NSString *normalizedUserDefinedName;
 @property (nonatomic) ZMConversationType conversationType;
-@property (nonatomic, readonly) ZMConversationType internalConversationType;
 
 @property (nonatomic) NSTimeInterval lastReadTimestampSaveDelay;
 @property (nonatomic) int64_t lastReadTimestampUpdateCounter;
@@ -368,12 +367,16 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 ///activeParticipants的计算过程占用cpu比较多，这里还是之前的逻辑，但是换种写法，来降低cpu计算量。
 -(NSSet <ZMUser *> *)activeParticipants
 {
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    if (self.internalConversationType == ZMConversationTypeHugeGroup) {
+        return [NSSet setWithObject:selfUser];
+    }
     
     NSMutableSet *activeParticipants = [NSMutableSet set];
     
     if (self.internalConversationType != ZMConversationTypeGroup &&
         self.internalConversationType != ZMConversationTypeHugeGroup) {
-        [activeParticipants addObject:[ZMUser selfUserInContext:self.managedObjectContext]];
+        [activeParticipants addObject:selfUser];
         if (self.connectedUser != nil) {
             [activeParticipants addObject:self.connectedUser];
         }
@@ -666,20 +669,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 - (ZMConversationType)conversationType
 {
     ZMConversationType conversationType = [self internalConversationType];
-    
-    // Exception: the group conversation is considered a 1-1 if:
-    // 1. Belongs to the team.
-    // 2. Has no name given.
-    // 3. Conversation has only one other participant.
-    // 4. This participant is not a service user (bot).
-    if ((conversationType == ZMConversationTypeGroup ||
-         conversationType == ZMConversationTypeHugeGroup) &&
-        self.lastServerSyncedActiveParticipants.count == 1 &&
-        !self.lastServerSyncedActiveParticipants.firstObject.isServiceUser &&
-        self.userDefinedName.length == 0) {
-        conversationType = ZMConversationTypeOneOnOne;
-    }
-    
     return conversationType;
 }
 

@@ -255,9 +255,7 @@ struct stringAndStatus {
     // We must only ever call this on the sync context. Otherwise, there's a race condition
     // where the UI and sync contexts could both insert the same conversation (same UUID) and we'd end up
     // having two duplicates of that connection, and we'd have a really hard time recovering from that.
-    //
-    RequireString(!moc.zm_isUserInterfaceContext, "Race condition!");
-    
+    //    
     ZMConnection *result = [self fetchConnectionWithUserUUID:UUID managedObjectContext:moc];
     
     if (result != nil) {

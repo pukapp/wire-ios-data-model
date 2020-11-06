@@ -496,11 +496,6 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     }
     
     ZMUser * user;
-    for (ZMUser * participants in conversation.lastServerSyncedActiveParticipants) {
-        if ([participants.remoteIdentifier isEqual:uuid]) {
-            user = participants;
-        }
-    }
     if (user == nil) {
         user = [self userWithRemoteID:uuid createIfNeeded:create inContext:moc];
     }

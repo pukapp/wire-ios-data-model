@@ -35,6 +35,18 @@ extension NSManagedObjectContext: TearDownCapable {
             }
         }
     }
+    
+    public func tearDownObject() {
+        self.performGroupedBlockAndWait {
+            let objects = self.registeredObjects
+            objects.forEach {
+                if let tearDownCapable = $0 as? TearDownCapable {
+                    tearDownCapable.tearDown()
+                }
+                self.refresh($0, mergeChanges: false)
+            }
+        }
+    }
 
     private func tearDownUserInfo() {
         let allKeys = userInfo.allKeys

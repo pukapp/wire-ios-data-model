@@ -173,6 +173,10 @@ extension ZMMessage {
             self.willChangeValue(forKey: key)
             self.setPrimitiveValue(newValue, forKey: key)
             self.didChangeValue(forKey: key)
+            //扩展中拉取的万人群消息不设置messagesNonceSet
+            if case .hugeGroup? = newValue?.conversationType {
+                return
+            }
             
             ///设置messagesNonceSet
             if let conv = newValue, let nonce = self.nonce {

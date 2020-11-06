@@ -28,6 +28,8 @@ extension NSManagedObjectContext {
         setPersistentStoreMetadata(nil as Data?, key: PersistentMetadataKey.pushToken.rawValue)
         setPersistentStoreMetadata(nil as Data?, key: PersistentMetadataKey.pushKitToken.rawValue)
         setPersistentStoreMetadata(nil as Data?, key: PersistentMetadataKey.lastUpdateEventID.rawValue)
+        self.zm_lastHugeNotificationID = nil
+        self.zm_lastNotificationID = nil
         saveOrRollback()
     }
     

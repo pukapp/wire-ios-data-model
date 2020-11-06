@@ -318,9 +318,10 @@ extension ZMConversation {
     public func addParticipantIfMissing(_ user: ZMUser, date dateOptional: Date?) {
         ///万人群消息直接判断lastServerSyncedActiveParticipants是否包含，不执行activeParticipants的判断
         if case .hugeGroup = conversationType {
-            if !self.lastServerSyncedActiveParticipants.contains(user) {
-                self.internalAddParticipants([user])
-            }
+//            万人群不维护lastServerSyncedActiveParticipants
+//            if !self.lastServerSyncedActiveParticipants.contains(user) {
+//                self.internalAddParticipants([user])
+//            }
             return
         }
         let date = dateOptional ?? Date()
@@ -657,26 +658,25 @@ extension ZMConversation {
     
     /// Returns true if all participants are connected to the self user and all participants are trusted
     @objc public var allUsersTrusted : Bool {
+        if self.conversationType == .hugeGroup {
+            return true
+        }
         guard self.lastServerSyncedActiveParticipants.count > 0, self.isSelfAnActiveMember else { return false }
         let hasOnlyTrustedUsers = self.activeParticipants.first { !$0.trusted() } == nil
         return hasOnlyTrustedUsers && !self.containsUnconnectedOrExternalParticipant
     }
     
     fileprivate var containsUnconnectedOrExternalParticipant : Bool {
-        guard let managedObjectContext = self.managedObjectContext else {
-            return true
+        if self.conversationType == .hugeGroup {
+            return false
         }
         
-        let selfUser = ZMUser.selfUser(in: managedObjectContext)
         return (self.lastServerSyncedActiveParticipants.array as! [ZMUser]).first {
             if $0.isConnected {
                 return false
             }
-            else if $0.isWirelessUser {
-                return false
-            }
             else {
-                return selfUser.team == nil || $0.team != selfUser.team
+                return $0.isWirelessUser
             }
         } != nil
     }

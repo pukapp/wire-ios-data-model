@@ -57,7 +57,7 @@ extension NSManagedObjectContext {
 private let metadataKey = "ZMMetadataKey"
 private let metadataKeysToRemove = "ZMMetadataKeysToRemove"
 
-extension NSManagedObjectContext {
+public extension NSManagedObjectContext {
     
     /// Non-persisted store metadata
     @objc internal var nonCommittedMetadata : NSMutableDictionary {
@@ -81,6 +81,7 @@ extension NSManagedObjectContext {
     }
     
     /// Persist in-memory metadata to persistent store
+    @discardableResult
     @objc func makeMetadataPersistent() -> Bool {
         
         guard nonCommittedMetadata.count > 0 || nonCommittedDeletedMetadataKeys.count > 0 else  { return false }
@@ -98,6 +99,8 @@ extension NSManagedObjectContext {
             }
             storedMetadata[stringKey] = value
         }
+        
+        print("lastUpdateEventIDKey    \(String(describing: storedMetadata[lastUpdateEventIDKey]))")
         
         self.persistentStoreCoordinator?.setMetadata(storedMetadata, for: store)
         self.discardNonCommitedMetadata()
