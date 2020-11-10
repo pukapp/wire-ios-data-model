@@ -165,11 +165,11 @@ NSString * const DeliveredKey = @"delivered";
     }
 
     // Update the legal hold state in the conversation
-    [conversation updateSecurityLevelIfNeededAfterReceiving:message timestamp:updateEvent.timeStamp ?: [NSDate date]];
+//    [conversation updateSecurityLevelIfNeededAfterReceiving:message timestamp:updateEvent.timeStamp ?: [NSDate date]];
 
-    if (!message.knownMessage) {
-        [UnknownMessageAnalyticsTracker tagUnknownMessageWithAnalytics:moc.analytics];
-    }
+//    if (!message.knownMessage) {
+//        [UnknownMessageAnalyticsTracker tagUnknownMessageWithAnalytics:moc.analytics];
+//    }
 
     // Check if the message is valid
 
