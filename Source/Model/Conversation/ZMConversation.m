@@ -1296,6 +1296,7 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
     
     ZMConversation *conversationToUpdate = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:YES inContext:context];
     [conversationToUpdate updateLastRead:timestamp synchronize:NO];
+    [conversationToUpdate calculateLastUnreadMessages];
 }
 
 
