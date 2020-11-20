@@ -194,17 +194,17 @@ extension ZMManagedObject {
         self.snapshotCenter = SnapshotCenter(managedObjectContext: managedObjectContext)
         super.init()
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
-            name:.NSManagedObjectContextObjectsDidChange,
-            object: self.managedObjectContext)
+//        NotificationCenter.default.addObserver(
+//            self,
+//            selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
+//            name:.NSManagedObjectContextObjectsDidChange,
+//            object: self.managedObjectContext)
         NotificationCenter.default.addObserver(self, selector: #selector(NotificationDispatcher.extractAndfireWhenIdle), name: NSNotification.Name.FireAllNotificationWhenIdle, object: nil)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(NotificationDispatcher.contextDidSave(_:)),
-            name:.NSManagedObjectContextDidSave,
-            object: self.managedObjectContext)
+//        NotificationCenter.default.addObserver(
+//            self,
+//            selector: #selector(NotificationDispatcher.contextDidSave(_:)),
+//            name:.NSManagedObjectContextDidSave,
+//            object: self.managedObjectContext)
         self.notificationTokens.append(NotificationInContext.addObserver(
             name: .NonCoreDataChangeInManagedObject,
             context: self.managedObjectContext.notificationContext)
@@ -257,10 +257,10 @@ extension ZMManagedObject {
     }
     
     /// This is called when the uiMOC saved
-    @objc func contextDidSave(_ note: Notification){
-        guard isObserving else { return }
-        self.postFireNotification()
-    }
+//    @objc func contextDidSave(_ note: Notification){
+//        guard isObserving else { return }
+//        self.postFireNotification()
+//    }
     
     /// This will be called if a change to an object does not cause a change in Core Data, e.g. downloading the asset and adding it to the cache
     func nonCoreDataChange(_ note: NotificationInContext){
