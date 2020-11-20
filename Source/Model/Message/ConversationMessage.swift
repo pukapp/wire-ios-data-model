@@ -167,64 +167,8 @@ public func ==(lhs: ZMConversationMessage?, rhs: ZMConversationMessage?) -> Bool
 // MARK:- Conversation managed properties
 extension ZMMessage {
     
-    @objc public var visibleInConversation : ZMConversation?  {
-        set {
-            let key = #keyPath(ZMMessage.visibleInConversation)
-            self.willChangeValue(forKey: key)
-            self.setPrimitiveValue(newValue, forKey: key)
-            self.didChangeValue(forKey: key)
-            //扩展中拉取的万人群消息不设置messagesNonceSet
-            if case .hugeGroup? = newValue?.conversationType {
-                return
-            }
-            
-            ///设置messagesNonceSet
-            if let conv = newValue, let nonce = self.nonce {
-                if let messagesNonceSet = conv.messagesNonceSet {
-                    conv.messagesNonceSet = messagesNonceSet.union([nonce])
-                } else {
-                    conv.messagesNonceSet = [nonce]
-                }
-            }
-            //自己在uiContext上发送了一条万人群消息，服务端也会发送给自己这条消息，收到推送处理消息是在syncContext上，
-            //这里需要立即保存到数据库，防止syncContext的数据没有同步，导致插入了两个相同的消息
-            if case .hugeGroup? = newValue?.conversationType,
-                self.sender?.isSelfUser ?? false,
-                self.managedObjectContext?.zm_isUserInterfaceContext ?? false {
-                self.managedObjectContext?.saveOrRollback()
-            }
-        }
-        get {
-            let key = #keyPath(ZMMessage.visibleInConversation)
-            self.willAccessValue(forKey: key)
-            let value = self.primitiveValue(forKey: key) as? ZMConversation
-            self.didAccessValue(forKey: key)
-            return value
-        }
-    }
-    
-    @objc public var hiddenInConversation : ZMConversation?  {
-        set {
-            let key = #keyPath(ZMMessage.hiddenInConversation)
-            self.willChangeValue(forKey: key)
-            self.setPrimitiveValue(newValue, forKey: key)
-            self.didChangeValue(forKey: key)
-            if let conv = newValue, let nonce = self.nonce {
-                if let messagesNonceSet = conv.messagesNonceSet {
-                    conv.messagesNonceSet = messagesNonceSet.union([nonce])
-                } else {
-                    conv.messagesNonceSet = [nonce]
-                }
-            }
-        }
-        get {
-            let key = #keyPath(ZMMessage.hiddenInConversation)
-            self.willAccessValue(forKey: key)
-            let value = self.primitiveValue(forKey: key) as? ZMConversation
-            self.didAccessValue(forKey: key)
-            return value
-        }
-    }
+    @NSManaged public var visibleInConversation : ZMConversation?
+    @NSManaged public var hiddenInConversation : ZMConversation?
     
     public var conversation : ZMConversation? {
         return self.visibleInConversation ?? self.hiddenInConversation
