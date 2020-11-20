@@ -1355,7 +1355,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     message.systemMessageType = type;
     message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
-    NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
+    NSString *messageText = [[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"];
     NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
     message.text = messageText != nil ? messageText : name;
     
@@ -1364,7 +1364,9 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     ///针对特殊系统消息类型填充不同的数据
     [self fillSystemMessageWithSystemMessage:message updateEvent:updateEvent inConversation:conversation inManagedObjectContext:moc];
     
-    [conversation updateTimestampsAfterUpdatingMessage:message];
+    if (conversation.conversationType != ZMConversationTypeHugeGroup) {
+        [conversation updateTimestampsAfterUpdatingMessage:message];
+    }
     return message;
 }
 
