@@ -213,47 +213,32 @@ NSString * const DeliveredKey = @"delivered";
             conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
         }
+    } else if (message.textData.linkPreview.count > 0) {
+        if (conversation.conversationType == ZMConversationTypeHugeGroup) {
+            return nil;
+        }
+        NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
+        Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
+        ZMOTRMessage *clientMessage = [messageClass fetchMessageWithNonce:nonce
+               forConversation:conversation
+        inManagedObjectContext:moc
+                prefetchResult:prefetchResult];
+        [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate: NO];
+        [clientMessage updateCategoryCache];
     } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasCalling || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
-        
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
-        // 优先通过新增conversation.messagesNonceSet，查询消息是否已存在本地，若存在，返回空，不存在，则去新建
-        BOOL isNewMessage = NO;
-        if ([conversation.messagesNonceSet containsObject:nonce]) {
-            // 群邀请已被确认消息需要强制设置为新消息，来达到强制更新消息内容的目的
-            if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-                clientMessage = [messageClass fetchMessageWithNonce:nonce
-                                                    forConversation:conversation
-                                             inManagedObjectContext:moc
-                                                     prefetchResult:prefetchResult];
-                if (clientMessage.isZombieObject) {
-                    return nil;
-                }
-                isNewMessage = true;
-            } else {
-               return nil;
+        if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
+            clientMessage = [messageClass fetchMessageWithNonce:nonce
+                                                forConversation:conversation
+                                         inManagedObjectContext:moc
+                                                 prefetchResult:prefetchResult];
+            if (clientMessage.isZombieObject) {
+                return nil;
             }
-            
-//            clientMessage = [messageClass fetchMessageWithNonce:nonce
-//                                                forConversation:conversation
-//                                         inManagedObjectContext:moc
-//                                                 prefetchResult:prefetchResult];
-//
-//            if (clientMessage.isZombieObject) {
-//                return nil;
-//            }
-//            ///万人群忽略送达的状态，具体什么原因等待以后修改注释
-//            if (conversation.conversationType == ZMConversationTypeHugeGroup) {
-//                clientMessage.delivered = YES;
-//            }
-//            // 有可能什么消息没有senderClientID，具体什么原因等待以后修改注释
-//            if (clientMessage.senderClientID && ![clientMessage.senderClientID isEqualToString:updateEvent.senderClientID]) {
-//                return nil;
-//            }
-        } else {
-            isNewMessage = YES;
-            
+        }
+        if (clientMessage == nil) {
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
             clientMessage.serverTimestamp = updateEvent.timeStamp;
@@ -261,14 +246,10 @@ NSString * const DeliveredKey = @"delivered";
             if (updateEvent.type == ZMUpdateEventTypeConversationServiceMessageAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
                 ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
             }
-            // 暂时屏蔽群消息的已读回执功能
-//            if (![updateEvent.senderUUID isEqual:selfUser.remoteIdentifier] && conversation.conversationType == ZMConversationTypeGroup) {
-//                clientMessage.expectsReadConfirmation = conversation.hasReadReceiptsEnabled;
-//            }
         }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
-        [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate:isNewMessage];
+        [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate: YES];
         
         // It seems that if the object was inserted and immediately deleted, the isDeleted flag is not set to true.
         // In addition the object will still have a managedObjectContext until the context is finally saved. In this
@@ -306,6 +287,9 @@ NSString * const DeliveredKey = @"delivered";
         message = nil;
     }
     if (message == nil) {
+        return nil;
+    }
+    if (message.textData.linkPreview.count > 0) {
         return nil;
     }
     NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
