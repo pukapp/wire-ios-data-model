@@ -10,7 +10,9 @@ import Foundation
 
 @objcMembers public class AppGroupInfo: NSObject {
     
-    public static var sharedUserDefaults: UserDefaults = UserDefaults(suiteName: AppGroupInfo.appGroupIdentifier)!
+    public static var sharedUserDefaults: UserDefaults {
+        return UserDefaults(suiteName: AppGroupInfo.appGroupIdentifier)!
+    }
     
     public static let appGroupIdentifier = Bundle.main.infoDictionary?["ApplicationGroupIdentifier"] as! String
 }
