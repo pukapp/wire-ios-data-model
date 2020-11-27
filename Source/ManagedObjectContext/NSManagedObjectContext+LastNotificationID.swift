@@ -43,14 +43,14 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             let eventProcessing = ZMSLog(tag: "event-processing")
             eventProcessing.info("Setting zm_lastNotificationID = \( newValue?.transportString() ?? "nil" )")
 //                        self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
-            let userDefault = AppGroupInfo.sharedUserDefaults
+            let userDefault = AppGroupInfo.instance.sharedUserDefaults
             userDefault.set(newValue?.transportString(), forKey: lastUpdateEventIDKey + uid)
         }
         
         get {
             guard let remoteIdentifier = ZMUser.selfUser(in: self).remoteIdentifier else {return nil}
             let uid = remoteIdentifier.transportString()
-            let userDefault = AppGroupInfo.sharedUserDefaults
+            let userDefault = AppGroupInfo.instance.sharedUserDefaults
             if let id = userDefault.value(forKey: lastUpdateEventIDKey + uid) as? String {
                 return UUID(uuidString: id)
             }
@@ -75,13 +75,13 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             let eventProcessing = ZMSLog(tag: "huge event-processing")
             eventProcessing.info("Setting zm_lastHugeNotificationID = \( newValue?.transportString() ?? "nil" )")
             //            self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
-            let userDefault = AppGroupInfo.sharedUserDefaults
+            let userDefault = AppGroupInfo.instance.sharedUserDefaults
             userDefault.set(newValue?.transportString(), forKey: lastHugeUpdateEventIDKey + uid)
         }
         
         get {
             let uid = ZMUser.selfUser(in: self).remoteIdentifier.transportString()
-            let userDefault = AppGroupInfo.sharedUserDefaults
+            let userDefault = AppGroupInfo.instance.sharedUserDefaults
             if let id = userDefault.value(forKey: lastHugeUpdateEventIDKey + uid) as? String {
                 return UUID(uuidString: id)
             }
