@@ -304,6 +304,11 @@ NSString * const DeliveredKey = @"delivered";
     if (message.hasTextJson) {
        [clientMessage updateAssistantbotWithUpdateEvent:updateEvent forConversation:conversation jsonText:message.textJson.content];
     }
+    // 删除消息不创建通知
+    if (message.hasDeleted) {
+        return array;
+    }
+//    deletionTimeout
     [array addObject:clientMessage];
     [array addObject:conversation];
     return array;

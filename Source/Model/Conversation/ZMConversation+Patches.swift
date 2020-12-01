@@ -30,7 +30,7 @@ extension ZMConversation {
     /// at any point in the past had been secure
     static func migrateAllSecureWithIgnored(in moc: NSManagedObjectContext) {
         let predicate = ZMConversation.predicateSecureWithIgnored()
-        let request = ZMConversation.sortedFetchRequest(with: predicate)
+        guard let request = ZMConversation.sortedFetchRequest(with: predicate) else { return }
         let allConversations = moc.executeFetchRequestOrAssert(request) as! [ZMConversation]
 
         for conversation in allConversations {

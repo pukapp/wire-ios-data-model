@@ -28,7 +28,7 @@ extension UserClient {
             // no client? no migration needed
             return
         }
-        let request = UserClient.sortedFetchRequest()
+        guard let request = UserClient.sortedFetchRequest() else { return }
         let allClients = moc.executeFetchRequestOrAssert(request) as! [UserClient]
         selfClient.keysStore.encryptionContext.perform { (session) in
             for client in allClients {

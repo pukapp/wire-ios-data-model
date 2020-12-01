@@ -166,6 +166,7 @@ extension ManagedObjectContextDirectory {
             Thread.current.name = NSManagedObjectContextType.search.rawValue
             moc.name = NSManagedObjectContextType.search.rawValue
             moc.configure(with: persistentStoreCoordinator)
+            ZMUser.selfUser(in: moc)
             moc.setupLocalCachedSessionAndSelfUser()
             moc.undoManager = nil
             moc.mergePolicy = NSMergePolicy(merge: .rollbackMergePolicyType)
@@ -184,7 +185,8 @@ extension NSManagedObjectContext {
     
     // This function setup the user info on the context, the session and self user must be initialised before end.
     public func setupLocalCachedSessionAndSelfUser() {
-        let session = self.executeFetchRequestOrAssert(ZMSession.sortedFetchRequest()).first as! ZMSession
+        guard let request = UserClient.sortedFetchRequest(),
+              let session = self.executeFetchRequestOrAssert(request).first as? ZMSession else { return }
         self.userInfo[SessionObjectIDKey] = session.objectID
         ZMUser.boxSelfUser(session.selfUser, inContextUserInfo: self)
     }
