@@ -200,9 +200,6 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 ///群内最后一条可见消息
 @property (nonatomic, nullable) ZMMessage *lastVisibleMessage;
 
-///群内所有消息Norce集合，用来判断新消息来的时候是否重复，避免数据库查询
-@property (nonatomic) NSSet<NSUUID *> * _Nullable messagesNonceSet;
-
 // 当前群是否被封禁
 @property (nonatomic) BOOL blocked;
 @property (nonatomic) ServiceMessage * _Nullable blockWarningMessage;

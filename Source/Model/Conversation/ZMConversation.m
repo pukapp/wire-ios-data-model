@@ -202,7 +202,6 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 @dynamic labels;
 // 新增
 
-@dynamic messagesNonceSet;
 @dynamic lastVisibleMessage;
 @dynamic selfRemark;
 

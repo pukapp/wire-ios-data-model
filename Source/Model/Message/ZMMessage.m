@@ -797,48 +797,44 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
         }
     }
     
-    NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
     NSPredicate *noncePredicate = [NSPredicate predicateWithFormat:@"%K == %@", ZMMessageNonceDataKey, [nonce data]];
     
-    BOOL checkedAllHiddenMessages = NO;
-    BOOL checkedAllVisibleMessage = NO;
-
-    if (![conversation hasFaultForRelationshipNamed:ZMConversationAllMessagesKey]) {
-        checkedAllVisibleMessage = YES;
-        for (ZMMessage *message in conversation.allMessages) {
-            if (message.isFault) {
-                checkedAllVisibleMessage = NO;
-            } else if ([message.entity isKindOfEntity:entity] && [noncePredicate evaluateWithObject:message]) {
-                return (id) message;
-            }
-        }
-    }
+//    NSEntityDescription *entity = moc.persistentStoreCoordinator.managedObjectModel.entitiesByName[self.entityName];
     
-    if (![conversation hasFaultForRelationshipNamed:ZMConversationHiddenMessagesKey]) {
-        checkedAllHiddenMessages = YES;
-        for (ZMMessage *message in conversation.hiddenMessages) {
-            if (message.isFault) {
-                checkedAllHiddenMessages = NO;
-            } else if ([message.entity isKindOfEntity:entity] && [noncePredicate evaluateWithObject:message]) {
-                return (id) message;
-            }
-        }
-    }
+//    BOOL checkedAllHiddenMessages = NO;
+//    BOOL checkedAllVisibleMessage = NO;
 
-    if (checkedAllVisibleMessage && checkedAllHiddenMessages) {
-        return nil;
-    }
+//    if (![conversation hasFaultForRelationshipNamed:ZMConversationAllMessagesKey]) {
+//        checkedAllVisibleMessage = YES;
+//        for (ZMMessage *message in conversation.allMessages) {
+//            if (message.isFault) {
+//                checkedAllVisibleMessage = NO;
+//            } else if ([message.entity isKindOfEntity:entity] && [noncePredicate evaluateWithObject:message]) {
+//                return (id) message;
+//            }
+//        }
+//    }
+//
+//    if (![conversation hasFaultForRelationshipNamed:ZMConversationHiddenMessagesKey]) {
+//        checkedAllHiddenMessages = YES;
+//        for (ZMMessage *message in conversation.hiddenMessages) {
+//            if (message.isFault) {
+//                checkedAllHiddenMessages = NO;
+//            } else if ([message.entity isKindOfEntity:entity] && [noncePredicate evaluateWithObject:message]) {
+//                return (id) message;
+//            }
+//        }
+//    }
 
-    NSPredicate *conversationPredicate = [NSPredicate predicateWithFormat:@"%K == %@ OR %K == %@", ZMMessageConversationKey, conversation.objectID, ZMMessageHiddenInConversationKey, conversation.objectID];
+//    if (checkedAllVisibleMessage && checkedAllHiddenMessages) {
+//        return nil;
+//    }
     
-    NSPredicate *predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[noncePredicate, conversationPredicate]];
+    NSPredicate *predicate = noncePredicate;
     NSFetchRequest *fetchRequest = [self.class sortedFetchRequestWithPredicate:predicate];
     fetchRequest.fetchLimit = 2;
     fetchRequest.includesSubentities = YES;
-    if ([self isKindOfClass:[ZMClientMessage class]] ||
-        [self isKindOfClass:[ZMAssetClientMessage class]]) {
-        fetchRequest.relationshipKeyPathsForPrefetching = @[@"dataSet"];
-    }
+    fetchRequest.relationshipKeyPathsForPrefetching = @[@"dataSet"];
     
     NSArray* fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
     VerifyString([fetchResult count] <= 1, "More than one message with the same nonce in the same conversation");
@@ -1328,6 +1324,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                               inManagedObjectContext:(NSManagedObjectContext *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
+    
+    ZMSystemMessage *systemMessage = (ZMSystemMessage *)[ZMMessage fetchMessageWithNonce:updateEvent.uuid forConversation: nil inManagedObjectContext:moc];
+    if (systemMessage) {
+        return systemMessage;
+    }
+    
     ZMSystemMessageType type = [self.class systemMessageTypeFromEvent:updateEvent];
     if (type == ZMSystemMessageTypeInvalid) {
         return nil;
@@ -1351,7 +1353,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     }
     
     ///创建系统消息并配置基本信息
-    ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
+    ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce: updateEvent.uuid managedObjectContext:moc];
     message.systemMessageType = type;
     message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;

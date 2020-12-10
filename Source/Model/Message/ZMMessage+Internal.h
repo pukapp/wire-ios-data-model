@@ -276,11 +276,11 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 - (void)markAsSent;
 
 + (instancetype _Nullable)fetchMessageWithNonce:(NSUUID * _Nullable)nonce
-                      forConversation:(ZMConversation * _Nonnull)conversation
+                      forConversation:(ZMConversation * _Nullable)conversation
                inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 + (instancetype _Nullable)fetchMessageWithNonce:(NSUUID * _Nonnull)nonce
-                      forConversation:(ZMConversation * _Nonnull)conversation
+                      forConversation:(ZMConversation * _Nullable)conversation
                inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                        prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 

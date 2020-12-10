@@ -218,8 +218,7 @@ NSString * const DeliveredKey = @"delivered";
             return nil;
         }
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
-        Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
-        ZMOTRMessage *clientMessage = [messageClass fetchMessageWithNonce:nonce
+        ZMOTRMessage *clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
                forConversation:conversation
         inManagedObjectContext:moc
                 prefetchResult:prefetchResult];
@@ -230,7 +229,7 @@ NSString * const DeliveredKey = @"delivered";
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
         if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-            clientMessage = [messageClass fetchMessageWithNonce:nonce
+            clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
                                                 forConversation:conversation
                                          inManagedObjectContext:moc
                                                  prefetchResult:prefetchResult];
@@ -238,6 +237,12 @@ NSString * const DeliveredKey = @"delivered";
                 return nil;
             }
         }
+        //如果不是万人群消息  需要查库看是否已经保存 扩展中可能已经保存这条消息
+        clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
+                                                         forConversation:conversation
+                                                  inManagedObjectContext:moc
+                                                          prefetchResult:prefetchResult];
+        
         if (clientMessage == nil) {
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
             clientMessage.senderClientID = updateEvent.senderClientID;
