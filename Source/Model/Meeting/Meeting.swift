@@ -93,9 +93,10 @@ public class ZMMeeting: ZMManagedObject {
     @NSManaged public var screenShareUserId: String?
     @NSManaged public var watchUserId: String?
     
-    @NSManaged public var onlyHosterCanShareScreen: Bool
-    @NSManaged public var isInternal: Bool
-    @NSManaged public var isLocked: Bool
+    @NSManaged public var currentIsScreenSharing: Bool //当前有人正在屏幕共享中
+    @NSManaged public var onlyHosterCanShareScreen: Bool //仅主持人可以屏幕分享
+    @NSManaged public var isInternal: Bool //是否内部会议
+    @NSManaged public var isLocked: Bool //是否锁定会议
     
     //被呼叫的时间-收到推送时更新，用来显示滑动加入会议的成员被呼叫页面
     @NSManaged public var callingDate: Date?
@@ -180,14 +181,17 @@ public extension ZMMeeting {
             let watcherId = watcher["user_id"] as? String {
             self.watchUserId = watcherId
         }
-        if let internalValue = payload["internal"] as? Int {
-            self.isInternal = internalValue == 1
+        if let internalValue = payload["internal"] as? String {
+            self.isInternal = internalValue == "on"
         }
-        if let canScreenShareValue = payload["screen_share"] as? Int {
-            self.onlyHosterCanShareScreen = canScreenShareValue == 1
+        if let isScreenSharingValue = payload["record"] as? String {
+            self.currentIsScreenSharing = isScreenSharingValue == "on"
         }
-        if let lockMeetingValue = payload["lock_meeting"] as? Int {
-            self.isLocked = lockMeetingValue == 1
+        if let canScreenShareValue = payload["screen_share"] as? String {
+            self.onlyHosterCanShareScreen = canScreenShareValue == "on"
+        }
+        if let lockMeetingValue = payload["lock_meeting"] as? String {
+            self.isLocked = lockMeetingValue == "on"
         }
     }
     
