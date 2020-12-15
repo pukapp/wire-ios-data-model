@@ -238,7 +238,7 @@ public class TextSearchQuery: NSObject {
         syncMOC.performGroupedBlock { [weak self] in
             guard let `self` = self else { return }
 
-            let request = ZMClientMessage.descendingFetchRequest(with: self.predicateForIndexedMessagesQueryMatch)
+            guard let request = ZMClientMessage.descendingFetchRequest(with: self.predicateForIndexedMessagesQueryMatch) else { return completion() }
 //            request?.fetchLimit = self.fetchConfiguration.indexedBatchSize
 //            request?.fetchOffset = callCount * self.fetchConfiguration.indexedBatchSize
 
@@ -267,8 +267,8 @@ public class TextSearchQuery: NSObject {
         syncMOC.performGroupedBlock { [weak self] in
             guard let `self` = self else { return }
 
-            let request = ZMClientMessage.descendingFetchRequest(with: self.predicateForNotIndexedMessages)
-            request?.fetchLimit = self.fetchConfiguration.notIndexedBatchSize
+            guard let request = ZMClientMessage.descendingFetchRequest(with: self.predicateForNotIndexedMessages) else { return }
+            request.fetchLimit = self.fetchConfiguration.notIndexedBatchSize
 
             guard let messagesToIndex = self.syncMOC.executeFetchRequestOrAssert(request) as? [ZMClientMessage] else { return }
             messagesToIndex.forEach {

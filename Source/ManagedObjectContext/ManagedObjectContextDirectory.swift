@@ -140,7 +140,8 @@ extension NSManagedObjectContext {
     
     // This function setup the user info on the context, the session and self user must be initialised before end.
     fileprivate func setupLocalCachedSessionAndSelfUser() {
-        let session = self.executeFetchRequestOrAssert(ZMSession.sortedFetchRequest()).first as! ZMSession
+        guard let request = UserClient.sortedFetchRequest(),
+              let session = self.executeFetchRequestOrAssert(request).first as? ZMSession else { return }
         self.userInfo[SessionObjectIDKey] = session.objectID
         ZMUser.boxSelfUser(session.selfUser, inContextUserInfo: self)
     }
