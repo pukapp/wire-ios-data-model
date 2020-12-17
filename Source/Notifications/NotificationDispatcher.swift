@@ -193,12 +193,12 @@ extension ZMManagedObject {
         self.affectingKeysStore = DependencyKeyStore(classIdentifiers : classIdentifiers)
         self.snapshotCenter = SnapshotCenter(managedObjectContext: managedObjectContext)
         super.init()
-
-//        NotificationCenter.default.addObserver(
-//            self,
-//            selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
-//            name:.NSManagedObjectContextObjectsDidChange,
-//            object: self.managedObjectContext)
+        //删除object对象通过此监听 处理
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(NotificationDispatcher.objectsDidChange(_:)),
+            name:.NSManagedObjectContextObjectsDidChange,
+            object: self.managedObjectContext)
         NotificationCenter.default.addObserver(self, selector: #selector(NotificationDispatcher.extractAndfireWhenIdle), name: NSNotification.Name.FireAllNotificationWhenIdle, object: nil)
 //        NotificationCenter.default.addObserver(
 //            self,
