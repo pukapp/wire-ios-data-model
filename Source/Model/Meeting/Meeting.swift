@@ -11,6 +11,7 @@ import Foundation
 public enum MeetingState: String {
     case on = "on"
     case off = "off"
+    case wait = "wait"
 }
 
 //会议模式，现在只有视频会议
@@ -159,13 +160,13 @@ public extension ZMMeeting {
             self.allUserNum = allUserNum
         }
         if let holder = payload["holder"] as? [String: Any] {
-            if let holderId = holder["user_id"] as? String {
+            if let holderId = holder["user_id"] as? String, !holderId.isEmpty {
                 self.holdId = holderId
             }
-            if let holderName = holder["nickname"] as? String {
+            if let holderName = holder["nickname"] as? String, !holderName.isEmpty {
                 self.holdName = holderName
             }
-            if let holderAvatar = holder["avatar"] as? String {
+            if let holderAvatar = holder["avatar"] as? String, !holderAvatar.isEmpty {
                 self.holdAvatar = holderAvatar
             }
         }
