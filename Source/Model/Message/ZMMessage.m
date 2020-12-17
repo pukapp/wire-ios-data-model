@@ -831,7 +831,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 //    }
     
     NSPredicate *predicate = noncePredicate;
-    NSFetchRequest *fetchRequest = [self.class sortedFetchRequestWithPredicate:predicate];
+    NSFetchRequest *fetchRequest = [ZMMessage sortedFetchRequestWithPredicate:predicate];
     fetchRequest.fetchLimit = 2;
     fetchRequest.includesSubentities = YES;
     fetchRequest.relationshipKeyPathsForPrefetching = @[@"dataSet"];
@@ -1325,7 +1325,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                       prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {
     
-    ZMSystemMessage *systemMessage = (ZMSystemMessage *)[ZMMessage fetchMessageWithNonce:updateEvent.uuid forConversation: nil inManagedObjectContext:moc];
+    ZMSystemMessage *systemMessage = (ZMSystemMessage *)[ZMMessage fetchMessageWithNonce:updateEvent.eid forConversation: nil inManagedObjectContext:moc];
     if (systemMessage) {
         return systemMessage;
     }
@@ -1353,7 +1353,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     }
     
     ///创建系统消息并配置基本信息
-    ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce: updateEvent.uuid managedObjectContext:moc];
+    ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce: updateEvent.eid managedObjectContext:moc];
     message.systemMessageType = type;
     message.visibleInConversation = conversation;
     message.serverTimestamp = updateEvent.timeStamp;
