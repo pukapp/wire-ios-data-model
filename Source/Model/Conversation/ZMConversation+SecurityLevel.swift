@@ -318,10 +318,10 @@ extension ZMConversation {
     public func addParticipantIfMissing(_ user: ZMUser, date dateOptional: Date?) {
         ///万人群消息直接判断lastServerSyncedActiveParticipants是否包含，不执行activeParticipants的判断
         if case .hugeGroup = conversationType {
-//            万人群不维护lastServerSyncedActiveParticipants
-//            if !self.lastServerSyncedActiveParticipants.contains(user) {
-//                self.internalAddParticipants([user])
-//            }
+            //增加判断是我的联系人
+            if user.connection != nil && !self.lastServerSyncedActiveParticipants.contains(user) {
+                self.internalAddParticipants([user])
+            }
             return
         }
         let date = dateOptional ?? Date()
