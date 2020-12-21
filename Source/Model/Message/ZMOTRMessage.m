@@ -214,16 +214,22 @@ NSString * const DeliveredKey = @"delivered";
             return editedMessage;
         }
     } else if (message.textData.linkPreview.count > 0) {
-        if (conversation.conversationType == ZMConversationTypeHugeGroup) {
-            return nil;
-        }
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         ZMOTRMessage *clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
                forConversation:conversation
         inManagedObjectContext:moc
                 prefetchResult:prefetchResult];
-        [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate: NO];
+        BOOL isNew = NO;
+        if (!clientMessage) {
+            clientMessage = [[ZMClientMessage alloc] initWithNonce:nonce managedObjectContext:moc];
+            clientMessage.senderClientID = updateEvent.senderClientID;
+            clientMessage.serverTimestamp = updateEvent.timeStamp;
+            [clientMessage updateWithSender:sender forConversation:conversation];
+            isNew = YES;
+        }
+        [clientMessage updateWithGenericMessage:message updateEvent:updateEvent initialUpdate: isNew];
         [clientMessage updateCategoryCache];
+        return clientMessage;
     } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasCalling || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
