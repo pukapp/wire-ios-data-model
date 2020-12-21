@@ -1176,6 +1176,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
 @dynamic serviceMessage;
 @dynamic blockUser;
 @dynamic add_friend;
+@dynamic changeCreatorId;
 @dynamic messageVisible;
 @dynamic managerType;
 @dynamic relevantForConversationStatus;
@@ -1258,32 +1259,21 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             systemMessage.messageVisible = [[[updateEvent.payload optionalDictionaryForKey:@"data"] optionalNumberForKey:ZMConversationInfoIsMessageVisibleOnlyManagerAndCreatorKey] stringValue];
             break;
         }
+        case ZMSystemMessageTypeCreatorChangeMsg:
+        {
+            NSString * new_creator = [[updateEvent.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"new_creator"];
+            systemMessage.changeCreatorId = new_creator;
+            break;
+        }
         case ZMSystemMessageTypeServiceMessage:
         {
             ServiceMessage *serviceMessage = [ServiceMessage insertNewObjectInManagedObjectContext:moc];
             [serviceMessage configDataWith:[updateEvent.payload optionalDictionaryForKey:@"data"]];
             if ([serviceMessage.type isEqualToString:@"20009"]) {
-                //暂时不删除不使用的systemmessage  后期补丁统一删除不使用的消息
-//                if (conversation.blockWarningMessage != nil) {
-//                    ///将之前的消息从表中删除
-//                    ZMSystemMessage * sysMessage = conversation.blockWarningMessage.systemMessage;
-//                    if (sysMessage != NULL) {
-//                        [moc deleteObject:sysMessage];
-//                        [moc deleteObject:conversation.blockWarningMessage];
-//                    }
-//                }
                 conversation.blockWarningMessage = serviceMessage;
                 ///这里的时间戳是用来监听 blockWarningMessage 属性改变用的
                 conversation.blockWarningMessageTimeStamp = [updateEvent.payload dateFor:@"time"];
             } else {
-//                if (conversation.lastServiceMessage != nil) {
-//                    ///将之前的消息从表中删除
-//                    ZMSystemMessage * sysMessage = conversation.lastServiceMessage.systemMessage;
-//                    if (sysMessage != NULL) {
-//                        [moc deleteObject:sysMessage];
-//                        [moc deleteObject:conversation.lastServiceMessage];
-//                    }
-//                }
                 conversation.lastServiceMessage = serviceMessage;
                 ///这里的时间戳是用来监听 lastServiceMessage 属性改变用的
                 conversation.lastServiceMessageTimeStamp = [updateEvent.payload dateFor:@"time"];

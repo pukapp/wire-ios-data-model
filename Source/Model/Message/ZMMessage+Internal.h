@@ -199,6 +199,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) NSString * _Nullable opt_id;
 @property (nonatomic) NSString * _Nullable add_friend;
 @property (nonatomic) NSString * _Nullable messageVisible;
+@property (nonatomic) NSString * _Nullable changeCreatorId;
 
 @property (nonatomic) ServiceMessage * _Nullable serviceMessage;
 

@@ -170,6 +170,7 @@ typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {
 @property (nonatomic, nullable) NSNumber *blockDuration;
 @property (nonatomic, nullable) NSString *blockUser;
 @property (nonatomic, nullable) NSString *add_friend;
+@property (nonatomic, nullable) NSString *changeCreatorId;
 @property (nonatomic) ZMSystemManagerMessageType managerType;
 @property (nonatomic, nullable) ServiceMessage *serviceMessage;
 @property (nonatomic, readonly, nullable) NSOrderedSet <NSString *>*userIDs;
