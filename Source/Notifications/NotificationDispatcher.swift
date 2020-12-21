@@ -369,6 +369,8 @@ extension ZMManagedObject {
                 // Luckily we created a snapshot of the object before the merge happend which we can use to compare the values
                 changedKeys = self.snapshotCenter.extractChangedKeysFromSnapshot(for: object)
             } else {
+                let changes = self.snapshotCenter.extractChangedKeysFromSnapshot(for: object)
+                changedKeys = changedKeys.union(changes)
                 self.snapshotCenter.updateSnapshot(for: object)
             }
             if let knownKeys = self.userChanges[object] {
