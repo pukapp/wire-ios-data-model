@@ -222,6 +222,7 @@
 		A03078F724D808C0008D2561 /* NSManagedObjectContext+ServerTimeDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03078F624D808C0008D2561 /* NSManagedObjectContext+ServerTimeDelta.swift */; };
 		A04AC76F221E9E0F0005C9E3 /* UserAliasname.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */; };
 		A08BCC682551AB6F0045675F /* AppGroupInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A08BCC672551AB6F0045675F /* AppGroupInfo.swift */; };
+		A0C64E1C25934BAA00DCFC46 /* EditMessageProcessRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C64E1B25934BAA00DCFC46 /* EditMessageProcessRecorder.swift */; };
 		A0E7845B253D8758007C8901 /* ZMConversation+TopSectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E7845A253D8758007C8901 /* ZMConversation+TopSectionController.swift */; };
 		A0E78460253E8C69007C8901 /* NSManagedObjectContext+UUIDToObjectCaches.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E7845F253E8C69007C8901 /* NSManagedObjectContext+UUIDToObjectCaches.swift */; };
 		A0EDE7202271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */; };
@@ -815,6 +816,7 @@
 		A04AC76E221E9E0F0005C9E3 /* UserAliasname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAliasname.swift; sourceTree = "<group>"; };
 		A06277A525010CEF00BD4AF8 /* zmessaging2.40.24.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.40.24.xcdatamodel; sourceTree = "<group>"; };
 		A08BCC672551AB6F0045675F /* AppGroupInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupInfo.swift; sourceTree = "<group>"; };
+		A0C64E1B25934BAA00DCFC46 /* EditMessageProcessRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditMessageProcessRecorder.swift; sourceTree = "<group>"; };
 		A0E7845A253D8758007C8901 /* ZMConversation+TopSectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+TopSectionController.swift"; sourceTree = "<group>"; };
 		A0E7845F253E8C69007C8901 /* NSManagedObjectContext+UUIDToObjectCaches.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+UUIDToObjectCaches.swift"; sourceTree = "<group>"; };
 		A0EDE71F2271FFF700B2D4E2 /* UserDisableSendMsgStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDisableSendMsgStatus.swift; sourceTree = "<group>"; };
@@ -1811,6 +1813,7 @@
 				5EFE9C0E2126D3FA007932A6 /* NormalizationResult.swift */,
 				A0E7845F253E8C69007C8901 /* NSManagedObjectContext+UUIDToObjectCaches.swift */,
 				A08BCC672551AB6F0045675F /* AppGroupInfo.swift */,
+				A0C64E1B25934BAA00DCFC46 /* EditMessageProcessRecorder.swift */,
 			);
 			name = Utilis;
 			path = Source/Utilis;
@@ -2653,6 +2656,7 @@
 				5E36B45E21CA5BBA00B7063B /* UnverifiedCredentials.swift in Sources */,
 				F9B71F091CB264DF001DB03F /* ZMConversationList.m in Sources */,
 				55C40BCE22B0316800EFD8BD /* ZMUser+LegalHoldRequest.swift in Sources */,
+				A0C64E1C25934BAA00DCFC46 /* EditMessageProcessRecorder.swift in Sources */,
 				5EFE9C0A2126BF9D007932A6 /* ZMPropertyNormalizationResult.m in Sources */,
 				164EB6F3230D987A001BBD4A /* ZMMessage+DataRetention.swift in Sources */,
 				F9A706941CAEE01D00C2F5FE /* UserClient+Protobuf.swift in Sources */,

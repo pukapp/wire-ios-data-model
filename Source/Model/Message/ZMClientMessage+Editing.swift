@@ -38,7 +38,7 @@ extension ZMMessage {
         add(ZMGenericMessage.message(content: originalText.applyEdit(from: editedText), nonce: nonce).data())
         updateNormalizedText()
         
-//        self.nonce = nonce
+        self.nonce = nonce
         self.updatedTimestamp = updateEvent.timeStamp()
         self.reactions.removeAll()
         self.linkAttachments = nil
