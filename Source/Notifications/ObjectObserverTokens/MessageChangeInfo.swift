@@ -53,6 +53,7 @@ extension ZMAssetClientMessage {
                               #keyPath(ZMAssetClientMessage.progress),
                               #keyPath(ZMMessage.reactions),
                               #keyPath(ZMMessage.operations),
+                              #keyPath(ZMMessage.isillegal),
                               #keyPath(ZMMessage.confirmations)]
         return keys.union(additionalKeys)
     }
@@ -67,6 +68,7 @@ extension ZMClientMessage {
                               #keyPath(ZMClientMessage.genericMessage),
                               #keyPath(ZMMessage.reactions),
                               #keyPath(ZMMessage.operations),
+                              #keyPath(ZMMessage.isillegal),
                               #keyPath(ZMMessage.confirmations),
                               #keyPath(ZMClientMessage.quote),
                               MessageKey.linkPreview.rawValue,
