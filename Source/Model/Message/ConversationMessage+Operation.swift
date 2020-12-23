@@ -22,14 +22,14 @@ extension ZMMessage {
             message.isSent
             else { return nil }
         let operatorUser: ZMUser = .selfUser(in: context)
-        let operaorName = operatorUser.name ?? operatorUser.displayName
+        let operaorName = operatorUser.newName()
         let genericMessage = ZMGenericMessage.message(content: ZMForbid(type: type.uniqueValue, messageID: messageID, operatorName: operaorName))
         let clientMessage = message.conversation?.appendClientMessage(with: genericMessage, expires: false, hidden: true)
         switch status {
         case .on: message.isillegal = true
         case .off: message.isillegal = false
         }
-        message.illegalUserName = operatorUser.displayName
+        message.illegalUserName = operatorUser.newName()
         return clientMessage
     }
 }
