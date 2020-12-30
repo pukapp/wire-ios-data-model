@@ -80,7 +80,7 @@ extension ZMConversation {
     }
     
     @objc
-    func updateServerModified(_ timestamp: Date) {
+    public func updateServerModified(_ timestamp: Date) {
         if timestamp > lastServerTimeStamp {
             lastServerTimeStamp = timestamp
         }

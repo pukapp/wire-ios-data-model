@@ -100,7 +100,8 @@ typedef NS_ENUM(int16_t, ZMSystemMessageType) {
     ZMSystemMessageTypeCreatorChangeMsg,///群主更换消息
     ZMSystemMessageTypeAllowAddFriend,
     ZMSystemMessageTypeMessageVisible,
-    ZMSystemMessageTypeItaskDynamicMessage /// itask动态消息
+    ZMSystemMessageTypeItaskDynamicMessage, /// itask动态消息
+    ZMSystemMessageTypeMeetingReservationMessage ///预约会议相关推送消息 - 注意此系统消息的创建是独立出来的
 };
 
 typedef NS_ENUM(int16_t, ZMSystemManagerMessageType) {

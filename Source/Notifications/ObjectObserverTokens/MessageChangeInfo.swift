@@ -91,7 +91,7 @@ extension ZMSystemMessage {
 
     public class override var observableKeys : Set<String> {
         let keys = super.observableKeys
-        let additionalKeys = [#keyPath(ZMSystemMessage.childMessages)]
+        let additionalKeys = [#keyPath(ZMSystemMessage.childMessages), #keyPath(ZMSystemMessage.text)]
         return keys.union(additionalKeys)
     }
 
