@@ -266,6 +266,8 @@ NSString * const DeliveredKey = @"delivered";
             if (updateEvent.type == ZMUpdateEventTypeConversationServiceMessageAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
                 ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
             }
+        } else {
+            return clientMessage;
         }
         
         // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
