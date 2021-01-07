@@ -174,7 +174,11 @@ extension MeetingListObserverCenter {
     
     public static func addMeetingListObserver(_ observer: ZMMeetingListObserver, managedObjectContext: NSManagedObjectContext) -> NSObjectProtocol {
         return ManagedObjectObserverToken(name: .meetingListDidReload, managedObjectContext: managedObjectContext, block: { [weak observer] _ in
-            observer?.meetingListsDidChange()
+            //主线程回调出去，因为需要做ui相关的操作
+            DispatchQueue.main.async {
+                print("MeetingListObserverCenter: meetingListsDidChange")
+                observer?.meetingListsDidChange()
+            }
         })
     }
 }

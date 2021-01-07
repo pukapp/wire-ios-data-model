@@ -267,8 +267,10 @@ public extension ZMMeeting {
     
     static func fetchNeedShowCallingViewMeeting(in context: NSManagedObjectContext) -> ZMMeeting? {
         let fetchRequest = NSFetchRequest<ZMMeeting>(entityName: ZMMeeting.entityName())
-        fetchRequest.predicate = NSPredicate(format: "%K == %@ AND %K != NULL", ZMMeetingStateKey, MeetingState.on.rawValue,
-                                             ZMMeetingCallingDateKey)
+        //增加限制时间，超过180s之后就不弹框了
+        let limitDate = Date(timeIntervalSinceNow: -180)
+        fetchRequest.predicate = NSPredicate(format: "%K == %@ AND %K > %@", ZMMeetingStateKey, MeetingState.on.rawValue,
+                                             ZMMeetingCallingDateKey, limitDate as NSDate)
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: #keyPath(ZMMeeting.callingDate), ascending: false)]
         fetchRequest.fetchLimit = 2
         let result = context.fetchOrAssert(request: fetchRequest)
