@@ -33,6 +33,7 @@ public enum MeetingMuteState: String {
 }
 
 public let ZMMeetingIdentifierKey = "meetingId"
+public let ZMMeetingRoomIdKey = "roomId"
 public let ZMMeetingStateKey = "stateRawValue"
 public let ZMMeetingNotificationStateKey = "notificationStateRawValue"
 public let ZMMeetingCallingDateKey = "callingDate"
@@ -220,6 +221,21 @@ public extension ZMMeeting {
     static func fetchExistingMeeting(with meetingId: String, in context: NSManagedObjectContext) -> ZMMeeting? {
         let fetchRequest = NSFetchRequest<ZMMeeting>(entityName: ZMMeeting.entityName())
         fetchRequest.predicate = NSPredicate(format: "%K == %@", ZMMeetingIdentifierKey, meetingId)
+        fetchRequest.fetchLimit = 2
+         
+        let result = context.fetchOrAssert(request: fetchRequest)
+        if result.count > 1 {
+            fatal("wrong meeting")
+        }
+        if result.count > 0 {
+            return result.first
+        }
+        return nil
+    }
+    
+    static func fetchExistingMeetingByRoomId(_ roomId: String, in context: NSManagedObjectContext) -> ZMMeeting? {
+        let fetchRequest = NSFetchRequest<ZMMeeting>(entityName: ZMMeeting.entityName())
+        fetchRequest.predicate = NSPredicate(format: "%K == %@", ZMMeetingRoomIdKey, roomId)
         fetchRequest.fetchLimit = 2
          
         let result = context.fetchOrAssert(request: fetchRequest)
