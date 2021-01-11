@@ -1356,7 +1356,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
     ///针对特殊系统消息类型填充不同的数据
     [self fillSystemMessageWithSystemMessage:message updateEvent:updateEvent inConversation:conversation inManagedObjectContext:moc];
     
-    if (conversation.conversationType != ZMConversationTypeHugeGroup) {
+    if (conversation.conversationType != ZMConversationTypeHugeGroup || type == ZMSystemMessageTypeServiceMessage) {
         [conversation updateTimestampsAfterUpdatingMessage:message];
     }
     return message;
