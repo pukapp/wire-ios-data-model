@@ -44,6 +44,22 @@
 
 extension UserDisableSendMsgStatus {
     
+    @objc static public func delete(managedObjectContext: NSManagedObjectContext, conversationId: String?, userId: String?) {
+        guard let cid = conversationId,
+              let uid = userId,
+              let uuid = UUID.init(uuidString: cid),
+              let conversation = ZMConversation.init(remoteID: uuid, createIfNeeded: false, in: managedObjectContext)
+              else {
+            return
+        }
+        for status in conversation.membersSendMsgStatuses {
+            if status.userid?.lowercased() == uid.lowercased() {
+                managedObjectContext.delete(status)
+                return
+            }
+        }
+    }
+    
     static public func update(managedObjectContext: NSManagedObjectContext, block_time: NSNumber?, block_duration: NSNumber?, user: String?, conversation: String?, fromPushChannel: Bool = false) {
         guard let block_time = block_time, let duration = block_duration, let u = user, let conv = conversation, let uuid = UUID(uuidString: conv) else {return}
         guard let conver = ZMConversation(remoteID: uuid, createIfNeeded: false, in: managedObjectContext) else {return}
