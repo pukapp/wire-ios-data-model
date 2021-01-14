@@ -156,7 +156,13 @@ extension ZMAssetClientMessage: ZMFileMessageData {
         
         do {
             try FileManager.default.createDirectory(at: temporaryFileURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
-            try FileManager.default.linkItem(at: assetURL, to: temporaryFileURL)
+            // m1运行link失败，这里暂时改为copy
+            if #available(iOS 14.0, *), ProcessInfo.processInfo.isiOSAppOnMac {
+                try FileManager.default.copyItem(at: assetURL, to: temporaryFileURL)
+            } else {
+                try FileManager.default.linkItem(at: assetURL, to: temporaryFileURL)
+            }
+            
         } catch {
             return nil
         }
