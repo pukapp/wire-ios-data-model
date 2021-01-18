@@ -1273,6 +1273,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             case ZMSystemMessageTypeAllowAddFriend:
             case ZMSystemMessageTypeMessageVisible:
             case ZMSystemMessageTypeItaskDynamicMessage:
+            case ZMSystemMessageTypeMeetingReservationMessage:
                 return NO;
         }
     }];
