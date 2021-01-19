@@ -85,6 +85,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
 
     private enum Keys {
         static let PushToken = "pushToken"
+        static let ApnsPushToken = "apnsPushToken"
         static let DeviceClass = "deviceClass"
     }
     
@@ -108,6 +109,30 @@ private let zmLog = ZMSLog(tag: "UserClient")
                 token = nil
             }
             self.didAccessValue(forKey: Keys.PushToken)
+            return token
+        }
+    }
+    
+    @NSManaged private var primitiveApnsPushToken: Data?
+    public var apnsPushToken: ApnsPushToken? {
+        set {
+            precondition(!managedObjectContext!.zm_isUserInterfaceContext, "Apns Push token should be set only on sync context")
+            if newValue != apnsPushToken {
+                self.willChangeValue(forKey: Keys.ApnsPushToken)
+                primitiveApnsPushToken = try? JSONEncoder().encode(newValue)
+                self.didChangeValue(forKey: Keys.ApnsPushToken)
+                setLocallyModifiedKeys([Keys.ApnsPushToken])
+            }
+        }
+        get {
+            self.willAccessValue(forKey: Keys.ApnsPushToken)
+            let token: ApnsPushToken?
+            if let data = primitiveApnsPushToken {
+                token = try? JSONDecoder().decode(ApnsPushToken.self, from:data)
+            } else {
+                token = nil
+            }
+            self.didAccessValue(forKey: Keys.ApnsPushToken)
             return token
         }
     }
@@ -160,7 +185,8 @@ private let zmLog = ZMSLog(tag: "UserClient")
     }
 
     public override func keysTrackedForLocalModifications() -> Set<String> {
-        return [ZMUserClientMarkedToDeleteKey, ZMUserClientNumberOfKeysRemainingKey, ZMUserClientMissingKey, ZMUserClientNeedsToUpdateSignalingKeysKey, Keys.PushToken]
+        return [ZMUserClientMarkedToDeleteKey, ZMUserClientNumberOfKeysRemainingKey, ZMUserClientMissingKey, ZMUserClientNeedsToUpdateSignalingKeysKey, Keys.PushToken,
+            Keys.ApnsPushToken]
     }
     
     public override static func sortKey() -> String {
