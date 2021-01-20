@@ -142,8 +142,9 @@ public protocol UserType: NSObjectProtocol {
     func connect(message: String)
 
     //群聊中名称显示(remark>aliasname>name)
-    func displayNameInConversation(conevrsation:ZMConversation?) -> String
-    
+//    func displayNameInConversation(conevrsation:ZMConversation?) -> String
+    @objc(displayNameInConversation:)
+    func displayName(in conversation: ZMConversation?) -> String
     /// Determines whether the user profile is managed by Wire or other services (SCIM)
     var managedByWire: Bool { get }
     

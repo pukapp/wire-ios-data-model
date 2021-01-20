@@ -155,8 +155,8 @@ public class ZMSearchUser: NSObject, UserType, UserConnectionType {
     fileprivate var internalPreviewImageData: Data?
     fileprivate var internalCompleteImageData: Data?
     
-    public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
-        return user?.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: user?.remoteIdentifier.transportString()) ?? user?.name ?? ""
+    public func displayName(in conversation: ZMConversation?) -> String {
+        return user?.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: user?.remoteIdentifier.transportString()) ?? user?.name ?? ""
     }
 
 

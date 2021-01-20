@@ -25,8 +25,13 @@ extension ZMUser: UserConnectionType { }
 extension ZMUser: UserType {
 
     
-    public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
-        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: self.remoteIdentifier.transportString()) ?? self.name ?? ""
+//    public func displayNameInConversation(conevrsation: ZMConversation?) -> String {
+//        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conevrsation, userId: self.remoteIdentifier.transportString()) ?? self.name ?? ""
+//    }
+    
+    @objc(displayNameInConversation:)
+    public func displayName(in conversation: ZMConversation?) -> String {
+        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? self.handle ?? ""
     }
 
     public func isGuest(in conversation: ZMConversation) -> Bool {
@@ -299,10 +304,7 @@ extension ZMUser {
 
 extension ZMUser {
         
-    @objc(displayNameInConversation:)
-    public func displayName(in conversation: ZMConversation?) -> String {
-        return self.reMark ?? UserAliasname.getUserInConversationAliasName(from: conversation, userId: remoteIdentifier.transportString()) ?? self.name ?? self.handle ?? ""
-    }
+    
 }
 
 extension NSManagedObject: SafeForLoggingStringConvertible {
