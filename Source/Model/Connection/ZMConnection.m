@@ -430,7 +430,13 @@ struct stringAndStatus {
     // check if it exists already
     NSFetchRequest *fetchRequest = [self.class sortedFetchRequestWithPredicate:[NSPredicate predicateWithFormat:@"to.remoteIdentifier_data == %@", [uuid data]]];
     NSArray* fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
-    RequireString([fetchResult count] <= 1, "More than one connection with the same 'to' field: %s", uuid.transportString.UTF8String);
+    if ([fetchResult count] > 1) {
+        for (NSUInteger i = 0; i < [fetchResult count]; i++) {
+            if (i > 0) {
+                [moc deleteObject:fetchResult[i]];
+            }
+        }
+    }
     return [fetchResult firstObject];
 }
 
