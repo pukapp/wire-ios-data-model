@@ -832,7 +832,8 @@ static NSString *const NeedsToRefetchLabelsKey = @"needsToRefetchLabels";
     //if there is no already session object than create one
     ZMSession *session = (ZMSession *)[moc executeFetchRequestOrAssert:[ZMSession sortedFetchRequest]].firstObject;
     if (session == nil) {
-        session = [ZMSession insertNewObjectInManagedObjectContext:moc];
+//        session = [ZMSession insertNewObjectInManagedObjectContext:moc];
+        session = [NSEntityDescription insertNewObjectForEntityForName: @"Session" inManagedObjectContext:moc];
 //        RequireString([moc obtainPermanentIDsForObjects:@[session] error:&error],
 //                      "Failed to get ID for self user: %lu", (long) error.code);
     }
