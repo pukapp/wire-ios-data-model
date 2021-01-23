@@ -212,7 +212,7 @@ private let zmLog = ZMSLog(tag: "UserClient")
     }
     
     public static func fetchUserClient(withRemoteId remoteIdentifier: String, forUser user:ZMUser, createIfNeeded: Bool) -> UserClient? {
-        precondition(!createIfNeeded || user.managedObjectContext!.zm_isSyncContext, "clients can only be created on the syncContext")
+        precondition(!createIfNeeded || !user.managedObjectContext!.zm_isUserInterfaceContext, "clients can only be created on the syncContext")
         
         guard let context = user.managedObjectContext else {
             fatal("User \(user.safeForLoggingDescription) is not a member of a managed object context (deleted object).")

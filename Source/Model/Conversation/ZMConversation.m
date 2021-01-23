@@ -891,6 +891,16 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     return [self conversationWithRemoteID:UUID createIfNeeded:create inContext:moc created:NULL];
 }
 
++ (nullable instancetype)conversationNoRowCacheWithRemoteID:(nonnull NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc
+{
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@", [self remoteIdentifierDataKey], UUID.data];
+    fetchRequest.fetchLimit = 1;
+    fetchRequest.includesPropertyValues = NO;
+    NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
+    return fetchResult.firstObject;
+}
+
 + (instancetype)conversationWithRemoteID:(NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(NSManagedObjectContext *)moc created:(BOOL *)created
 {
     VerifyReturnNil(UUID != nil);
@@ -899,7 +909,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
     // where the UI and sync contexts could both insert the same conversation (same UUID) and we'd end up
     // having two duplicates of that conversation, and we'd have a really hard time recovering from that.
     //
-    RequireString(! create || moc.zm_isSyncContext, "Race condition!");
+    RequireString(! create || !moc.zm_isUserInterfaceContext, "Race condition!");
     
     ZMConversation *result = [self fetchObjectWithRemoteIdentifier:UUID inManagedObjectContext:moc];
     

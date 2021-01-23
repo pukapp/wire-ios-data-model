@@ -24,7 +24,7 @@ public extension ZMUser {
         // where the UI and sync contexts could both insert the same user (same UUID) and we'd end up
         // having two duplicates of that user, and we'd have a really hard time recovering from that.
         //
-        assert(!createIfNeeded || context.zm_isSyncContext, "Race condition!")
+        assert(!createIfNeeded || !context.zm_isUserInterfaceContext, "Race condition!")
         if let result = fetchAndMergeDuplicates(with: remoteIdentifier, in: context) {
             return result
         } else if(createIfNeeded) {

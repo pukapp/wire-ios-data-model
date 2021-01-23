@@ -223,15 +223,25 @@ NSString * const DeliveredKey = @"delivered";
         [ZMMessageConfirmation createMessageConfirmations:message.confirmation conversation:conversation updateEvent:updateEvent sender: sender];
     } else if (message.hasEdited) {
         NSUUID *editedMessageId = [NSUUID uuidWithTransportString:message.edited.replacingMessageId];
-        ZMClientMessage *editedMessage = [ZMClientMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
-        if ([editedMessage processMessageEdit:message.edited from:updateEvent]) {
+        //
+        if ([EditMessageProcessRecorder.shared existWithMessageId:editedMessageId.transportString user: selfUser.remoteIdentifier.transportString]) {
+            return nil;
+        }
+        ZMClientMessage *editedMessage = (ZMClientMessage *)[ZMMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
+        if (editedMessage && [editedMessage processMessageEdit:message.edited from:updateEvent]) {
+            [EditMessageProcessRecorder.shared addMessageEditedWithMessageId:editedMessageId.transportString user:selfUser.remoteIdentifier.transportString];
             [editedMessage updateCategoryCache];
-            
             conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
         }
     } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasMediasoup || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
+        
+        // 每次编辑消息, nonce都会发生变化,
+        // 如果扩展中处理一条消息被多次编辑, 启动app 重新拉取事件处理的时候, 无法判断消息是否是被编辑过的消息  根据nonce已经查不到了, 通过EditMessageProcessRecorder 记录被编辑成功的消息, 发现处理过, 跳过
+        if ([EditMessageProcessRecorder.shared existWithMessageId:nonce.transportString user: selfUser.remoteIdentifier.transportString]) {
+            return nil;
+        }
         
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
