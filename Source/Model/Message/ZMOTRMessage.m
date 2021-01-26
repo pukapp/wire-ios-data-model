@@ -234,7 +234,7 @@ NSString * const DeliveredKey = @"delivered";
             conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
         }
-    } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasMediasoup || message.hasAvailability)) {
+    } else if ([conversation shouldAddEvent:updateEvent] && !(message.hasClientAction || message.hasNewCalling || message.hasAvailability)) {
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         
         // 每次编辑消息, nonce都会发生变化,

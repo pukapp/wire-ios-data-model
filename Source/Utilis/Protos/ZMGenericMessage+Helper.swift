@@ -410,8 +410,8 @@ extension ZMGenericMessage {
             return location
         } else if hasCalling() {
             return  calling
-        } else if hasMediasoup() {
-            return  mediasoup
+        } else if hasNewCalling() {
+            return  newCalling
         } else if hasConfirmation() {
             return confirmation
         } else if hasExternal() {
@@ -646,7 +646,7 @@ public extension ZMUserEntry {
 
 public extension ZMNewOtrMessage {
     
-    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil, unblock: Bool = false) -> ZMNewOtrMessage {
+    @objc static func message(withSender sender: UserClient, nativePush: Bool, recipients: [ZMUserEntry], blob: Data? = nil, unblock: Bool = false, voipString: String?) -> ZMNewOtrMessage {
         let builder = ZMNewOtrMessage.builder()!
         builder.setNativePush(nativePush)
         builder.setSender(sender.clientId)
@@ -656,6 +656,9 @@ public extension ZMNewOtrMessage {
         }
         if unblock {
             builder.setUnblock(unblock)
+        }
+        if nil != voipString {
+            builder.setIosVoip(voipString)
         }
         return builder.build()
     }
@@ -1254,16 +1257,20 @@ extension ZMCalling: MessageContentType {
 }
 
 @objc
-extension ZMMediasoup: MessageContentType {
+extension ZMNewCalling: MessageContentType {
     
-    public static func mediasoup(message: String) -> ZMMediasoup {
-        let builder = ZMMediasoupBuilder()
+    public static func newCalling(message: String, canSynchronizeClients: Bool, voipString: String?) -> ZMNewCalling {
+        let builder = ZMNewCallingBuilder()
         builder.setContent(message)
+        builder.setCanSynchronizeClients(canSynchronizeClients)
+        if let string = voipString {
+            builder.setIosVoipString(string)
+        }
         return builder.build()
     }
     
     public func setContent(on builder: ZMGenericMessageBuilder) {
-        builder.setMediasoup(self)
+        builder.setNewCalling(self)
     }
     
     public func expectsReadConfirmation() -> Bool {

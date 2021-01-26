@@ -110,7 +110,12 @@ extension ZMGenericMessage {
             }
         }
         if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
-            return (data, recipientsAndStrategy.strategy)
+            if self.hasNewCalling() && !self.newCalling.canSynchronizeClients() {
+                //某些电话消息不能同步给其他设备
+                return (data, .ignoreAllMissingClientsNotFromUsers(users: Set([ZMUser.selfUser(in: context)])))
+            } else {
+                return (data, recipientsAndStrategy.strategy)
+            }
         }
         
         return nil
@@ -240,8 +245,10 @@ extension ZMGenericMessage {
         
         let userEntries = self.recipientsWithEncryptedData(selfClient, recipients: recipients, sessionDirectory: sessionDirectory)
         let nativePush = !hasConfirmation() // We do not want to send pushes for delivery receipts
-        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush, recipients: userEntries, blob: externalData, unblock: unblock)
-        
+        let voipString = self.newCalling.iosVoipString
+        let message = ZMNewOtrMessage.message(withSender: selfClient, nativePush: nativePush,
+                                              recipients: userEntries, blob: externalData,
+                                              unblock: unblock, voipString: voipString)
         return message
     }
     
