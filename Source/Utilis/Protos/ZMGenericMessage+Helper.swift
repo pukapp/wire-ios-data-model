@@ -657,7 +657,7 @@ public extension ZMNewOtrMessage {
         if unblock {
             builder.setUnblock(unblock)
         }
-        if nil != voipString {
+        if let voipString = voipString, !voipString.isEmpty {
             builder.setIosVoip(voipString)
         }
         return builder.build()

@@ -101,7 +101,6 @@ extension ZMGenericMessage {
     public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?, unblock: Bool = false, message: ZMMessage? = nil) -> (data: Data, strategy: MissingClientsStrategy)? {
         guard let context = conversation.managedObjectContext else { return nil }
         
-        let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context))
         // 若消息有指定的接受者，仅为指定的用户加密
         if let recipientUsers = message?.recipientUsers,
             recipientUsers.count > 0 {
@@ -109,13 +108,11 @@ extension ZMGenericMessage {
                 return (data, .ignoreAllMissingClientsNotFromUsers(users: recipientUsers))
             }
         }
+        //某些消息不能同步给自己的其他设备,语音的发起消息由于是voip推送，不能推送给其他设备
+        let notSynchronizeOtherClients: Bool = self.hasNewCalling() && !self.newCalling.canSynchronizeClients()
+        let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context), notSynchronizeOtherClients: notSynchronizeOtherClients)
         if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
-            if self.hasNewCalling() && !self.newCalling.canSynchronizeClients() {
-                //某些电话消息不能同步给其他设备
-                return (data, .ignoreAllMissingClientsNotFromUsers(users: Set([ZMUser.selfUser(in: context)])))
-            } else {
-                return (data, recipientsAndStrategy.strategy)
-            }
+            return (data, recipientsAndStrategy.strategy)
         }
         
         return nil
@@ -160,7 +157,7 @@ extension ZMGenericMessage {
         return messageData
     }
 
-    func recipientUsersForMessage(in conversation: ZMConversation, selfUser: ZMUser) -> (users: Set<ZMUser>, strategy: MissingClientsStrategy) {
+    func recipientUsersForMessage(in conversation: ZMConversation, selfUser: ZMUser, notSynchronizeOtherClients: Bool) -> (users: Set<ZMUser>, strategy: MissingClientsStrategy) {
         let (services, otherUsers) = (conversation.lastServerSyncedActiveParticipants.set as! Set<ZMUser>).categorize()
 
         func recipientForConfirmationMessage() -> Set<ZMUser>? {
@@ -196,7 +193,9 @@ extension ZMGenericMessage {
         }
 
         func allAuthorizedRecipients() -> Set<ZMUser> {
-            if let connectedUser = conversation.connectedUser { return Set(arrayLiteral: connectedUser, selfUser) }
+            if let connectedUser = conversation.connectedUser {
+                return notSynchronizeOtherClients ? Set(arrayLiteral: connectedUser) : Set(arrayLiteral: connectedUser, selfUser)
+            }
 
             func mentionedServices() -> Set<ZMUser> {
                 return services.filter { service in
@@ -205,8 +204,8 @@ extension ZMGenericMessage {
             }
             
             let authorizedServices = ZMUser.servicesMustBeMentioned ? mentionedServices() : services
-
-            return otherUsers.union(authorizedServices).union([selfUser])
+            let exceptMeUsers = otherUsers.union(authorizedServices)
+            return notSynchronizeOtherClients ? exceptMeUsers : exceptMeUsers.union([selfUser])
         }
 
         var recipientUsers = Set<ZMUser>()
