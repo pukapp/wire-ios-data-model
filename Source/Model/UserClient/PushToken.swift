@@ -26,7 +26,10 @@ public struct PushToken: Equatable, Codable {
     public var randomCode: Int
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
+    //安装后检测系统是否是ios13 是 重新注册
     public var isiOS13Registered: Bool = false
+    //启动检测是否升级版本为ios13
+    public var isUpdateiOS13: Bool = false
 }
 
 public struct ApnsPushToken: Equatable, Codable {
