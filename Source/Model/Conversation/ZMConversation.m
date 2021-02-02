@@ -367,10 +367,10 @@ NSString *const EnabledEditMsgKey = @"enabledEditMsg";
 -(NSSet <ZMUser *> *)activeParticipants
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    if (self.internalConversationType == ZMConversationTypeHugeGroup) {
-        return [NSSet setWithObject:selfUser];
-    }
-    
+//    if (self.internalConversationType == ZMConversationTypeHugeGroup) {
+//        return [NSSet setWithObject:selfUser];
+//    }
+//
     NSMutableSet *activeParticipants = [NSMutableSet set];
     
     if (self.internalConversationType != ZMConversationTypeGroup &&
