@@ -243,20 +243,12 @@ NSString * const DeliveredKey = @"delivered";
         }
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
-        if (updateEvent.type == ZMUpdateEventTypeConversationMemberJoinask) {
-            clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
-                                                forConversation:conversation
-                                         inManagedObjectContext:moc
-                                                 prefetchResult:prefetchResult];
-            if (clientMessage.isZombieObject) {
-                return nil;
-            }
-        }
         //如果不是万人群消息  需要查库看是否已经保存 扩展中可能已经保存这条消息
         clientMessage = (ZMOTRMessage *)[ZMMessage fetchMessageWithNonce:nonce
                                                          forConversation:conversation
                                                   inManagedObjectContext:moc
                                                           prefetchResult:prefetchResult];
+        
         
         if (clientMessage == nil) {
             clientMessage = [[messageClass alloc] initWithNonce:nonce managedObjectContext:moc];
@@ -266,7 +258,7 @@ NSString * const DeliveredKey = @"delivered";
             if (updateEvent.type == ZMUpdateEventTypeConversationServiceMessageAdd && [clientMessage isKindOfClass:ZMClientMessage.class]) {
                 ((ZMClientMessage *)clientMessage).linkPreviewState = ZMLinkPreviewStateWaitingToBeProcessed;
             }
-        } else {
+        } else if (updateEvent.type != ZMUpdateEventTypeConversationMemberJoinask) {
             return clientMessage;
         }
         
