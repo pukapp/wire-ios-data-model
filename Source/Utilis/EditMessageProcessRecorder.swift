@@ -17,7 +17,7 @@ public class EditMessageProcessRecorder: NSObject {
    
     static let shared = EditMessageProcessRecorder()
     
-    let maxSize = 100
+    let maxSize = 2000
     let defaults = AppGroupInfo.instance.sharedUserDefaults
     
     let EditMessageIdsProcessedInExtensionKey = "EditMessageIdsProcessedInExtensionKey"
