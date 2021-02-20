@@ -7,6 +7,7 @@
 //
 
 import Foundation
+private var zmLog = ZMSLog(tag: "message unencryption")
 
 public protocol UnencryptedMessagePayloadGenerator {
 
@@ -51,6 +52,30 @@ extension ZMClientMessage: UnencryptedMessagePayloadGenerator {
             params["unblock"] = true
         }
         
+        func recipientsForDeletedEphemeral() -> Set<ZMUser>? {
+            guard genericMessage.hasDeleted() && [.group, .hugeGroup].contains(conversation.conversationType) else { return nil }
+            let nonce = UUID(uuidString: genericMessage.deleted.messageId)
+            guard let message = ZMMessage.fetch(withNonce:nonce, for:conversation, in:conversation.managedObjectContext!) else { return nil }
+            guard message.destructionDate != nil else { return nil }
+            guard let sender = message.sender else {
+                zmLog.error("sender of deleted ephemeral message \(String(describing: genericMessage.deleted.messageId)) is already cleared \n ConvID: \(String(describing: conversation.remoteIdentifier)) ConvType: \(conversation.conversationType.rawValue)")
+                return Set(arrayLiteral: user)
+            }
+            
+            // if self deletes their own message, we want to send delete msg
+            // for everyone, so return nil.
+            guard !sender.isSelfUser else { return nil }
+            
+            // otherwise we delete only for self and the sender, all other
+            // recipients are unaffected.
+            return Set(arrayLiteral: sender, user)
+        }
+        
+        if let deletedEphemeral = recipientsForDeletedEphemeral() {
+            params["recipients"] = deletedEphemeral.map({
+                $0.remoteIdentifier.transportString()
+            })
+        }
         return params
     }
 
@@ -83,6 +108,8 @@ extension ZMClientMessage {
     }
 }
 
+
+
 extension ZMAssetClientMessage: UnencryptedMessagePayloadGenerator {
 
     public func unencryptedMessagePayload() -> [String : Any]? {
@@ -101,11 +128,37 @@ extension ZMAssetClientMessage: UnencryptedMessagePayloadGenerator {
         if let imgId = user.previewProfileAssetIdentifier {
             asset["avatar_key"] = imgId
         }
-        return [
+        var params = [
             "text": genericMessage.data().base64EncodedString(),
             "sender": sender,
             "asset": asset
-        ]
+        ] as [String : Any]
+        
+        func recipientsForDeletedEphemeral() -> Set<ZMUser>? {
+            guard genericMessage.hasDeleted() && [.group, .hugeGroup].contains(conversation.conversationType) else { return nil }
+            let nonce = UUID(uuidString: genericMessage.deleted.messageId)
+            guard let message = ZMMessage.fetch(withNonce:nonce, for:conversation, in:conversation.managedObjectContext!) else { return nil }
+            guard message.destructionDate != nil else { return nil }
+            guard let sender = message.sender else {
+                zmLog.error("sender of deleted ephemeral message \(String(describing: genericMessage.deleted.messageId)) is already cleared \n ConvID: \(String(describing: conversation.remoteIdentifier)) ConvType: \(conversation.conversationType.rawValue)")
+                return Set(arrayLiteral: user)
+            }
+            
+            // if self deletes their own message, we want to send delete msg
+            // for everyone, so return nil.
+            guard !sender.isSelfUser else { return nil }
+            
+            // otherwise we delete only for self and the sender, all other
+            // recipients are unaffected.
+            return Set(arrayLiteral: sender, user)
+        }
+        
+        if let deletedEphemeral = recipientsForDeletedEphemeral() {
+            params["recipients"] = deletedEphemeral.map({
+                $0.remoteIdentifier.transportString()
+            })
+        }
+        return params
     }
 
     public var unencryptedMessageDebugInfo: String {
