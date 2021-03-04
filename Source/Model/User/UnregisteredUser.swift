@@ -37,6 +37,7 @@ public class UnregisteredUser {
     public var acceptedTermsOfService: Bool?
     public var marketingConsent: Bool?
     public var password: String?
+    public var captchToken: String?
 
     /**
      * Creates an empty unregistered user.
@@ -81,6 +82,7 @@ extension UnregisteredUser: Equatable {
             && lhs.acceptedTermsOfService == rhs.acceptedTermsOfService
             && lhs.marketingConsent == rhs.marketingConsent
             && lhs.password == rhs.password
+            && lhs.captchToken == rhs.captchToken
     }
 
 }
