@@ -121,7 +121,7 @@ class SharedObjectTestClass: NSObject, NSCoding {
 }
 
 /// This class is used to persist objects in a shared directory
-public class SharedObjectStore<T>: NSObject, NSKeyedUnarchiverDelegate {
+public class SharedObjectStore<T>: NSObject {
 
     private let directory: URL
     private let url: URL
@@ -133,15 +133,19 @@ public class SharedObjectStore<T>: NSObject, NSKeyedUnarchiverDelegate {
         self.url = directory.appendingPathComponent(fileName)
         super.init()
         FileManager.default.createAndProtectDirectory(at:directory)
+        FileManager.default.createAndProtectDirectory(at:url)
     }
 
     @discardableResult public func store(_ object: T) -> Bool {
         do {
-            var current = load()
-            current.append(object)
-            let archived = NSKeyedArchiver.archivedData(withRootObject: current)
-            try archived.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
-            zmLog.debug("Stored object in shared container at \(url), object: \(object), all objects: \(current)")
+//            var current = load()
+//            current.append(object)
+//            let archived = NSKeyedArchiver.archivedData(withRootObject: current)
+//            try archived.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            let path = url.appendingPathComponent(UUID().transportString())
+            let archived = NSKeyedArchiver.archivedData(withRootObject: object)
+            try archived.write(to: path, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            zmLog.debug("Stored object in shared container at \(url), object: \(object)")
             return true
         } catch {
             zmLog.error("Failed to write to url: \(url), error: \(error), object: \(object)")
@@ -156,31 +160,37 @@ public class SharedObjectStore<T>: NSObject, NSKeyedUnarchiverDelegate {
         }
 
         do {
-            let data = try Data(contentsOf: url)
-            let unarchiver = NSKeyedUnarchiver(forReadingWith: data)
-            unarchiver.delegate = self // If we are loading data saved before project rename the class will not be found
-            let stored = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? [T]
+            let subPaths = try FileManager.default.subpathsOfDirectory(atPath: url.path)
+            var stored = [T]()
+            for path in subPaths {
+                let subFullPath = url.appendingPathComponent(path).path
+                let data = try Data(contentsOf: URL(fileURLWithPath: subFullPath))
+                let unarchiver = NSKeyedUnarchiver(forReadingWith: data)
+                let obj = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? T
+                if let t = obj {
+                    stored.append(t)
+                }
+            }
+//            let data = try Data(contentsOf: url)
+//            let unarchiver = NSKeyedUnarchiver(forReadingWith: data)
+//            unarchiver.delegate = self // If we are loading data saved before project rename the class will not be found
+//            let stored = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? [T]
             zmLog.debug("Loaded shared objects from \(url): \(String(describing: stored))")
-            return stored ?? []
+            return stored
         } catch {
             zmLog.error("Failed to read from url: \(url), error: \(error)")
             return []
         }
     }
     
-    public func unarchiver(_ unarchiver: NSKeyedUnarchiver, cannotDecodeObjectOfClassName name: String, originalClasses classNames: [String]) -> Swift.AnyClass? {
-        let oldModulePrefix = "ZMCDataModel"
-        if let modulePrefixRange = name.range(of: oldModulePrefix) {
-            let fixedName = name.replacingCharacters(in: modulePrefixRange, with: "WireDataModel")
-            return NSClassFromString(fixedName)
-        }
-        return nil
-    }
-
     public func clear() {
         do {
-            guard fileManager.fileExists(atPath: url.path) else { return }
-            try fileManager.removeItem(at: url)
+            let subPaths = try FileManager.default.subpathsOfDirectory(atPath: url.path)
+            for path in subPaths {
+                let subFullPath = url.appendingPathComponent(path).path
+                guard fileManager.fileExists(atPath: subFullPath) else { return }
+                try fileManager.removeItem(at: URL(fileURLWithPath: subFullPath))
+            }
             zmLog.debug("Cleared shared objects from \(url)")
         } catch {
             zmLog.error("Failed to remove item at url: \(url), error: \(error)")
