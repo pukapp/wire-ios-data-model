@@ -85,6 +85,7 @@ public struct MeetingReserved {
         case accepted
         case pending
         case rejected
+        case removed
     }
     
     public enum AppointState: String {
