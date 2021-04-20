@@ -99,13 +99,74 @@ extension ZMAssetClientMessage: EncryptedPayloadGenerator {
     
 }
 
+fileprivate struct ZMCalling {
+    var callingType: String
+    var video: Bool
+    var callUserId: String
+    var callUserName: String
+    var conversationId: String
+    // 由于手机接收到voip消息时必须唤醒callkit，否则会崩溃，所以自己给别人拨打电话的消息不能同步到其他设备上
+    var notSynchronizeOtherClients: Bool
+    
+    init(callingType: String, video: Bool, callUserId: String, callUserName: String, conversationId: String, notSynchronizeOtherClients: Bool) {
+        self.callingType = callingType
+        self.video = video
+        self.callUserId = callUserId
+        self.callUserName = callUserName
+        self.conversationId = conversationId
+        self.notSynchronizeOtherClients = notSynchronizeOtherClients
+    }
+}
 
 extension ZMGenericMessage {
+    
+    /**
+     * 如果是通话消息，加入通话相关明文信息
+     * avs所发的信令重新组装，让服务器通过voip明文形式推送出去
+     * video参数暂时设置为false,等待avs框架更换
+     */
+    private func buildCallingData(_ conversation: ZMConversation) -> ZMCalling? {
+        guard hasCalling(),
+            let context = conversation.managedObjectContext,
+            let conversationId = conversation.remoteIdentifier?.transportString(),
+            let callingContent = calling.content.data(using: .utf8),
+            let callingInfo = try? JSONSerialization.jsonObject(with: callingContent, options: []) as? [AnyHashable : Any],
+            let avsType = callingInfo["type"] as? String,
+            let avsResp = callingInfo["resp"] as? Bool else {
+                return nil
+        }
+        print("----\(callingInfo)")
+        var callingType: String? = nil
+        if conversation.conversationType == .oneOnOne && avsType == "SETUP" && avsResp == false ||
+            conversation.conversationType == .group && avsType == "GROUPSTART" && avsResp == false {
+            callingType = "1"
+        }
+        if conversation.conversationType == .oneOnOne && avsType == "SETUP" && avsResp == true {
+            callingType = "2"
+        }
+        if conversation.conversationType == .oneOnOne && avsType == "CANCEL" {
+            callingType = "3"
+        }
+        var video = false
+        if let props = callingInfo["resp"] as? [AnyHashable: Any],
+            let videosend = props["videosend"] as? Bool {
+            video = videosend
+        }
+        guard let typeValue = callingType else {
+            return nil
+        }
+        return ZMCalling(callingType: typeValue,
+                         video: video,
+                         callUserId: ZMUser.selfUser(in: context).remoteIdentifier.transportString(),
+                         callUserName: ZMUser.selfUser(in: context).newName(),
+                         conversationId: conversationId,
+                         notSynchronizeOtherClients: callingType != "2")
+    }
+    
     
     public func encryptedMessagePayloadData(_ conversation: ZMConversation, externalData: Data?, unblock: Bool = false, message: ZMMessage? = nil) -> (data: Data, strategy: MissingClientsStrategy)? {
         guard let context = conversation.managedObjectContext else { return nil }
         
-        let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context))
         // 若消息有指定的接受者，仅为指定的用户加密
         if let recipientUsers = message?.recipientUsers,
             recipientUsers.count > 0 {
@@ -113,59 +174,12 @@ extension ZMGenericMessage {
                 return (data, .ignoreAllMissingClientsNotFromUsers(users: recipientUsers))
             }
         }
-        // 如果是通话消息，加入通话相关明文信息
-        // video参数暂时设置为false,等待avs框架更换
-        if hasCalling() {
-            guard let callingContent = calling.content.data(using: .utf8),
-                let callingInfo = try? JSONSerialization.jsonObject(with: callingContent, options: []) as? [AnyHashable : Any],
-                let type = callingInfo["type"] as? String,
-                let resp = callingInfo["resp"] as? Bool else {
-                    return nil
-            }
-            print("----\(callingInfo)")
-            var callingType: String? = nil
-            var users = recipientsAndStrategy.users
-            if conversation.conversationType == .oneOnOne && type == "SETUP" && resp == false ||
-                conversation.conversationType == .group && type == "GROUPSTART" && resp == false {
-                callingType = "1"
-                users.remove(ZMUser.selfUser(in: context))
-            }
-            if conversation.conversationType == .oneOnOne && type == "SETUP" && resp == true {
-                callingType = "2"
-            }
-            if conversation.conversationType == .oneOnOne && type == "CANCEL" {
-                callingType = "3"
-                users.remove(ZMUser.selfUser(in: context))
-            }
-            var video = false
-            if let props = callingInfo["resp"] as? [AnyHashable: Any],
-                let videosend = props["videosend"] as? Bool {
-                video = videosend
-            }
-            
-            if callingType != nil,
-                let conversationId = conversation.remoteIdentifier?.transportString(),
-                let data = encryptedMessagePayloadData(for: users,
-                                                       externalData: nil,
-                                                       context: context,
-                                                       unblock: unblock,
-                                                       video: video,
-                                                       callUserId: ZMUser.selfUser(in: context).remoteIdentifier.transportString(),
-                                                       callUserName: ZMUser.selfUser(in: context).newName(),
-                                                       conversationId: conversationId,
-                                                       callingType: callingType) {
-                if callingType == "1" || callingType == "3" {
-                    return (data, .ignoreAllMissingClientsFromUsers(users: Set([ZMUser.selfUser(in: context)])))
-                } else {
-                    return (data, recipientsAndStrategy.strategy)
-                }
-                
-            }
-        }
-        if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock) {
+        //某些消息不能同步给自己的其他设备,语音的发起消息由于是voip推送，不能推送给其他设备
+        let notSynchronizeOtherClients: Bool = hasCalling() && (buildCallingData(conversation)?.notSynchronizeOtherClients ?? false)
+        let recipientsAndStrategy = recipientUsersForMessage(in: conversation, selfUser: ZMUser.selfUser(in: context), notSynchronizeOtherClients: notSynchronizeOtherClients)
+        if let data = encryptedMessagePayloadData(for: recipientsAndStrategy.users, externalData: nil, context: context, unblock: unblock, calling: buildCallingData(conversation)) {
             return (data, recipientsAndStrategy.strategy)
         }
-        
         return nil
     }
     
@@ -183,11 +197,7 @@ extension ZMGenericMessage {
                                                  externalData: Data?,
                                                  context: NSManagedObjectContext,
                                                  unblock: Bool = false,
-                                                 video: Bool? = nil,
-                                                 callUserId: String? = nil,
-                                                 callUserName: String? = nil,
-                                                 conversationId: String? = nil,
-                                                 callingType: String? = nil) -> Data? {
+                                                 calling: ZMCalling? = nil) -> Data? {
         guard let selfClient = ZMUser.selfUser(in: context).selfClient(), selfClient.remoteIdentifier != nil
             else { return nil }
         
@@ -200,11 +210,11 @@ extension ZMGenericMessage {
                                      externalData: externalData,
                                      sessionDirectory: sessionsDirectory,
                                      unblock: unblock,
-                                     video: video,
-                                     callUserId: callUserId,
-                                     callUserName: callUserName,
-                                     conversationId: conversationId,
-                                     callingType: callingType)
+                                     video: calling?.video,
+                                     callUserId: calling?.callUserId,
+                                     callUserName: calling?.callUserName,
+                                     conversationId: calling?.conversationId,
+                                     callingType: calling?.callingType)
 
             messageData = message.data()
             
@@ -225,7 +235,7 @@ extension ZMGenericMessage {
         return messageData
     }
 
-    func recipientUsersForMessage(in conversation: ZMConversation, selfUser: ZMUser) -> (users: Set<ZMUser>, strategy: MissingClientsStrategy) {
+    func recipientUsersForMessage(in conversation: ZMConversation, selfUser: ZMUser, notSynchronizeOtherClients: Bool) -> (users: Set<ZMUser>, strategy: MissingClientsStrategy) {
         let (services, otherUsers) = (conversation.lastServerSyncedActiveParticipants.set as! Set<ZMUser>).categorize()
 
         func recipientForConfirmationMessage() -> Set<ZMUser>? {
@@ -261,7 +271,9 @@ extension ZMGenericMessage {
         }
 
         func allAuthorizedRecipients() -> Set<ZMUser> {
-            if let connectedUser = conversation.connectedUser { return Set(arrayLiteral: connectedUser, selfUser) }
+            if let connectedUser = conversation.connectedUser {
+                return notSynchronizeOtherClients ? Set(arrayLiteral: connectedUser) : Set(arrayLiteral: connectedUser, selfUser)
+            }
 
             func mentionedServices() -> Set<ZMUser> {
                 return services.filter { service in
@@ -270,8 +282,8 @@ extension ZMGenericMessage {
             }
             
             let authorizedServices = ZMUser.servicesMustBeMentioned ? mentionedServices() : services
-
-            return otherUsers.union(authorizedServices).union([selfUser])
+            let exceptMeUsers = otherUsers.union(authorizedServices)
+            return notSynchronizeOtherClients ? exceptMeUsers : exceptMeUsers.union([selfUser])
         }
 
         var recipientUsers = Set<ZMUser>()
