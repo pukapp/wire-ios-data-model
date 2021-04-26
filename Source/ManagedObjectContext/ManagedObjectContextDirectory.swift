@@ -141,7 +141,7 @@ extension ManagedObjectContextDirectory {
                 moc.setupLocalCachedSessionAndSelfUser()
                 moc.setupUserKeyStore(accountDirectory: accountDirectory, applicationContainer: applicationContainer)
                 moc.undoManager = nil
-                moc.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+                moc.mergePolicy = NSMergePolicy(merge: .rollbackMergePolicyType)
                 dispatchGroup.apply(moc.add)
             }
             
