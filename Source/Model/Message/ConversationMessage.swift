@@ -282,6 +282,12 @@ extension ZMMessage {
     
     
     @objc public var canBeDeleted : Bool {
+        guard let conversation = self.conversation else {
+            return false
+        }
+        guard conversation.conversationType == .oneOnOne || conversation.creator.isSelfUser || conversation.enabledEditMsg else {
+            return false
+        }
         return deliveryState != .pending
     }
     
