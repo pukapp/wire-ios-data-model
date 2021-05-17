@@ -157,6 +157,7 @@ NSString * const ZMMessageJsonTextKey = @"jsonText";
 @dynamic dataSet;
 @dynamic quote;
 @dynamic updatedTimestamp;
+@dynamic translationText;
 
 - (instancetype)initWithNonce:(NSUUID *)nonce managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {

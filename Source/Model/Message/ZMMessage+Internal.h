@@ -244,6 +244,8 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 @property (nonatomic) BOOL isSendDelivered;
 //是否已读
 @property (nonatomic) BOOL isSendRead;
+//翻译后的文本
+@property (nonatomic) NSString * _Nullable translationText;
 
 @property (nonatomic) NSSet <ZMUser *> * _Nullable recipientUsers;
 
