@@ -69,6 +69,7 @@ extension ZMClientMessage {
                               #keyPath(ZMMessage.reactions),
                               #keyPath(ZMMessage.operations),
                               #keyPath(ZMMessage.isillegal),
+                              #keyPath(ZMMessage.translationText),
                               #keyPath(ZMMessage.confirmations),
                               #keyPath(ZMClientMessage.quote),
                               MessageKey.linkPreview.rawValue,
@@ -127,6 +128,7 @@ extension ZMSystemMessage {
                 "confirmationsChanged: \(confirmationsChanged)",
                 "childMessagesChanged: \(childMessagesChanged)",
                 "quoteChanged: \(quoteChanged)",
+                "translationChanged: \(translationChanged)",
                 "imageChanged: \(imageChanged)",
                 "fileAvailabilityChanged: \(fileAvailabilityChanged)",
                 "usersChanged: \(usersChanged)",
@@ -166,6 +168,10 @@ extension ZMSystemMessage {
     
     public var quoteChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMClientMessage.quote))
+    }
+    
+    public var translationChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMMessage.translationText))
     }
 
     /// Whether the image data on disk changed
