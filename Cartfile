@@ -1,10 +1,10 @@
 
 
 github "pukapp/wire-ios-transport"  "iTask"
-github "pukapp/wire-ios-protos" "secret"
+github "pukapp/wire-ios-protos" "iTask"
 github "pukapp/wire-ios-images" "secret"
 github "pukapp/wire-ios-link-preview" "secret"
 
 github "wireapp/PINCache" "2.3-swift3.1"
-github "wireapp/wire-ios-cryptobox" ~> 19.0
+github "pukapp/wire-ios-cryptobox" "iTask"
 
