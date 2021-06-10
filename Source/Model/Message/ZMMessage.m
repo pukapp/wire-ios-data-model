@@ -1507,6 +1507,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             return !self.sender.isSelfUser;
         case ZMSystemMessageTypeMissedCall:
         case ZMSystemMessageTypeServiceMessage:
+        case ZMSystemMessageTypePerformedCall:
             return YES;
         default:
             return NO;
