@@ -172,9 +172,9 @@ static NSString *ZMLogTag ZM_UNUSED = @"ephemeral";
 
 + (NSPredicate *)predicateForObjectsThatNeedToBeInsertedUpstream
 {
-    // we only handler messages sended whthin 10 minutes
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:([[NSDate date] timeIntervalSince1970] - 2*60)];
-    return [NSPredicate predicateWithFormat:@"%K > %@", ZMMessageServerTimestampKey, date];
+    NSPredicate *encryptedNotSynced = [NSPredicate predicateWithFormat:@"%K == FALSE", DeliveredKey];
+    NSPredicate *notExpired = [NSPredicate predicateWithFormat:@"%K == 0", ZMMessageIsExpiredKey];
+    return [NSCompoundPredicate andPredicateWithSubpredicates:@[encryptedNotSynced, notExpired]];
 }
 
 - (void)markAsSent

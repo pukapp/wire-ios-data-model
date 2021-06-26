@@ -294,7 +294,7 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 
 /// Returns a predicate that matches messages that might expire if they are not sent in time
 + (NSPredicate * _Nonnull)predicateForMessagesThatWillExpire;
-
++ (NSPredicate * _Nonnull)predicateForMessagesMayBeNeedResend;
 
 + (void)setDefaultExpirationTime:(NSTimeInterval)defaultExpiration;
 + (NSTimeInterval)defaultExpirationTime;

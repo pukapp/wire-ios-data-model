@@ -863,6 +863,12 @@ inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
             ZMMessageIsExpiredKey];
 }
 
++ (NSPredicate * _Nonnull)predicateForMessagesMayBeNeedResend {
+    // we only handler messages sended whthin 1 minutes
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:([[NSDate date] timeIntervalSince1970] - 1*60)];
+    return [NSPredicate predicateWithFormat:@"%K > %@", ZMMessageServerTimestampKey, date];
+}
+
 
 + (BOOL)doesEventTypeGenerateMessage:(ZMUpdateEventType)type;
 {
