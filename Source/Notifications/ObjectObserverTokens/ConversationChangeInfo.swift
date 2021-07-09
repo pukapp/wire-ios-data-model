@@ -72,7 +72,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.announcement),
                     #keyPath(ZMConversation.hasReadReceiptsEnabled),
                     ZMConversation.externalParticipantsStateKey,
-                    #keyPath(ZMConversation.legalHoldStatus),
+//                    #keyPath(ZMConversation.legalHoldStatus),
                     #keyPath(ZMConversation.labels)
             ])
     }
@@ -189,7 +189,7 @@ extension ZMConversation : ObjectInSnapshot {
     public var oratorChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.orator))
     }
-    
+    //群管理员变动
     public var managersChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.manager))
     }
@@ -197,7 +197,7 @@ extension ZMConversation : ObjectInSnapshot {
     public var conversationSelfRemarkChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.selfRemark))
     }
-    
+    //群主变动
     public var groupCreatorChanged: Bool {
         return changedKeysContain(keys: #keyPath(ZMConversation.creatorChangeTimestamp))
     }
