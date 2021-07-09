@@ -42,7 +42,7 @@ extension ZMConversation : ObjectInSnapshot {
                     #keyPath(ZMConversation.syncedMessageDestructionTimeout),
                     #keyPath(ZMConversation.language),
                     //new add
-                    #keyPath(ZMConversation.isRemindHouseOpen),
+                    #keyPath(ZMConversation.houseNotificationStatus),
                     #keyPath(ZMConversation.showMemsum),
                     #keyPath(ZMConversation.enabledEditMsg),
                     #keyPath(ZMConversation.blockWarningMessageTimeStamp),
@@ -93,9 +93,9 @@ extension ZMConversation : ObjectInSnapshot {
 
 
 @objcMembers public final class ConversationChangeInfo : ObjectChangeInfo {
-    //群内house开启或者关闭
-    public var isRemindHouseOpenChanged: Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.isRemindHouseOpen))
+    //群内house通知状态改变
+    public var houseNotificationStatusChanged: Bool {
+        return changedKeysContain(keys: #keyPath(ZMConversation.houseNotificationStatus))
     }
     //群成员是否可以编辑或者删除消息
     public var enabledEditMsgChanged: Bool {

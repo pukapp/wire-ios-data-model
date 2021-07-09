@@ -213,9 +213,6 @@ extern NSString * _Null_unspecified const ZMIsDimmedKey; ///< Specifies that a r
 @property (nullable, nonatomic, copy) NSString *fifth_image;
 @property (nullable, nonatomic, copy) NSString *fifth_name;
 
-// 是否提醒群内House的开启状态
-@property (nonatomic) BOOL isRemindHouseOpen;
-
 - (BOOL)canMarkAsUnread;
 - (void)markAsUnread;
 
