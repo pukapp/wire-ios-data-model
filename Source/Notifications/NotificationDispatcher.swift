@@ -76,6 +76,7 @@ public class ManagedObjectObserverToken : NSObject {
 struct Changes : Mergeable {
     let changedKeys : Set<String>
     let originalChanges : [String : NSObject?]
+    var initChanges: Bool = false
     
     init(changedKeys: Set<String>) {
         self.changedKeys = changedKeys
@@ -362,28 +363,33 @@ extension ZMManagedObject {
     /// Extracts changes from the updated objects
     func extractChanges(from changedObjects: Set<ZMManagedObject>) {
         
-        func getChangedKeysSinceLastSave(object: ZMManagedObject) -> Set<String> {
+        func getChangedKeysSinceLastSave(object: ZMManagedObject) -> (Set<String>, Bool) {
             var changedKeys = Set(object.changedValues().keys)
+            var isInitChanges = false
             if changedKeys.count == 0 || object.isFault  {
                 // If the object is a fault, calling changedValues() will return an empty set
                 // Luckily we created a snapshot of the object before the merge happend which we can use to compare the values
-                changedKeys = self.snapshotCenter.extractChangedKeysFromSnapshot(for: object)
+                let changes = self.snapshotCenter.extractChangedKeysFromSnapshot(for: object)
+                changedKeys = changes.0
+                isInitChanges = changes.1
             } else {
                 let changes = self.snapshotCenter.extractChangedKeysFromSnapshot(for: object)
-                changedKeys = changedKeys.union(changes)
+                isInitChanges = changes.1
+                changedKeys = changedKeys.union(changes.0)
                 self.snapshotCenter.updateSnapshot(for: object)
             }
             if let knownKeys = self.userChanges[object] {
                 changedKeys = changedKeys.union(knownKeys)
             }
-            return changedKeys
+            return (changedKeys, isInitChanges)
         }
         
         // Check for changed keys and affected keys
         
         let changes : [ZMManagedObject: Changes] = changedObjects.mapToDictionary{ object in
             // (1) Get all the changed keys since last Save
-            let changedKeys = getChangedKeysSinceLastSave(object: object)
+            let changes = getChangedKeysSinceLastSave(object: object)
+            let changedKeys = changes.0
             guard changedKeys.count > 0 else { return nil }
             
             // (2) Get affected changes
@@ -393,7 +399,9 @@ extension ZMManagedObject {
             let affectedKeys = changedKeys.map{affectingKeysStore.observableKeysAffectedByValue(object.classIdentifier, key: $0)}
                                           .reduce(Set()){$0.union($1)}
             guard affectedKeys.count > 0 else { return nil }
-            return Changes(changedKeys: affectedKeys)
+            var ch = Changes(changedKeys: affectedKeys)
+            ch.initChanges = changes.1
+            return ch
         }
         // (4) Merge the changes with the other ones
         self.allChanges = self.allChanges.merged(with: changes)
@@ -454,7 +462,9 @@ extension ZMManagedObject {
             guard let notificationName = (object as? ObjectInSnapshot)?.notificationName,
                 let changeInfo = ObjectChangeInfo.changeInfo(for: object, changes: changedKeys)
                 else { return }
-            
+            if changedKeys.initChanges {
+                return
+            }
             let classIdentifier = object.classIdentifier
             NotificationInContext(name: notificationName,
                                   context: self.managedObjectContext.notificationContext,

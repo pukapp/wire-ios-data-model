@@ -33,6 +33,7 @@ public protocol ObjectChangeInfoProtocol : NSObjectProtocol {
 open class ObjectChangeInfo : NSObject, ObjectChangeInfoProtocol {
     
     let object : NSObject
+    var isinitChanges: Bool = false
     
     public required init(object: NSObject) {
         self.object = object
