@@ -77,7 +77,7 @@ extension ZMConversation {
         let genericMessage = ZMGenericMessage.message(content: textContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
         let clientMessage = ZMClientMessage(nonce: nonce, managedObjectContext: managedObjectContext!)
         clientMessage.add(genericMessage.data())
-        if self.conversationType == .hugeGroup || quotedMessage != nil {
+        if  quotedMessage != nil {
             clientMessage.linkPreviewState = .done
             clientMessage.needsLinkAttachmentsUpdate = false
         } else {
