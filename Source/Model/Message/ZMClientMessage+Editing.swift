@@ -32,17 +32,21 @@ extension ZMMessage {
               let originalText = genericMessage?.textData,
               let editedText = messageEdit.text,
               messageEdit.hasText(),
-              senderUUID == sender?.remoteIdentifier
+              senderUUID == sender?.remoteIdentifier,
+              let manageContext = self.managedObjectContext
         else { return false }
         
         add(ZMGenericMessage.message(content: originalText.applyEdit(from: editedText), nonce: nonce).data())
         updateNormalizedText()
+                
+        if let existMessage = ZMMessage.fetch(withRemoteIdentifier: nonce, in: manageContext) {
+            manageContext.delete(existMessage)
+        }
         
         self.nonce = nonce
         self.updatedTimestamp = updateEvent.timeStamp()
         self.reactions.removeAll()
         self.linkAttachments = nil
-        
         return true
     }
     

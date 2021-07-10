@@ -207,12 +207,12 @@ NSString * const DeliveredKey = @"delivered";
     } else if (message.hasEdited) {
         NSUUID *editedMessageId = [NSUUID uuidWithTransportString:message.edited.replacingMessageId];
         //
-        if ([EditMessageProcessRecorder.shared existWithMessageId:editedMessageId.transportString user: selfUser.remoteIdentifier.transportString]) {
-            return nil;
-        }
+//        if ([EditMessageProcessRecorder.shared existWithMessageId:editedMessageId.transportString user: selfUser.remoteIdentifier.transportString]) {
+//            return nil;
+//        }
         ZMMessage *editedMessage = [ZMMessage fetchMessageWithNonce:editedMessageId forConversation:conversation inManagedObjectContext:moc prefetchResult:prefetchResult];
         if (editedMessage && [editedMessage processMessageEdit:message.edited from:updateEvent]) {
-            [EditMessageProcessRecorder.shared addMessageEditedWithMessageId:editedMessageId.transportString user:selfUser.remoteIdentifier.transportString];
+//            [EditMessageProcessRecorder.shared addMessageEditedWithMessageId:editedMessageId.transportString user:selfUser.remoteIdentifier.transportString];
             [editedMessage updateCategoryCache];
             conversation.lastVisibleMessage = editedMessage;
             return editedMessage;
@@ -238,9 +238,9 @@ NSString * const DeliveredKey = @"delivered";
         NSUUID *nonce = [NSUUID uuidWithTransportString:message.messageId];
         // 每次编辑消息, nonce都会发生变化,
         // 如果扩展中处理一条消息被多次编辑, 启动app 重新拉取事件处理的时候, 无法判断消息是否是被编辑过的消息  根据nonce已经查不到了, 通过EditMessageProcessRecorder 记录被编辑成功的消息, 发现处理过, 跳过
-        if ([EditMessageProcessRecorder.shared existWithMessageId:nonce.transportString user: selfUser.remoteIdentifier.transportString]) {
-            return nil;
-        }
+//        if ([EditMessageProcessRecorder.shared existWithMessageId:nonce.transportString user: selfUser.remoteIdentifier.transportString]) {
+//            return nil;
+//        }
         Class messageClass = [ZMGenericMessage entityClassForGenericMessage:message];
         ZMOTRMessage *clientMessage;
         //如果不是万人群消息  需要查库看是否已经保存 扩展中可能已经保存这条消息
