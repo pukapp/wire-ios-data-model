@@ -393,6 +393,9 @@ extension ZMManagedObject {
         let changes : [ZMManagedObject: Changes] = changedObjects.mapToDictionary{ object in
             // (1) Get all the changed keys since last Save
             let changes = getChangedKeysSinceLastSave(object: object)
+            if changes.1 {
+                return Changes(changedKeys: Set<String>())
+            }
             let changedKeys = changes.0
             guard changedKeys.count > 0 else { return nil }
             
